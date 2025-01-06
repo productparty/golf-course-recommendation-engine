@@ -51,4 +51,84 @@ router.get('/clubs', [
   }
 });
 
+const { GolfCourse } = require('../models');
+
+router.post('/', async (req, res) => {
+    console.log('POST /api/golf-courses hit'); // Debugging log
+    try {
+        const golfCourse = await GolfCourse.create(req.body);
+        res.status(201).send(golfCourse);
+    } catch (error) {
+        console.error('Error creating golf course:', error);
+        res.status(400).send({ error: error.message });
+
+    }
+});
+
+router.get('/', async (req, res) => {
+    try {
+        const golfCourses = await GolfCourse.findAll();
+        res.status(200).send({ data: golfCourses });
+    } catch (error) {
+        console.error('Error fetching golf courses:', error);
+        res.status(500).send({ error: 'Internal Server Error' });
+    }
+});
+
+router.get('/:course_id', async (req, res) => {
+    try {
+        const golfCourse = await GolfCourse.findByPk(req.params.course_id);
+        if (golfCourse) {
+            res.status(200).send(golfCourse);
+        } else {
+            res.status(404).send({ error: 'Golf Course Not Found' });
+        }
+    } catch (error) {
+        console.error('Error fetching golf course:', error);
+        res.status(500).send({ error: 'Internal Server Error' });
+    }
+});
+
+router.put('/:course_id', async (req, res) => {
+    try {
+        const golfCourse = await GolfCourse.findByPk(req.params.course_id);
+        if (golfCourse) {
+            await golfCourse.update(req.body);
+            res.status(200).send(golfCourse);
+        } else {
+            res.status(404).send({ error: 'Golf Course Not Found' });
+        }
+    } catch (error) {
+        console.error('Error updating golf course:', error);
+        res.status(400).send({ error: error.message });
+    }
+});
+
+router.delete('/:course_id', async (req, res) => {
+    try {
+        const golfCourse = await GolfCourse.findByPk(req.params.course_id);
+        if (golfCourse) {
+            await golfCourse.destroy();
+            res.status(200).send({ message: 'Golf Course Deleted' });
+        } else {
+            res.status(404).send({ error: 'Golf Course Not Found' });
+        }
+    } catch (error) {
+        console.error('Error deleting golf course:', error);
+        res.status(500).send({ error: 'Internal Server Error' });
+    }
+});
+
+module.exports = router;
+router.post('/', async (req, res) => {
+    console.log('POST /api/golf-courses hit'); // Debugging log
+    try {
+        const golfCourse = await GolfCourse.create(req.body);
+        res.status(201).send(golfCourse);
+    } catch (error) {
+        console.error('Error creating golf course:', error);
+        res.status(400).send({ error: error.message });
+    }
+});
+
 module.exports = router;

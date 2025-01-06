@@ -3,9 +3,13 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "start": "node index.js",
-    "test": "cross-env NODE_ENV=test NODE_NO_WARNINGS=1 jest --no-cache --testLocationInResults --json --useStderr --outputFile C:\\Users\\mwats\\AppData\\Local\\Temp\\jest_runner_golf_course_recommendation_engine_mwats_2.json --testNamePattern Golf Course API --no-coverage --reporters default --reporters c:\\Users\\mwats\\.vscode\\extensions\\orta.vscode-jest-6.4.0\\out\\reporter.js --colors --watchAll=false"
+    "test": "cross-env NODE_ENV=test NODE_NO_WARNINGS=1 jest --no-cache --testLocationInResults --json --useStderr --outputFile ./jest_runner_golf_course_recommendation_engine.json --testNamePattern 'Golf Course API' --no-coverage --reporters default --reporters ./reporter.js --colors --watchAll=false",
+    "test:backend": "jest --config jest.config.js tests/",
+    "seed-database": "node cli.js seed-database",
+    "start-server": "node cli.js start-server"
   },
   "repository": {
     "type": "git",
@@ -20,9 +24,8 @@
     "sequelize",
     "postgresql"
   ],
-  "author": "Your Name <your.email@example.com>",
+  "author": "Mike Watson <mwatson1983@gmail.com>",
   "license": "ISC",
-  "type": "commonjs",
   "bugs": {
     "url": "https://github.com/productparty/golf-course-recommendation-engine/issues"
   },
@@ -31,19 +34,23 @@
     "@vitejs/plugin-react": "^4.3.4",
     "axios": "^1.7.9",
     "body-parser": "^1.19.0",
+    "commander": "^10.0.0",
     "cors": "^2.8.5",
+    "csv-parser": "^3.1.0",
     "dotenv": "^10.0.0",
     "express": "^4.17.1",
     "express-validator": "^7.2.1",
+    "get-port": "^7.1.0",
     "glob-stream": "^8.0.2",
     "micromatch": "^4.0.8",
     "module": "^1.2.5",
     "pg": "^8.6.0",
-    "react": "^17.0.2",
-    "react-dom": "^17.0.2",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
     "sequelize": "^6.6.5",
     "swagger-jsdoc": "^6.1.0",
     "swagger-ui-express": "^4.1.6",
+    "text-encoding": "^0.7.0",
     "vinyl-fs": "^4.0.0",
     "yargs": "^17.7.2"
   },
@@ -52,8 +59,9 @@
     "@babel/preset-env": "^7.26.0",
     "@babel/preset-react": "^7.14.5",
     "@babel/preset-typescript": "^7.14.5",
-    "@testing-library/jest-dom": "^5.16.5",
-    "@testing-library/react": "^11.2.7",
+    "@testing-library/dom": "^10.4.0",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.1.0",
     "@types/axios": "^0.9.36",
     "@types/react": "^19.0.2",
     "@types/react-dom": "^19.0.2",
@@ -67,28 +75,18 @@
     "ts-jest": "^29.2.5",
     "typescript": "^4.3.5"
   },
-  "jest": {
-    "testEnvironment": "jsdom",
-    "testMatch": [
-      "**/tests/**/*.[jt]s?(x)",
-      "**/?(*.)+(spec|test).[tj]s?(x)"
-    ],
-    "testRegex": "",
-    "transform": {
-      "^.+\\.[tj]sx?$": "babel-jest",
-      "^.+\\.svg$": "<rootDir>/svgTransform.js"
-    },
-    "transformIgnorePatterns": [
-      "node_modules/(?!(uuid)/)"
-    ],
-    "moduleNameMapper": {
-      "\\.(css|less)$": "identity-obj-proxy"
-    }
-  },
   "overrides": {
     "braces": "^3.0.2",
     "lodash.template": "^4.5.0",
     "concat-stream": "^2.0.0",
-    "yargs-parser": "^5.0.0"
+    "yargs-parser": "^21.1.1"
+  },
+  "resolutions": {
+    "braces": ">=3.0.3",
+    "yargs-parser": "^21.1.1",
+    "concat-stream": ">=1.5.2",
+    "lodash.template": ">=4.5.0",
+    "micromatch": ">=4.0.8",
+    "yargs": "^17.7.2"
   }
 }

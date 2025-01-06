@@ -1,29 +1,29 @@
-const { DataTypes } = require('sequelize');
-const sequelize = require('./index').sequelize;
-const GolfCourse = require('./golfcourse');
+module.exports = (sequelize, DataTypes) => {
+  const Hole = sequelize.define('Hole', {
+    hole_id: {
+      type: DataTypes.INTEGER,
+      autoIncrement: true,
+      primaryKey: true
+    },
+    course_id: {
+      type: DataTypes.INTEGER,
+      references: {
+        model: 'GolfCourse',
+        key: 'id'
+      }
+    },
+    hole_number: DataTypes.INTEGER,
+    par: DataTypes.INTEGER,
+    yardage: DataTypes.INTEGER,
+    handicap: DataTypes.INTEGER
+  }, {
+    tableName: 'holes',
+    timestamps: false
+  });
 
-const Hole = sequelize.define('Hole', {
-  hole_id: {
-    type: DataTypes.INTEGER,
-    autoIncrement: true,
-    primaryKey: true
-  },
-  course_id: {
-    type: DataTypes.INTEGER,
-    references: {
-      model: GolfCourse,
-      key: 'course_id'
-    }
-  },
-  hole_number: DataTypes.INTEGER,
-  par: DataTypes.INTEGER,
-  yardage: DataTypes.INTEGER,
-  handicap: DataTypes.INTEGER
-}, {
-  tableName: 'holes',
-  timestamps: false
-});
+  Hole.associate = function(models) {
+    Hole.belongsTo(models.GolfCourse, { foreignKey: 'course_id' });
+  };
 
-Hole.belongsTo(GolfCourse, { foreignKey: 'course_id' });
-
-module.exports = Hole;
+  return Hole;
+};

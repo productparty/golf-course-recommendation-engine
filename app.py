@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Query, HTTPException
+from fastapi import FastAPI, Query, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
@@ -20,7 +20,7 @@ app.add_middleware(
     allow_headers=["*"],  # Allow all HTTP headers
 )
 
-AZURE_MAPS_API_KEY = "9NGtm5ACQVDOOMBQ4lZRzoE2J5JxN9st9uSftyEvjmaMpyrSZ247JQQJ99ALACYeBjFulBLoAAAgAZMP103l"
+AZURE_MAPS_API_KEY = "9NGtm5ACQVDOOMBQ4lZRzoE2J5JxN9uSftyEvjmaMpyrSZ247JQQJ99ALACYeBjFulBLoAAAgAZMP103l"
 DATABASE_CONFIG = {
     "dbname": "golf_recommendation",
     "user": "postgres",
@@ -79,6 +79,22 @@ def get_lat_lng(zip_code: str):
     except requests.RequestException as e:
         logger.error(f"Geocoding request failed: {e}")
         raise ValueError(f"Geocoding request failed: {e}")
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    logger.info(f"Request: {request.method} {request.url}")
+    response = await call_next(request)
+    logger.info(f"Response: {response.status_code}")
+    return response
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    logger.error(f"Unhandled error: {exc}")
+    raise HTTPException(status_code=500, detail="Internal server error")
+
+@app.get("/health")
+def health_check():
+    return {"status": "ok"}
 
 @app.get("/clubs/")
 def get_clubs(state: str = Query(None), limit: int = 10):
@@ -200,20 +216,29 @@ def search_by_zip(
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-@app.post("/api/golf-courses/")
+@app.post("/api/golf-courses")
 def create_golf_course(course: dict):
-    with get_db_connection() as conn:
-        with conn.cursor() as cursor:
-            cursor.execute("""
-                INSERT INTO golf_clubs_courses (club_name, city, state, country, address, timestamp_updated, distance, course_id, course_name, num_holes, has_gps, zip_code, lat, lng)
-                VALUES (%(club_name)s, %(city)s, %(state)s, %(country)s, %(address)s, %(timestamp_updated)s, %(distance)s, %(course_id)s, %(course_name)s, %(num_holes)s, %(has_gps)s, %(zip_code)s, %(lat)s, %(lng)s)
-                RETURNING club_id
-            """, course)
-            club_id = cursor.fetchone()[0]
-            conn.commit()
-            return {"id": club_id}
+    logger.info(f"Incoming request body: {course}")  # Log the incoming request body
+    logger.info(f"Received data: {course}")  # Log the received data
+    # Set the geom field based on lat and lng
+    course['geom'] = f"POINT({course['lng']} {course['lat']})"
+    
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute("""
+                    INSERT INTO golf_clubs_courses (club_name, city, state, country, address, timestamp_updated, distance, course_id, course_name, num_holes, has_gps, zip_code, lat, lng, geom)
+                    VALUES (%(club_name)s, %(city)s, %(state)s, %(country)s, %(address)s, %(timestamp_updated)s, %(distance)s, %(course_id)s, %(course_name)s, %(num_holes)s, %(has_gps)s, %(zip_code)s, %(lat)s, %(lng)s, %(geom)s)
+                    RETURNING course_id
+                """, course)
+                course_id = cursor.fetchone()[0]
+                conn.commit()
+                return {"id": course_id}
+    except Exception as e:
+        logger.error(f"Error creating golf course: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
 
-@app.get("/api/golf-courses/")
+@app.get("/api/golf-courses")
 def get_all_golf_courses():
     with get_db_connection() as conn:
         with conn.cursor(cursor_factory=RealDictCursor) as cursor:
@@ -225,7 +250,7 @@ def get_all_golf_courses():
 def get_golf_course(course_id: str):
     with get_db_connection() as conn:
         with conn.cursor(cursor_factory=RealDictCursor) as cursor:
-            cursor.execute("SELECT * FROM golf_clubs_courses WHERE club_id = %s", (course_id,))
+            cursor.execute("SELECT * FROM golf_clubs_courses WHERE course_id = %s", (course_id,))
             result = cursor.fetchone()
             if result:
                 return result
@@ -234,23 +259,27 @@ def get_golf_course(course_id: str):
 
 @app.put("/api/golf-courses/{course_id}")
 def update_golf_course(course_id: str, course: dict):
+    # Set the geom field based on lat and lng
+    course['geom'] = f"POINT({course['lng']} {course['lat']})"
+    
     with get_db_connection() as conn:
         with conn.cursor() as cursor:
             cursor.execute("""
                 UPDATE golf_clubs_courses
-                SET club_name = %(club_name)s, city = %(city)s, state = %(state)s, country = %(country)s, address = %(address)s, timestamp_updated = %(timestamp_updated)s, distance = %(distance)s, course_id = %(course_id)s, course_name = %(course_name)s, num_holes = %(num_holes)s, has_gps = %(has_gps)s, zip_code = %(zip_code)s, lat = %(lat)s, lng = %(lng)s
-                WHERE club_id = %s
-                RETURNING club_id
-            """, {**course, "club_id": course_id})
+                SET club_name = %(club_name)s, city = %(city)s, state = %(state)s, country = %(country)s, address = %(address)s, timestamp_updated = %(timestamp_updated)s, distance = %(distance)s, course_id = %(course_id)s, course_name = %(course_name)s, num_holes = %(num_holes)s, has_gps = %(has_gps)s, zip_code = %(zip_code)s, lat = %(lat)s, lng = %(lng)s, geom = %(geom)s
+                WHERE course_id = %s
+                RETURNING course_id
+            """, {**course, "course_id": course_id})
             updated_id = cursor.fetchone()[0]
             conn.commit()
             return {"id": updated_id}
 
 @app.delete("/api/golf-courses/{course_id}")
 def delete_golf_course(course_id: str):
+    logger.info(f"Deleting course_id: {course_id}")  # Log the course_id being deleted
     with get_db_connection() as conn:
         with conn.cursor() as cursor:
-            cursor.execute("DELETE FROM golf_clubs_courses WHERE club_id = %s RETURNING club_id", (course_id,))
+            cursor.execute("DELETE FROM golf_clubs_courses WHERE course_id = %s RETURNING course_id", (course_id,))
             deleted_id = cursor.fetchone()
             if deleted_id:
                 conn.commit()
@@ -274,4 +303,4 @@ if __name__ == "__main__":
     test_search_by_zip()
     print("Starting FastAPI server...")
     import uvicorn
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+    uvicorn.run(app, host="127.0.0.1", port=8001)
