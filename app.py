@@ -1,85 +1,53 @@
 from fastapi import FastAPI, Query, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel
-import psycopg2
 from psycopg2.extras import RealDictCursor
-import requests
-from maps import validate_address  # Import your function from maps.py
+import psycopg2
 import logging
-from cachetools import cached, TTLCache
+import requests
+from recommendation_engine import calculate_recommendation_score
+from dotenv import load_dotenv
+import os
+
+# Load environment variables from .env file
+load_dotenv()
 
 app = FastAPI()
 
-# Add CORS middleware
+# CORS Middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # Allow only your frontend URL
+    allow_origins=["http://localhost:5173"],
     allow_credentials=True,
-    allow_methods=["*"],  # Allow all HTTP methods
-    allow_headers=["*"],  # Allow all HTTP headers
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
-AZURE_MAPS_API_KEY = "9NGtm5ACQVDOOMBQ4lZRzoE2J5JxN9uSftyEvjmaMpyrSZ247JQQJ99ALACYeBjFulBLoAAAgAZMP103l"
-DATABASE_CONFIG = {
-    "dbname": "golf_recommendation",
-    "user": "postgres",
-    "password": "password",
-    "host": "localhost",
-    "port": "5432",
-}
-
-class GolfCourse(BaseModel):
-    course_id: str
-    address: str
-    city: str
-    state: str
-    zip_code: str
-    lat: float
-    lng: float
-    geom: str  # This should be a WKT representation of the geometry
-
-def get_db_connection():
-    conn = psycopg2.connect(**DATABASE_CONFIG)
-    return conn
-
-# Configure logging
+# Logging Setup
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Cache for geocoding results (TTL: 1 hour)
-cache = TTLCache(maxsize=100, ttl=3600)
+# Database Config
+DATABASE_CONFIG = {
+    "dbname": os.getenv("DB_NAME"),
+    "user": os.getenv("DB_USER"),
+    "password": os.getenv("DB_PASSWORD"),
+    "host": os.getenv("DB_HOST"),
+    "port": os.getenv("DB_PORT"),
+}
 
-@cached(cache)
-def get_lat_lng(zip_code: str):
-    url = f"https://atlas.microsoft.com/search/address/json"
-    params = {
-        "subscription-key": AZURE_MAPS_API_KEY,
-        "api-version": "1.0",
-        "query": zip_code,
-        "countrySet": "US"  # Prioritize US locations
-    }
+AZURE_MAPS_API_KEY = os.getenv("AZURE_MAPS_API_KEY")
+
+# Database Connection
+def get_db_connection():
     try:
-        response = requests.get(url, params=params)
-        response.raise_for_status()
-        data = response.json()
-        logger.info(f"Geocoding response for ZIP code {zip_code}: {data}")
+        conn = psycopg2.connect(**DATABASE_CONFIG)
+        return conn
+    except Exception as e:
+        logger.error(f"Database connection error: {e}")
+        raise HTTPException(status_code=500, detail="Database connection failed")
 
-        if "results" in data and len(data["results"]) > 0:
-            location = data["results"][0]["position"]
-            lat, lng = location["lat"], location["lon"]
-
-            # Validate that the coordinates are within the expected region (USA)
-            if 24.396308 <= lat <= 49.384358 and -125.0 <= lng <= -66.93457:
-                return lat, lng
-            else:
-                raise ValueError(f"Geocoded coordinates {lat}, {lng} are outside the expected region for the USA.")
-        else:
-            raise ValueError(f"Unable to geocode ZIP code: {zip_code}")
-    except requests.RequestException as e:
-        logger.error(f"Geocoding request failed: {e}")
-        raise ValueError(f"Geocoding request failed: {e}")
-
+# Middleware to log requests
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
     logger.info(f"Request: {request.method} {request.url}")
@@ -87,95 +55,58 @@ async def log_requests(request: Request, call_next):
     logger.info(f"Response: {response.status_code}")
     return response
 
+# Exception Handler
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     logger.error(f"Unhandled error: {exc}")
-    raise HTTPException(status_code=500, detail="Internal server error")
+    return JSONResponse(
+        status_code=500,
+        content={"error": "Internal server error", "details": str(exc)},
+    )
 
+# Health Check
 @app.get("/health")
 def health_check():
     return {"status": "ok"}
 
-@app.get("/clubs/")
-def get_clubs(state: str = Query(None), limit: int = 10):
-    query = "SELECT * FROM golf_clubs_courses"
-    filters = []
-    params = {}
-
-    if state:
-        filters.append("state = %(state)s")
-        params["state"] = state
-
-    if filters:
-        query += " WHERE " + " AND ".join(filters)
-
-    query += " LIMIT %(limit)s"
-    params["limit"] = limit
-
-    with get_db_connection() as conn:
-        with conn.cursor(cursor_factory=RealDictCursor) as cursor:
-            cursor.execute(query, params)
-            results = cursor.fetchall()
-
-    return results
-
-@app.get("/recommendations/")
-def get_recommendations(
-    state: str = Query(None),
-    city: str = Query(None),
-    club_id: str = Query(None),
-    limit: int = 3
-):
-    query = "SELECT * FROM golf_clubs_courses"
-    filters = []
-    params = {}
-
-    if state:
-        filters.append("state = %(state)s")
-        params["state"] = state
-
-    if city:
-        filters.append("city = %(city)s")
-        params["city"] = city
-
-    if club_id:
-        filters.append("club_id != %(club_id)s")
-        filters.append("state = (SELECT state FROM golf_clubs_courses WHERE club_id = %(club_id)s)")
-        params["club_id"] = club_id
-
-    if filters:
-        query += " WHERE " + " AND ".join(filters)
-
-    query += " LIMIT %(limit)s"
-    params["limit"] = limit
-
-    with get_db_connection() as conn:
-        with conn.cursor(cursor_factory=RealDictCursor) as cursor:
-            cursor.execute(query, params)
-            results = cursor.fetchall()
-
-    return results
-
-@app.get("/validate_address/")
-def validate_address_api(address: str, city: str, state: str):
-    result = validate_address(address, city, state)
-    if result:
-        return result
-    else:
-        raise HTTPException(status_code=404, detail="Address not found")
-
-@app.get("/geocode_zip/")
-def geocode_zip(zip_code: str):
+# Geocode ZIP Code
+def get_lat_lng(zip_code: str):
     try:
-        lat, lng = get_lat_lng(zip_code)
-        return {"lat": lat, "lng": lng}
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        url = "https://atlas.microsoft.com/search/address/json"
+        params = {
+            "api-version": "1.0",
+            "subscription-key": AZURE_MAPS_API_KEY,
+            "query": zip_code,
+        }
+        response = requests.get(url, params=params)
+        response.raise_for_status()
+        data = response.json()
 
-@app.get("/search_by_zip/")
-def search_by_zip(
-    zip_code: str = Query(..., description="ZIP code to search"),
-    radius: int = Query(25, ge=1, le=100, description="Search radius in miles")
+        us_results = [
+            result for result in data.get("results", [])
+            if result["address"].get("countryCode") == "US"
+        ]
+        if not us_results:
+            raise ValueError(f"No US results for ZIP code {zip_code}")
+
+        lat = us_results[0]["position"]["lat"]
+        lng = us_results[0]["position"]["lon"]
+        logger.info(f"Geocoded ZIP code {zip_code} to lat={lat}, lng={lng}")
+        return lat, lng
+    except Exception as e:
+        logger.error(f"Error geocoding ZIP code {zip_code}: {e}")
+        raise HTTPException(status_code=400, detail=f"Failed to geocode ZIP code {zip_code}")
+
+# Find Courses Endpoint
+@app.get("/find_courses/")
+def find_courses(
+    zip_code: str,
+    radius: int = 10,
+    price_tier: str = None,
+    difficulty: str = None,
+    technologies: str = None,
+    limit: int = 10,
+    offset: int = 0,
 ):
     try:
         lat, lng = get_lat_lng(zip_code)
@@ -187,120 +118,147 @@ def search_by_zip(
             gc.course_id,
             gc.club_name,
             gc.course_name,
-            gc.address,
             gc.city,
             gc.state,
             gc.zip_code,
-            gc.lat,
-            gc.lng,
-            ST_AsText(gc.geom) AS geom_wkt,
-            ST_Distance(gc.geom::geography, z.geog) / 1609.34 AS distance_miles
+            gc.price_tier,
+            gc.difficulty,
+            ST_Distance(gc.geom::geography, z.geog) / 1609.34 AS distance_miles,
+            array_agg(t.technology_name) FILTER (WHERE t.technology_name IS NOT NULL) AS technologies
         FROM 
-            golf_clubs_courses gc,
+            golf_clubs_courses gc
+        LEFT JOIN golfcourse_technology gt ON gc.course_id = gt.course_id
+        LEFT JOIN technologyintegration t ON gt.technology_id = t.technology_id,
             zip_centroid z
         WHERE 
             ST_DWithin(gc.geom::geography, z.geog, %s * 1609.34)
-        ORDER BY 
-            ST_Distance(gc.geom::geography, z.geog)
-        LIMIT 20;
         """
-        params = (lng, lat, radius)
+        filters = []
+        params = [lng, lat, radius]
+
+        if price_tier:
+            filters.append("gc.price_tier = %s")
+            params.append(price_tier)
+        if difficulty:
+            filters.append("gc.difficulty = %s")
+            params.append(difficulty)
+        if technologies:
+            filters.append(
+                """
+                EXISTS (
+                    SELECT 1 FROM golfcourse_technology gt
+                    JOIN technologyintegration t ON gt.technology_id = t.technology_id
+                    WHERE gt.course_id = gc.course_id
+                    AND t.technology_name = ANY(%s)
+                )
+                """
+            )
+            params.append(technologies.split(","))
+
+        if filters:
+            query += " AND " + " AND ".join(filters)
+
+        query += """
+        GROUP BY gc.course_id, z.geog
+        ORDER BY ST_Distance(gc.geom::geography, z.geog)
+        LIMIT %s OFFSET %s
+        """
+        params.extend([limit, offset])
 
         with get_db_connection() as conn:
             with conn.cursor(cursor_factory=RealDictCursor) as cursor:
                 cursor.execute(query, params)
                 results = cursor.fetchall()
 
-        return results
-
+        return {"results": results, "total": len(results)}
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        logger.error(f"Error in find_courses: {e}")
+        raise HTTPException(status_code=400, detail="Failed to fetch courses")
 
-@app.post("/api/golf-courses")
-def create_golf_course(course: dict):
-    logger.info(f"Incoming request body: {course}")  # Log the incoming request body
-    logger.info(f"Received data: {course}")  # Log the received data
-    # Set the geom field based on lat and lng
-    course['geom'] = f"POINT({course['lng']} {course['lat']})"
-    
+# Get Recommendations Endpoint
+@app.get("/get_recommendations/")
+def get_recommendations(
+    zip_code: str,
+    radius: int = 10,
+    skill_level: str = None,
+    preferred_price_range: str = None,
+    technologies: str = None,
+):
     try:
+        lat, lng = get_lat_lng(zip_code)
+        query = """
+        WITH zip_centroid AS (
+            SELECT ST_SetSRID(ST_MakePoint(%s, %s), 4326)::geography AS geog
+        )
+        SELECT 
+            gc.course_id,
+            gc.club_name,
+            gc.course_name,
+            gc.city,
+            gc.state,
+            gc.zip_code,
+            gc.price_tier,
+            gc.difficulty,
+            ST_Distance(gc.geom::geography, z.geog) / 1609.34 AS distance_miles,
+            array_agg(t.technology_name) FILTER (WHERE t.technology_name IS NOT NULL) AS technologies
+        FROM 
+            golf_clubs_courses gc
+        LEFT JOIN golfcourse_technology gt ON gc.course_id = gt.course_id
+        LEFT JOIN technologyintegration t ON gt.technology_id = t.technology_id,
+            zip_centroid z
+        WHERE 
+            ST_DWithin(gc.geom::geography, z.geog, %s * 1609.34)
+        """
+        filters = []
+        params = [lng, lat, radius]
+
+        if skill_level:
+            difficulty_map = {"Beginner": "Easy", "Intermediate": "Medium", "Advanced": "Hard"}
+            filters.append("gc.difficulty = %s")
+            params.append(difficulty_map.get(skill_level))
+        if preferred_price_range:
+            filters.append("gc.price_tier = %s")
+            params.append(preferred_price_range)
+        if technologies:
+            filters.append(
+                """
+                EXISTS (
+                    SELECT 1 FROM golfcourse_technology gt
+                    JOIN technologyintegration t ON gt.technology_id = t.technology_id
+                    WHERE gt.course_id = gc.course_id
+                    AND t.technology_name = ANY(%s)
+                )
+                """
+            )
+            params.append(technologies.split(","))
+
+        if filters:
+            query += " AND " + " AND ".join(filters)
+
+        query += """
+        GROUP BY gc.course_id, z.geog
+        ORDER BY ST_Distance(gc.geom::geography, z.geog)
+        """
+
         with get_db_connection() as conn:
-            with conn.cursor() as cursor:
-                cursor.execute("""
-                    INSERT INTO golf_clubs_courses (club_name, city, state, country, address, timestamp_updated, distance, course_id, course_name, num_holes, has_gps, zip_code, lat, lng, geom)
-                    VALUES (%(club_name)s, %(city)s, %(state)s, %(country)s, %(address)s, %(timestamp_updated)s, %(distance)s, %(course_id)s, %(course_name)s, %(num_holes)s, %(has_gps)s, %(zip_code)s, %(lat)s, %(lng)s, %(geom)s)
-                    RETURNING course_id
-                """, course)
-                course_id = cursor.fetchone()[0]
-                conn.commit()
-                return {"id": course_id}
+            with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+                cursor.execute(query, params)
+                results = cursor.fetchall()
+
+        recommendations = sorted(
+            results,
+            key=lambda course: calculate_recommendation_score(
+                course,
+                {
+                    "skill_level": skill_level,
+                    "preferred_price_range": preferred_price_range,
+                    "technologies": technologies.split(",") if technologies else [],
+                },
+            ),
+            reverse=True,
+        )
+
+        return {"results": recommendations[:5]}
     except Exception as e:
-        logger.error(f"Error creating golf course: {e}")
-        raise HTTPException(status_code=400, detail=str(e))
-
-@app.get("/api/golf-courses")
-def get_all_golf_courses():
-    with get_db_connection() as conn:
-        with conn.cursor(cursor_factory=RealDictCursor) as cursor:
-            cursor.execute("SELECT * FROM golf_clubs_courses")
-            results = cursor.fetchall()
-            return {"data": results}
-
-@app.get("/api/golf-courses/{course_id}")
-def get_golf_course(course_id: str):
-    with get_db_connection() as conn:
-        with conn.cursor(cursor_factory=RealDictCursor) as cursor:
-            cursor.execute("SELECT * FROM golf_clubs_courses WHERE course_id = %s", (course_id,))
-            result = cursor.fetchone()
-            if result:
-                return result
-            else:
-                raise HTTPException(status_code=404, detail="Golf Course Not Found")
-
-@app.put("/api/golf-courses/{course_id}")
-def update_golf_course(course_id: str, course: dict):
-    # Set the geom field based on lat and lng
-    course['geom'] = f"POINT({course['lng']} {course['lat']})"
-    
-    with get_db_connection() as conn:
-        with conn.cursor() as cursor:
-            cursor.execute("""
-                UPDATE golf_clubs_courses
-                SET club_name = %(club_name)s, city = %(city)s, state = %(state)s, country = %(country)s, address = %(address)s, timestamp_updated = %(timestamp_updated)s, distance = %(distance)s, course_id = %(course_id)s, course_name = %(course_name)s, num_holes = %(num_holes)s, has_gps = %(has_gps)s, zip_code = %(zip_code)s, lat = %(lat)s, lng = %(lng)s, geom = %(geom)s
-                WHERE course_id = %s
-                RETURNING course_id
-            """, {**course, "course_id": course_id})
-            updated_id = cursor.fetchone()[0]
-            conn.commit()
-            return {"id": updated_id}
-
-@app.delete("/api/golf-courses/{course_id}")
-def delete_golf_course(course_id: str):
-    logger.info(f"Deleting course_id: {course_id}")  # Log the course_id being deleted
-    with get_db_connection() as conn:
-        with conn.cursor() as cursor:
-            cursor.execute("DELETE FROM golf_clubs_courses WHERE course_id = %s RETURNING course_id", (course_id,))
-            deleted_id = cursor.fetchone()
-            if deleted_id:
-                conn.commit()
-                return {"message": "Golf Course Deleted"}
-            else:
-                raise HTTPException(status_code=404, detail="Golf Course Not Found")
-
-# Test script
-def test_search_by_zip():
-    zip_code = "48091"
-    radius = 10
-    print(f"Testing search_by_zip with ZIP: {zip_code}, radius: {radius}")
-    try:
-        result = search_by_zip(zip_code, radius)
-        print(f"Results: {result}")
-    except Exception as e:
-        print(f"Error during test: {e}")
-
-if __name__ == "__main__":
-    print("Starting test script...")
-    test_search_by_zip()
-    print("Starting FastAPI server...")
-    import uvicorn
-    uvicorn.run(app, host="127.0.0.1", port=8001)
+        logger.error(f"Error in get_recommendations: {e}")
+        raise HTTPException(status_code=400, detail="Failed to fetch recommendations")

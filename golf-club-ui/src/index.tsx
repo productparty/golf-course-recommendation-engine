@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import App from './App'; // Import your App component
+import GolfCourseApp from './GolfCourseApp'; // Import your GolfCourseApp component
 import './index.css'; // Import global styles (if you have a CSS file)
 
 const root = ReactDOM.createRoot(
@@ -9,6 +9,6 @@ const root = ReactDOM.createRoot(
 
 root.render(
   <React.StrictMode>
-    <App />
+    <GolfCourseApp />
   </React.StrictMode>
 );

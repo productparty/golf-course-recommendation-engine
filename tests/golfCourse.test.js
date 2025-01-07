@@ -6,8 +6,6 @@ import cors from 'cors';
 import golfCourseRoutes from '../src/routes/golfCourseRoutes';
 import { sequelize, GolfCourse } from '../src/models'; // Ensure correct import
 
-const baseURL = 'http://127.0.0.1:8001'; // Base URL for the FastAPI server
-
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
@@ -40,7 +38,7 @@ describe('Golf Course API', () => {
   let courseId;
 
   test('POST /api/golf-courses - create a new golf course', async () => {
-    const response = await request(baseURL)
+    const response = await request(app)
       .post('/api/golf-courses')
       .send({
         club_name: 'Augusta National Golf Club',
@@ -74,7 +72,7 @@ describe('Golf Course API', () => {
       console.error('courseId is not defined, skipping test.');
       return;
     }
-    const response = await request(baseURL).get('/api/golf-courses');
+    const response = await request(app).get('/api/golf-courses');
     console.log('GET all response:', response.body);
     if (response.statusCode !== 200) {
       console.error('Error response:', response.statusCode, response.body);
@@ -89,7 +87,7 @@ describe('Golf Course API', () => {
       console.error('courseId is not defined, skipping test.');
       return;
     }
-    const response = await request(baseURL).get(`/api/golf-courses/${courseId}`);
+    const response = await request(app).get(`/api/golf-courses/${courseId}`);
     console.log('GET single response:', response.body);
     if (response.statusCode !== 200) {
       console.error('Error response:', response.statusCode, response.body);
@@ -103,7 +101,7 @@ describe('Golf Course API', () => {
       console.error('courseId is not defined, skipping test.');
       return;
     }
-    const response = await request(baseURL)
+    const response = await request(app)
       .put(`/api/golf-courses/${courseId}`)
       .send({
         num_holes: 19, // Update the number of holes
@@ -123,7 +121,7 @@ describe('Golf Course API', () => {
       return;
     }
     console.log('Deleting courseId:', courseId); // Log the courseId being deleted
-    const response = await request(baseURL).delete(`/api/golf-courses/${courseId}`);
+    const response = await request(app).delete(`/api/golf-courses/${courseId}`);
     console.log('DELETE response:', response.body);
     if (response.statusCode !== 200) {
       console.error('Error response:', response.statusCode, response.body);
@@ -137,7 +135,7 @@ describe('Golf Course API', () => {
       console.error('courseId is not defined, skipping test.');
       return;
     }
-    const response = await request(baseURL).get(`/api/golf-courses/${courseId}`);
+    const response = await request(app).get(`/api/golf-courses/${courseId}`);
     console.log('GET deleted response:', response.body);
     if (response.statusCode !== 404) {
       console.error('Error response:', response.statusCode, response.body);

@@ -1,6 +1,7 @@
 import React from 'react';
 import logo from './logo.svg';
 import './App.css';
+import GolfCourseApp from './GolfCourseApp';
 
 function App() {
   return (
@@ -8,8 +9,7 @@ function App() {
       <header className="App-header">
         <img src={logo} className="App-logo" alt="logo" />
         <h1>Golf Course Finder</h1>
-        <input placeholder="Enter ZIP code" />
-        <button>Search</button>
+        <GolfCourseApp />
         <p>
           Edit <code>src/App.js</code> and save to reload.
         </p>
