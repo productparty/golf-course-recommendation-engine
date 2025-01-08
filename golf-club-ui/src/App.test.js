@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom'; // Import the Jest DOM matchers
-import App from './App';
+import App from './GolfCourseFinderApp';
 
 test('renders Golf Course Finder heading', () => {
   render(<App />);
