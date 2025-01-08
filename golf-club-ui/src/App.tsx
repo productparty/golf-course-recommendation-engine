@@ -31,7 +31,6 @@ const App: React.FC = () => {
                 <Route path="/submit-course" element={<SubmitCourse />} />
               </Routes>
             </div>
-            <Typography variant="h1">Hello, World!</Typography>
           </main>
           <Footer />
         </div>
