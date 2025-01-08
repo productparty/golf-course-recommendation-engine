@@ -8,9 +8,11 @@ import FindCourse from './pages/FindCourse/findCourse';
 import RecommendCourse from './pages/RecommendCourse/recommendCourse';
 import SignUp from './pages/SignUp/signUp';
 import SubmitCourse from './pages/SubmitCourse/submitCourse';
-import { ThemeProvider } from '@mui/material/styles';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
-import theme from './theme';
+import Typography from '@mui/material/Typography';
+
+const theme = createTheme();
 
 const App: React.FC = () => {
   return (
@@ -29,6 +31,7 @@ const App: React.FC = () => {
                 <Route path="/submit-course" element={<SubmitCourse />} />
               </Routes>
             </div>
+            <Typography variant="h1">Hello, World!</Typography>
           </main>
           <Footer />
         </div>
