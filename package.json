@@ -9,6 +9,7 @@
   },
   "scripts": {
     "build": "react-scripts build",
-    "vercel-build": "vercel build"
+    "vercel-build": "vercel build",
+    "deploy": "vercel && vercel --prod"
   }
 }
