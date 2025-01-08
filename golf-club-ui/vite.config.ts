@@ -13,7 +13,7 @@ export default defineConfig({
     outDir: 'dist',
     assetsDir: 'assets',
     rollupOptions: {
-      external: ['@mui/material']
+      // Removed external configuration
     }
   }
 });
