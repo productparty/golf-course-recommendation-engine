@@ -9,4 +9,9 @@ export default defineConfig({
   resolve: {
     extensions: ['.js', '.jsx', '.ts', '.tsx'],
   },
+  build: {
+    rollupOptions: {
+      external: ['@mui/material']
+    }
+  }
 });
