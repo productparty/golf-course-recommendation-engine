@@ -10,6 +10,8 @@ export default defineConfig({
     extensions: ['.js', '.jsx', '.ts', '.tsx'],
   },
   build: {
+    outDir: 'dist',
+    assetsDir: 'assets',
     rollupOptions: {
       external: ['@mui/material']
     }
