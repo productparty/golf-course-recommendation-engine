@@ -10,5 +10,5 @@
     "forceConsistentCasingInFileNames": true,
     "baseUrl": "./src"
   },
-  "include": ["src"]
+  "include": ["src", "../Archive/index.tsx"]
 }

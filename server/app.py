@@ -1,18 +1,29 @@
-from fastapi import FastAPI, Query, HTTPException, Request
+# Existing imports
+import os
+import sys
+from dotenv import load_dotenv
+from utils.recommendation_engine import calculate_recommendation_score
+
+# New imports (add these after the existing imports)
+from fastapi import FastAPI, Query, HTTPException, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from psycopg2.extras import RealDictCursor
 import psycopg2
 import logging
 import requests
-from .utils.recommendation_engine import calculate_recommendation_score
-from dotenv import load_dotenv
-import os
+import jwt
+from datetime import datetime, timedelta
 
 # Load environment variables from .env file
 load_dotenv()
 
-app = FastAPI()
+app = FastAPI(
+    title="Golf Course API",
+    version="1.0.0",
+    description="API for managing golf clubs, courses, reviews, and more.",
+)
 
 # CORS Middleware
 app.add_middleware(
@@ -38,6 +49,11 @@ DATABASE_CONFIG = {
 
 AZURE_MAPS_API_KEY = os.getenv("AZURE_MAPS_API_KEY")
 
+# JWT Secret Key
+SECRET_KEY = os.getenv("SECRET_KEY", "your_secret_key")
+
+# OAuth2 scheme
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 # Database Connection
 def get_db_connection():
@@ -75,6 +91,7 @@ def health_check():
 
 
 # Geocode ZIP Code
+@app.get("/geocode_zip/", tags=["Utilities"])
 def get_lat_lng(zip_code: str):
     try:
         url = "https://atlas.microsoft.com/search/address/json"
@@ -103,8 +120,7 @@ def get_lat_lng(zip_code: str):
         raise HTTPException(status_code=400, detail=f"Failed to geocode ZIP code {zip_code}")
 
 
-# Geocode ZIP Code Endpoint
-@app.get("/geocode_zip/")
+@app.get("/geocode_zip/", tags=["Utilities"])
 def geocode_zip(zip_code: str):
     try:
         lat, lng = get_lat_lng(zip_code)
@@ -114,8 +130,7 @@ def geocode_zip(zip_code: str):
         raise HTTPException(status_code=400, detail="Failed to geocode ZIP code")
 
 
-# Find Courses Endpoint
-@app.get("/find_courses/")
+@app.get("/find_courses/", tags=["Courses"])
 def find_courses(
     zip_code: str,
     radius: int = 10,
@@ -132,19 +147,21 @@ def find_courses(
             SELECT ST_SetSRID(ST_MakePoint(%s, %s), 4326)::geography AS geog
         )
         SELECT 
-            gc.course_id,
-            gc.club_name,
+            gc.global_id AS course_id,
+            g.club_name,
             gc.course_name,
-            gc.city,
-            gc.state,
-            gc.zip_code,
+            gc.num_holes,
+            g.city,
+            g.state,
+            g.zip_code,
             gc.price_tier,
             gc.difficulty,
             ST_Distance(gc.geom::geography, z.geog) / 1609.34 AS distance_miles,
             array_agg(t.technology_name) FILTER (WHERE t.technology_name IS NOT NULL) AS technologies
         FROM 
-            golf_clubs_courses gc
-        LEFT JOIN golfcourse_technology gt ON gc.course_id = gt.course_id
+            golfcourse gc
+        LEFT JOIN golfclub g ON gc.club_id = g.global_id
+        LEFT JOIN golfcourse_technology gt ON gc.global_id = gt.course_id
         LEFT JOIN technologyintegration t ON gt.technology_id = t.technology_id,
             zip_centroid z
         WHERE 
@@ -164,7 +181,7 @@ def find_courses(
                 EXISTS (
                     SELECT 1 FROM golfcourse_technology gt
                     JOIN technologyintegration t ON gt.technology_id = t.technology_id
-                    WHERE gt.course_id = gc.course_id
+                    WHERE gt.course_id = gc.global_id
                     AND t.technology_name = ANY(%s)
                 )
             """)
@@ -174,7 +191,7 @@ def find_courses(
             query += " AND " + " AND ".join(filters)
 
         query += """
-        GROUP BY gc.course_id, z.geog
+        GROUP BY gc.global_id, g.global_id, z.geog
         ORDER BY ST_Distance(gc.geom::geography, z.geog)
         LIMIT %s OFFSET %s
         """
@@ -190,38 +207,24 @@ def find_courses(
         logger.error(f"Error in find_courses: {e}")
         raise HTTPException(status_code=400, detail="Failed to fetch courses")
 
-# Get all golf courses endpoint
-@app.get("/api/golf-courses")
-def get_all_golf_courses(limit: int = 10, offset: int = 0):
-    try:
-        query = "SELECT * FROM golf_clubs_courses LIMIT %s OFFSET %s"
-        with get_db_connection() as conn:
-            with conn.cursor(cursor_factory=RealDictCursor) as cursor:
-                cursor.execute(query, (limit, offset))
-                results = cursor.fetchall()
-        return results  # Return the list directly
-    except Exception as e:
-        logger.error(f"Error in get_all_golf_courses: {e}")
-        raise HTTPException(status_code=400, detail="Failed to fetch golf courses")
 
 
-# Create golf course endpoint
-@app.post("/api/golf-courses")
+@app.post("/api/golf-courses", tags=["Courses"])
 def create_golf_course(course: dict):
     """
     Create a new golf course entry in the database.
     """
     try:
-        required_fields = ["club_id", "club_name", "course_name", "city", "state", "price_tier", "difficulty", "zip_code", "lat", "lng"]
+        required_fields = ["club_id", "course_name", "num_holes", "price_tier", "difficulty", "zip_code", "lat", "lng"]
         for field in required_fields:
             if field not in course:
                 raise ValueError(f"Missing required field: {field}")
 
         query = """
-        INSERT INTO golf_clubs_courses 
-        (club_id, club_name, course_name, city, state, price_tier, difficulty, zip_code, geom)
+        INSERT INTO golfcourse 
+        (global_id, club_id, course_name, num_holes, price_tier, difficulty, zip_code, geom)
         VALUES 
-        (%(club_id)s, %(club_name)s, %(course_name)s, %(city)s, %(state)s, %(price_tier)s, %(difficulty)s, %(zip_code)s, ST_SetSRID(ST_MakePoint(%(lng)s, %(lat)s), 4326))
+        (%(global_id)s, %(club_id)s, %(course_name)s, %(num_holes)s, %(price_tier)s, %(difficulty)s, %(zip_code)s, ST_SetSRID(ST_MakePoint(%(lng)s, %(lat)s), 4326))
         """
         with get_db_connection() as conn:
             with conn.cursor() as cursor:
@@ -232,24 +235,23 @@ def create_golf_course(course: dict):
         logger.error(f"Error in create_golf_course: {e}")
         raise HTTPException(status_code=400, detail=f"Failed to create golf course: {e}")
 
-# Update golf course endpoint
-@app.put("/api/golf-courses/{course_id}")
+@app.put("/api/golf-courses/{course_id}", tags=["Courses"])
 def update_golf_course(course_id: str, course: dict):
     """
     Update a golf course in the database.
     """
     try:
-        required_fields = ["club_id", "club_name", "course_name", "city", "state", "price_tier", "difficulty", "zip_code", "lat", "lng"]
+        required_fields = ["club_id", "course_name", "num_holes", "price_tier", "difficulty", "zip_code", "lat", "lng"]
         for field in required_fields:
             if field not in course:
                 raise ValueError(f"Missing required field: {field}")
 
         query = """
-        UPDATE golf_clubs_courses
-        SET club_id = %(club_id)s, club_name = %(club_name)s, course_name = %(course_name)s, city = %(city)s, 
-            state = %(state)s, price_tier = %(price_tier)s, difficulty = %(difficulty)s, 
-            zip_code = %(zip_code)s, geom = ST_SetSRID(ST_MakePoint(%(lng)s, %(lat)s), 4326)
-        WHERE course_id = %(course_id)s
+        UPDATE golfcourse
+        SET club_id = %(club_id)s, course_name = %(course_name)s, num_holes = %(num_holes)s, 
+            price_tier = %(price_tier)s, difficulty = %(difficulty)s, zip_code = %(zip_code)s, 
+            geom = ST_SetSRID(ST_MakePoint(%(lng)s, %(lat)s), 4326)
+        WHERE global_id = %(course_id)s
         """
         course["course_id"] = course_id
         with get_db_connection() as conn:
@@ -261,14 +263,13 @@ def update_golf_course(course_id: str, course: dict):
         logger.error(f"Error in update_golf_course: {e}")
         raise HTTPException(status_code=400, detail=f"Failed to update golf course: {e}")
 
-# Delete golf course endpoint
-@app.delete("/api/golf-courses/{course_id}")
+@app.delete("/api/golf-courses/{course_id}", tags=["Courses"])
 def delete_golf_course(course_id: str):
     """
     Delete a golf course from the database.
     """
     try:
-        query = "DELETE FROM golf_clubs_courses WHERE course_id = %s"
+        query = "DELETE FROM golfcourse WHERE global_id = %s"
         with get_db_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute(query, (course_id,))
@@ -278,91 +279,107 @@ def delete_golf_course(course_id: str):
         logger.error(f"Error in delete_golf_course: {e}")
         raise HTTPException(status_code=400, detail="Failed to delete golf course")
 
-# Get Recommendations Endpoint
-@app.get("/get_recommendations/")
-def get_recommendations(
-    zip_code: str,
-    radius: int = 10,
-    skill_level: str = None,
-    preferred_price_range: str = None,
-    technologies: str = None,
-):
+
+@app.post("/api/golfers", tags=["Golfers"])
+def create_golfer(golfer: dict):
+    """
+    Create a new golfer profile in the database.
+    """
     try:
-        lat, lng = get_lat_lng(zip_code)
+        required_fields = ["golfer_id", "email", "first_name", "last_name", "handicap_index", "preferred_price_range", "preferred_difficulty", "preferred_tees", "skill_level", "play_frequency"]
+        for field in required_fields:
+            if field not in golfer:
+                raise ValueError(f"Missing required field: {field}")
+
         query = """
-        WITH zip_centroid AS (
-            SELECT ST_SetSRID(ST_MakePoint(%s, %s), 4326)::geography AS geog
-        )
-        SELECT 
-            gc.course_id,
-            gc.club_name,
-            gc.course_name,
-            gc.city,
-            gc.state,
-            gc.zip_code,
-            gc.price_tier,
-            gc.difficulty,
-            ST_Distance(gc.geom::geography, z.geog) / 1609.34 AS distance_miles,
-            array_agg(t.technology_name) FILTER (WHERE t.technology_name IS NOT NULL) AS technologies
-        FROM 
-            golf_clubs_courses gc
-        LEFT JOIN golfcourse_technology gt ON gc.course_id = gt.course_id
-        LEFT JOIN technologyintegration t ON gt.technology_id = t.technology_id,
-            zip_centroid z
-        WHERE 
-            ST_DWithin(gc.geom::geography, z.geog, %s * 1609.34)
+        INSERT INTO golfer_profile 
+        (golfer_id, email, first_name, last_name, handicap_index, preferred_price_range, preferred_difficulty, preferred_tees, skill_level, play_frequency)
+        VALUES 
+        (%(golfer_id)s, %(email)s, %(first_name)s, %(last_name)s, %(handicap_index)s, %(preferred_price_range)s, %(preferred_difficulty)s, %(preferred_tees)s, %(skill_level)s, %(play_frequency)s)
         """
-        filters = []
-        params = [lng, lat, radius]
+        with get_db_connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute(query, golfer)
+                conn.commit()
+        return {"message": "Golfer profile created successfully"}, 201
+    except Exception as e:
+        logger.error(f"Error in create_golfer: {e}")
+        raise HTTPException(status_code=400, detail=f"Failed to create golfer profile: {e}")
 
-        if skill_level:
-            difficulty_map = {"Beginner": "Easy", "Intermediate": "Medium", "Advanced": "Hard"}
-            filters.append("gc.difficulty = %s")
-            params.append(difficulty_map.get(skill_level))
-        if preferred_price_range:
-            filters.append("gc.price_tier = %s")
-            params.append(preferred_price_range)
-        if technologies:
-            filters.append("""
-                EXISTS (
-                    SELECT 1 FROM golfcourse_technology gt
-                    JOIN technologyintegration t ON gt.technology_id = t.technology_id
-                    WHERE gt.course_id = gc.course_id
-                    AND t.technology_name = ANY(%s)
-                )
-            """)
-            params.append(technologies.split(","))
 
-        if filters:
-            query += " AND " + " AND ".join(filters)
+# Add endpoints for golf clubs, tees, reviews, and saved courses (expand here based on your schema updates)
 
-        query += """
-        GROUP BY gc.course_id, z.geog
-        ORDER BY ST_Distance(gc.geom::geography, z.geog)
-        """
+# Generate JWT Token
+def create_access_token(data: dict, expires_delta: timedelta = timedelta(minutes=30)):
+    to_encode = data.copy()
+    expire = datetime.utcnow() + expires_delta
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm="HS256")
+    return encoded_jwt
 
+# Verify JWT Token
+def verify_token(token: str = Depends(oauth2_scheme)):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+        return payload
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token has expired")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+# User Authentication
+@app.post("/token", tags=["Auth"])
+async def login(form_data: OAuth2PasswordRequestForm = Depends()):
+    try:
         with get_db_connection() as conn:
             with conn.cursor(cursor_factory=RealDictCursor) as cursor:
-                cursor.execute(query, params)
-                results = cursor.fetchall()
-
-        recommendations = sorted(
-            results,
-            key=lambda course: calculate_recommendation_score(
-                course,
-                {
-                    "skill_level": skill_level,
-                    "preferred_price_range": preferred_price_range,
-                    "technologies": technologies.split(",") if technologies else [],
-                },
-            ),
-            reverse=True,
-        )
-
-        return {"results": recommendations[:5]}
+                cursor.execute("SELECT * FROM users WHERE email = %s", (form_data.username,))
+                user = cursor.fetchone()
+                if not user or not user["password"] == form_data.password:
+                    raise HTTPException(status_code=400, detail="Invalid credentials")
+                access_token = create_access_token(data={"sub": user["email"]})
+                return {"access_token": access_token, "token_type": "bearer"}
     except Exception as e:
-        logger.error(f"Error in get_recommendations: {e}")
-        raise HTTPException(status_code=400, detail="Failed to fetch recommendations")
+        logger.error(f"Error in login: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+# Create Account
+@app.post("/create-account", tags=["Auth"])
+async def create_account(user: dict):
+    try:
+        required_fields = ["email", "password", "first_name", "last_name"]
+        for field in required_fields:
+            if field not in user:
+                raise ValueError(f"Missing required field: {field}")
+
+        query = """
+        INSERT INTO users (email, password, first_name, last_name)
+        VALUES (%(email)s, %(password)s, %(first_name)s, %(last_name)s)
+        """
+        with get_db_connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute(query, user)
+                conn.commit()
+        return {"message": "Account created successfully"}, 201
+    except Exception as e:
+        logger.error(f"Error in create_account: {e}")
+        raise HTTPException(status_code=400, detail=f"Failed to create account: {e}")
+
+# Get Golfer Profile
+@app.get("/golfer-profile", tags=["Golfers"])
+async def get_golfer_profile(token: str = Depends(verify_token)):
+    try:
+        email = token["sub"]
+        with get_db_connection() as conn:
+            with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+                cursor.execute("SELECT * FROM golfer_profile WHERE email = %s", (email,))
+                profile = cursor.fetchone()
+                if not profile:
+                    raise HTTPException(status_code=404, detail="Profile not found")
+                return profile
+    except Exception as e:
+        logger.error(f"Error in get_golfer_profile: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 if __name__ == "__main__":
     import uvicorn

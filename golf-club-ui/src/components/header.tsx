@@ -3,6 +3,10 @@ import { Link } from 'react-router-dom';
 import styles from '../builderio/navigation/Navigation.module.css';
 
 const Header: React.FC = () => {
+  const handleImageError = (event: React.SyntheticEvent<HTMLImageElement, Event>) => {
+    event.currentTarget.src = 'path/to/fallback-image.png'; // Provide a path to your fallback image
+  };
+
   return (
     <header
       style={{
@@ -21,6 +25,7 @@ const Header: React.FC = () => {
           alt="Golf Course Finder Logo"
           className={styles.brandLogo}
           style={{ maxWidth: '100px', height: 'auto' }}
+          onError={handleImageError}
         />
         <h1 className={styles.brandName} style={{ fontSize: '1.5rem', marginLeft: '10px' }}>Fairway Finder</h1>
       </div>
@@ -30,6 +35,9 @@ const Header: React.FC = () => {
         <Link to="/recommend-course" className={styles.navLink}>Recommend Course</Link>
         <Link to="/submit-course" className={styles.navLink}>Submit Course</Link>
         <Link to="/sign-up" className={styles.navLink}>Sign Up</Link>
+        <Link to="/create-account" className={styles.navLink}>Create Account</Link>
+        <Link to="/login" className={styles.navLink}>Log In</Link>
+        <Link to="/golfer-profile" className={styles.navLink}>Golfer Profile</Link>
       </nav>
     </header>
   );
