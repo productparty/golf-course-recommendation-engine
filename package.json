@@ -20,7 +20,7 @@
     "start:all": "concurrently \"npm run start:backend\" \"npm run start:frontend\"",
     "build:frontend": "npm run build --prefix golf-club-ui",
     "build": "npm run build:frontend",
-    "postinstall": "npm install vite @vitejs/plugin-react"
+    "postinstall": "cd golf-club-ui && npm install"
   },
   "devDependencies": {
     "@types/lodash.debounce": "^4.0.9",
