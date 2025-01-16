@@ -10,7 +10,8 @@
     "sequelize": "^6.37.5",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
-    "vercel": "^39.2.6"
+    "vercel": "^39.2.6",
+    "vite": "^4.0.0"
   },
   "scripts": {
     "start:backend": "cd server && python app.py",
