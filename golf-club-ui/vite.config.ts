@@ -10,7 +10,7 @@ export default defineConfig(({ mode }) => {
     plugins: [react()],
     publicDir: path.resolve(__dirname, 'public'),
     build: {
-      outDir: path.resolve(__dirname, 'build'),
+      outDir: path.resolve(__dirname, 'build'), // Ensure this matches the output directory in Vercel config
       emptyOutDir: true,
       rollupOptions: {
         input: path.resolve(__dirname, 'index.html'),
