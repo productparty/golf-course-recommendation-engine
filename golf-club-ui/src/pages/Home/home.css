@@ -1,0 +1,31 @@
+.home-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+}
+
+.top-image {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+.header-image {
+  max-width: 100%;
+  height: auto;
+  max-height: 100%;
+}
+
+.links-container {
+  margin-top: 10px; /* Move closer to the top image */
+  width: 100%;
+  max-width: 1200px; /* Match the width of the header image */
+}
+
+.section {
+  width: 100%;
+  max-width: 1200px;
+  margin-top: 0; /* Remove additional margin-top */
+}

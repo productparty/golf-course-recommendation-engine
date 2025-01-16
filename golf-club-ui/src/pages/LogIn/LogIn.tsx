@@ -1,32 +1,44 @@
-import React, { useState } from 'react';
-import { supabase } from '../../config/supabaseClient';
-import { Container, Typography, TextField, Button, Box, Alert } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import { Container, Typography, TextField, Button, Box, Link } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 
-const LogIn = () => {
-  const [email, setEmail] = useState('');
+const LogIn: React.FC = () => {
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { login, isLoggedIn } = useAuth();
 
-  const handleLogIn = async (e: React.FormEvent<HTMLFormElement>) => {
+  useEffect(() => {
+    if (isLoggedIn) {
+      navigate('/');
+    }
+  }, [isLoggedIn, navigate]);
+
+  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
     setError('');
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      const response = await fetch('http://localhost:8000/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username, password }),
+      });
 
-      if (error) throw error;
-
-      if (data.session) {
-        // Safe access to localStorage
-        if (typeof window !== 'undefined' && window.localStorage) {
-          localStorage.setItem('supabase.auth.token', data.session.access_token);
-        }
-        navigate('/golfer-profile');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Failed to log in');
       }
+
+      const data = await response.json();
+      localStorage.setItem('authToken', data.access_token);
+      login();
     } catch (error) {
       if (error instanceof Error) {
         setError(error.message);
@@ -43,13 +55,13 @@ const LogIn = () => {
       <Typography variant="h4" component="h1" gutterBottom>
         Log In
       </Typography>
-      <Box component="form" onSubmit={handleLogIn} sx={{ mt: 2 }}>
+      <Box component="form" onSubmit={handleLogin} sx={{ mt: 2 }}>
         <TextField
           fullWidth
           label="Email"
           type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
           required
           margin="normal"
           sx={{ backgroundColor: 'white' }}
@@ -68,6 +80,16 @@ const LogIn = () => {
           {loading ? 'Loading...' : 'Log In'}
         </Button>
         {error && <Typography color="error" sx={{ mt: 2 }}>{error}</Typography>}
+        <Box sx={{ mt: 2 }}>
+          <Link href="/create-account" variant="body2">
+            Need to create an account?
+          </Link>
+        </Box>
+        <Box sx={{ mt: 2 }}>
+          <Link href="/password-reset-request" variant="body2">
+            Need to reset your password?
+          </Link>
+        </Box>
       </Box>
     </Container>
   );

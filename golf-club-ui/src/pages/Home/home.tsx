@@ -1,45 +1,77 @@
 import React from 'react';
-import { Container, Typography, Box, List, ListItem, ListItemText } from '@mui/material';
+import { Container, Box, List, ListItem, ListItemText } from '@mui/material';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
+import './home.css';
 
 const Home: React.FC = () => {
+  const { isLoggedIn } = useAuth();
+
   return (
-    <Container maxWidth="sm">
-      <Typography variant="h4" component="h1" gutterBottom>
-        Welcome to Fairway Finder
-      </Typography>
-      <Typography variant="body1" gutterBottom>
-        Discover new courses, get personalized recommendations, and more!
-      </Typography>
-      <Box className="section" sx={{ mt: 2 }}>
-        <List>
-          <ListItem>
-            <ListItemText
-              primary={<Link to="/find-course">Find a Course</Link>}
-              secondary="Search for golf courses based on location, price range, difficulty, and available technologies."
-            />
-          </ListItem>
-          <ListItem>
-            <ListItemText
-              primary={<Link to="/recommend-course">Recommend a Course</Link>}
-              secondary="Get personalized golf course recommendations based on your preferences and location."
-            />
-          </ListItem>
-          <ListItem>
-            <ListItemText
-              primary={<Link to="/submit-course">Submit a Course</Link>}
-              secondary="Submit information about a new golf course to be added to our database."
-            />
-          </ListItem>
-          <ListItem>
-            <ListItemText
-              primary={<Link to="/sign-up">Sign Up</Link>}
-              secondary="Sign up to receive updates and provide feedback about our platform."
-            />
-          </ListItem>
-        </List>
-      </Box>
-    </Container>
+    <div className="home-container">
+      <div className="top-image">
+        <img
+          src="/golfclubheader.jpg" // Path to the image in the public folder
+          alt="Golf Course"
+          className="header-image"
+        />
+      </div>
+      <Container maxWidth="lg" className="links-container">
+        <Box className="section">
+          <List>
+            {isLoggedIn ? (
+              <>
+                <ListItem>
+                  <ListItemText
+                    primary={<Link to="/find-club">Find Club</Link>}
+                    secondary="Search for golf clubs based on location, price range, difficulty, and available technologies."
+                  />
+                </ListItem>
+                <ListItem>
+                  <ListItemText
+                    primary={<Link to="/recommend-club">Recommend Club</Link>}
+                    secondary="Get personalized golf club recommendations based on your preferences and location."
+                  />
+                </ListItem>
+                <ListItem>
+                  <ListItemText
+                    primary={<Link to="/submit-club">Submit Club</Link>}
+                    secondary="Submit information about a new golf club to be added to our database."
+                  />
+                </ListItem>
+                <ListItem>
+                  <ListItemText
+                    primary={<Link to="/golfer-profile">Golfer Profile</Link>}
+                    secondary="View and edit your golfer profile."
+                  />
+                </ListItem>
+              </>
+            ) : (
+              <>
+                <ListItem>
+                  <ListItemText
+                    primary={<Link to="/sign-up">Sign Up</Link>}
+                    secondary="Sign up to receive updates and provide feedback about our platform."
+                  />
+                </ListItem>
+                <ListItem>
+                  <ListItemText
+                    primary={<Link to="/create-account">Create Account</Link>}
+                    secondary="Create a new account to get started."
+                  />
+                </ListItem>
+                <ListItem>
+                  <ListItemText
+                    primary={<Link to="/login">Log In</Link>}
+                    secondary="Log in to your account."
+                  />
+                </ListItem>
+              </>
+            )}
+          </List>
+        </Box>
+      </Container>
+    </div>
   );
 };
 

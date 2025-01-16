@@ -2,6 +2,7 @@
   "name": "golf-course-recommendation-engine",
   "version": "1.0.0",
   "dependencies": {
+    "@sendgrid/mail": "^8.1.4",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "pg": "^8.13.1",
@@ -19,6 +20,7 @@
     "build": "npm run build:frontend"
   },
   "devDependencies": {
+    "@types/lodash.debounce": "^4.0.9",
     "concurrently": "^6.2.1"
   }
 }

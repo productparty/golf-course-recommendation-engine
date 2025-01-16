@@ -11,7 +11,7 @@ const Footer: React.FC = () => {
       }}
     >
       <p style={{ margin: 0 }}>
-        © {new Date().getFullYear()} Fairway Finder. All rights reserved.
+        © {new Date().getFullYear()} Find My Club. All rights reserved.
       </p>
     </footer>
   );

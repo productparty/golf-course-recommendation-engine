@@ -5,15 +5,13 @@ const priceTiers = ['$', '$$', '$$$'];
 const difficulties = ['Easy', 'Medium', 'Hard'];
 const states = ['AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA', 'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD', 'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ', 'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC', 'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY'];
 
-const SubmitCourse: React.FC = () => {
+const SubmitClub: React.FC = () => {
   const [formData, setFormData] = useState({
     club_name: '',
-    course_name: '',
     city: '',
     state: '',
     price_tier: '',
-    difficulty: '',
-    zip_code: ''
+    difficulty: ''
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | SelectChangeEvent<string>) => {
@@ -23,8 +21,8 @@ const SubmitCourse: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const mailtoLink = `mailto:mwatson1983@gmail.com?subject=Submit Course Form Submission&body=${encodeURIComponent(
-      `Club Name: ${formData.club_name}\nCourse Name: ${formData.course_name}\nCity: ${formData.city}\nState: ${formData.state}\nPrice Tier: ${formData.price_tier}\nDifficulty: ${formData.difficulty}\nZIP Code: ${formData.zip_code}`
+    const mailtoLink = `mailto:mwatson1983@gmail.com?subject=Submit Club Form Submission&body=${encodeURIComponent(
+      `Club Name: ${formData.club_name}\nCity: ${formData.city}\nState: ${formData.state}\nPrice Tier: ${formData.price_tier}\nDifficulty: ${formData.difficulty}`
     )}`;
     window.location.href = mailtoLink;
   };
@@ -32,10 +30,10 @@ const SubmitCourse: React.FC = () => {
   return (
     <Container maxWidth="sm">
       <Typography variant="h4" component="h1" gutterBottom>
-        Submit Course
+        Submit Club
       </Typography>
       <Typography variant="body1" gutterBottom>
-        Please fill out the form below to submit a new golf course to our database.
+        Please fill out the form below to submit a new golf club to our database.
       </Typography>
       <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
         <TextField
@@ -43,16 +41,6 @@ const SubmitCourse: React.FC = () => {
           label="Club Name"
           name="club_name"
           value={formData.club_name}
-          onChange={handleChange}
-          required
-          margin="normal"
-          sx={{ backgroundColor: 'white' }}
-        />
-        <TextField
-          fullWidth
-          label="Course Name"
-          name="course_name"
-          value={formData.course_name}
           onChange={handleChange}
           required
           margin="normal"
@@ -122,16 +110,6 @@ const SubmitCourse: React.FC = () => {
             ))}
           </Select>
         </FormControl>
-        <TextField
-          fullWidth
-          label="ZIP Code"
-          name="zip_code"
-          value={formData.zip_code}
-          onChange={handleChange}
-          required
-          margin="normal"
-          sx={{ backgroundColor: 'white' }}
-        />
         <Button type="submit" variant="contained" color="primary" sx={{ mt: 2 }}>
           Submit
         </Button>
@@ -140,4 +118,4 @@ const SubmitCourse: React.FC = () => {
   );
 };
 
-export default SubmitCourse;
+export default SubmitClub;
