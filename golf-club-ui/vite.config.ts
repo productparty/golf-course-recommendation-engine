@@ -10,7 +10,7 @@ export default defineConfig(({ mode }) => {
     plugins: [react()],
     publicDir: path.resolve(__dirname, 'public'),
     build: {
-      outDir: path.resolve(__dirname, 'dist'),
+      outDir: path.resolve(__dirname, 'build'),
       emptyOutDir: true,
       rollupOptions: {
         input: path.resolve(__dirname, 'index.html'),
