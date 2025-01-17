@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { Container, Typography, Box, CircularProgress, TextField, Button, MenuItem, Select, InputLabel, FormControl, Autocomplete, Link } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import debounce from 'lodash.debounce';
+import debounce from 'lodash.debounce';  // Ensure this import is correct
 
 interface GolferProfile {
   email: string;
