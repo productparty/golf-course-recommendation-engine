@@ -2,15 +2,15 @@
   "version": 2,
   "builds": [
     { "src": "server/app.py", "use": "@vercel/python" },
-    { 
-      "src": "golf-club-ui/package.json", 
+    {
+      "src": "golf-club-ui/package.json",
       "use": "@vercel/static-build",
-      "config": { "distDir": "build" }
+      "config": { "distDir": "dist" }
     }
   ],
   "routes": [
     { "src": "/api/(.*)", "dest": "server/app.py" },
     { "handle": "filesystem" },
-    { "src": "/(.*)", "dest": "golf-club-ui/build/$1" }
+    { "src": "/(.*)", "dest": "golf-club-ui/dist/index.html" }
   ]
 }
