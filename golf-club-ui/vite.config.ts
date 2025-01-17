@@ -7,11 +7,11 @@ export default defineConfig(({ mode }) => {
 
   return {
     root: '.',
-    base: '/golf-club-ui/build/', // Ensure this matches the output directory in Vercel config
+    base: '/golf-club-ui/dist/', // Ensure this matches the output directory in Vercel config
     plugins: [react()],
     publicDir: path.resolve(__dirname, 'public'),
     build: {
-      outDir: path.resolve(__dirname, 'build'), // Ensure this matches the output directory in Vercel config
+      outDir: path.resolve(__dirname, 'dist'), // Ensure this matches the output directory in Vercel config
       emptyOutDir: true,
       rollupOptions: {
         input: path.resolve(__dirname, 'index.html'),
