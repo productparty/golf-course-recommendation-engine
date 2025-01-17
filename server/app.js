@@ -10,7 +10,7 @@ app.use(bodyParser.json());
 // Example route to send a confirmation email
 app.post('/send-confirmation-email', (req, res) => {
   const { email, token } = req.body;
-  if (!email || !token) 
+  if (!email || !token) {
     return res.status(400).json({ error: 'Email and token are required' });
   }
 
