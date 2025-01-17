@@ -8,7 +8,8 @@
     "serve": "vite preview",
     "start": "npm run dev",
     "type-check": "tsc --noEmit",
-    "test": "vitest"
+    "test": "vitest",
+    "postinstall": "npm run build"
   },
   "dependencies": {
     "@emotion/react": "^11.11.1",

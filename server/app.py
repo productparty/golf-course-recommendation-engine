@@ -731,6 +731,10 @@ async def get_recommendations(
         logger.error(f"Error in get_recommendations: {e}")
         raise HTTPException(status_code=400, detail=f"Failed to fetch recommendations: {e}")
 
+@app.get("/hello")
+def read_root():
+    return {"message": "Hello World"}
+
 @app.get("/")
 def read_root():
     return {"Hello": "World"}
