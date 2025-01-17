@@ -143,7 +143,6 @@ def get_db_connection():
         logger.error(f"Database connection error: {e}")
         raise HTTPException(status_code=500, detail="Database connection failed")
 
-
 # Middleware to log requests
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
@@ -151,7 +150,6 @@ async def log_requests(request: Request, call_next):
     response = await call_next(request)
     logger.info(f"Response: {response.status_code}")
     return response
-
 
 # Exception Handler
 @app.exception_handler(Exception)
@@ -162,11 +160,9 @@ async def global_exception_handler(request: Request, exc: Exception):
         content={"error": "Internal server error", "details": str(exc)},
     )
 
-
 @app.get("/api/health", tags=["Utilities"], summary="Health Check", description="Check the health of the API.")
 def health_check():
     return {"status": "ok"}
-
 
 # Geocode ZIP Code
 @app.get("/api/geocode_zip/", tags=["Utilities"])
@@ -197,7 +193,6 @@ def get_lat_lng(zip_code: str):
         logger.error(f"Error geocoding ZIP code {zip_code}: {e}")
         raise HTTPException(status_code=400, detail=f"Failed to geocode ZIP code {zip_code}")
 
-
 @app.get("/api/geocode_zip/", tags=["Utilities"])
 def geocode_zip(zip_code: str):
     try:
@@ -206,7 +201,6 @@ def geocode_zip(zip_code: str):
     except Exception as e:
         logger.error(f"Error in geocode_zip: {e}")
         raise HTTPException(status_code=400, detail="Failed to geocode ZIP code")
-
 
 @app.get("/api/find_clubs/", tags=["Clubs"], summary="Find Clubs", description="Find golf clubs based on various criteria.")
 def find_clubs(
@@ -333,7 +327,6 @@ def delete_golf_course(course_id: str):
     except Exception as e:
         logger.error(f"Error in delete_golf_course: {e}")
         raise HTTPException(status_code=400, detail="Failed to delete golf course")
-
 
 class GolferProfileRequest(BaseModel):
     email: str
@@ -470,7 +463,7 @@ async def get_golfer_profile(golfer_id: str = None, email: str = None, token: st
     Retrieve the profile of the authenticated golfer or check if an email exists.
     """
     try:
-        if golfer_id:
+        if (golfer_id):
             query = """
             SELECT gp.golfer_id, gp.email, gp.first_name, gp.last_name, gp.handicap_index, gp.preferred_price_range, gp.preferred_difficulty, gp.skill_level, gp.play_frequency, gp.club_id, gc.club_name, gp.preferred_tees, gp.is_verified
             FROM golfer_profile gp
