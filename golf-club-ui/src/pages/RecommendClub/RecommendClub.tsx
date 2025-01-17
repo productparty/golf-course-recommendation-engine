@@ -32,8 +32,8 @@ const RecommendClub: React.FC = () => {
         radius,
       };
 
-      const response = await axios.get<{ results: GolfC[] }>(
-        'http://127.0.0.1:8000/get_recommendations/',
+      const response = await axios.get<{ results: GolfClub[] }>(
+        `${process.env.REACT_APP_API_URL}/get_recommendations/`,
         {
           params,
           headers: {

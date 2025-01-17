@@ -14,7 +14,7 @@ const PasswordResetRequest: React.FC = () => {
     setSuccess(false);
 
     try {
-      const response = await fetch('http://localhost:8000/password-reset-request', {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/password-reset-request`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -25,7 +25,7 @@ const PasswordResetConfirm: React.FC = () => {
 
     try {
       const token = searchParams.get('token');
-      const response = await fetch('http://localhost:8000/password-reset-confirm', {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/password-reset-confirm`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

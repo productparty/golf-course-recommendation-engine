@@ -50,7 +50,7 @@ const FindClub: React.FC = () => {
       if (findTechnologies.length > 0) params.technologies = findTechnologies.join(',');
 
       const response = await axios.get<{ results: GolfClub[]; total: number }>(
-        'http://localhost:8000/find_clubs/',
+        `${process.env.REACT_APP_API_URL}/find_clubs/`,
         { params }
       );
 

@@ -23,7 +23,7 @@ const VerifyEmail: React.FC = () => {
       }
 
       try {
-        const response = await fetch(`http://localhost:8000/verify-email?token=${token}`, {
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/verify-email?token=${token}`, {
           method: 'GET',
         });
 

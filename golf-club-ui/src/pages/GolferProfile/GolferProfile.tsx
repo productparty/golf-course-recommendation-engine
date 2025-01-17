@@ -45,7 +45,7 @@ const GolferProfile = () => {
       }
 
       try {
-        const response = await fetch('http://localhost:8000/get-golfer-profile', {
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/get-golfer-profile`, {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -74,7 +74,7 @@ const GolferProfile = () => {
   useEffect(() => {
     const fetchInitialClubs = async () => {
       try {
-        const response = await axios.get<GolfClub[]>('http://localhost:8000/search-golf-clubs', {
+        const response = await axios.get<GolfClub[]>(`${process.env.REACT_APP_API_URL}/search-golf-clubs`, {
           params: { query: '' },
         });
         setClubs(response.data);
@@ -90,7 +90,7 @@ const GolferProfile = () => {
     if (!profile) return;
 
     try {
-      const response = await fetch('http://localhost:8000/update-golfer-profile', {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/update-golfer-profile`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -115,7 +115,7 @@ const GolferProfile = () => {
 
   const fetchClubs = async (query: string) => {
     try {
-      const response = await axios.get<GolfClub[]>('http://localhost:8000/search-golf-clubs', {
+      const response = await axios.get<GolfClub[]>(`${process.env.REACT_APP_API_URL}/search-golf-clubs`, {
         params: { query },
       });
       setClubs(response.data);

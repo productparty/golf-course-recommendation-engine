@@ -28,6 +28,9 @@ from sendgrid.helpers.mail import Mail
 # Load environment variables from .env file
 load_dotenv()
 
+# Define FRONTEND_URL
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
+
 app = FastAPI(
     title="Golf Course API",
     version="1.0.0",
@@ -37,7 +40,7 @@ app = FastAPI(
 # CORS Middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # Add your frontend URL here
+    allow_origins=[FRONTEND_URL],  # Use FRONTEND_URL here
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -92,7 +95,7 @@ def confirm_verification_token(token: str, expiration=3600) -> str:
 
 # Utility function to send confirmation email
 def send_confirmation_email(email: str, token: str):
-    confirmation_url = f"http://localhost:5173/verify-email?token={token}"
+    confirmation_url = f"{FRONTEND_URL}/verify-email?token={token}"
     message = Mail(
         from_email='mike@watsonconsultingandadvisory.com',  # Replace with your verified sender email
         to_emails=email,
@@ -110,7 +113,7 @@ def send_confirmation_email(email: str, token: str):
 
 # Utility function to send password reset email
 def send_password_reset_email(email: str, token: str):
-    reset_url = f"http://localhost:5173/password-reset-confirm?token={token}"
+    reset_url = f"{FRONTEND_URL}/password-reset-confirm?token={token}"
     message = Mail(
         from_email='mike@watsonconsultingandadvisory.com',  # Replace with your verified sender email
         to_emails=email,
