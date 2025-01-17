@@ -29,7 +29,7 @@ export default defineConfig(({ mode }) => {
       },
       proxy: {
         '/api': {
-          target: 'http://localhost:8080',
+          target: env.REACT_APP_API_URL || 'http://localhost:8080',
           changeOrigin: true,
           secure: false,
         },
@@ -39,7 +39,11 @@ export default defineConfig(({ mode }) => {
       port: 4173,
     },
     define: {
-      'import.meta.env': env, // Expose env variables
+      'import.meta.env': {
+        ...env,
+        REACT_APP_API_URL: env.REACT_APP_API_URL,
+        FRONTEND_URL: env.FRONTEND_URL,
+      }, // Expose env variables
     },
   };
 });
