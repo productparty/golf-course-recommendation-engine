@@ -731,6 +731,10 @@ async def get_recommendations(
         logger.error(f"Error in get_recommendations: {e}")
         raise HTTPException(status_code=400, detail=f"Failed to fetch recommendations: {e}")
 
+@app.get("/")
+def read_root():
+    return {"Hello": "World"}
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("app:app", host="0.0.0.0", port=8000, log_level="info")
