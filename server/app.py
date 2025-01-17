@@ -35,6 +35,7 @@ app = FastAPI(
     title="Golf Course API",
     version="1.0.0",
     description="API for managing golf clubs, courses, reviews, and more.",
+    openapi_prefix="/api"  # Add this line to set the prefix for all routes
 )
 
 # CORS Middleware
@@ -162,13 +163,13 @@ async def global_exception_handler(request: Request, exc: Exception):
     )
 
 
-@app.get("/health", tags=["Utilities"], summary="Health Check", description="Check the health of the API.")
+@app.get("/api/health", tags=["Utilities"], summary="Health Check", description="Check the health of the API.")
 def health_check():
     return {"status": "ok"}
 
 
 # Geocode ZIP Code
-@app.get("/geocode_zip/", tags=["Utilities"])
+@app.get("/api/geocode_zip/", tags=["Utilities"])
 def get_lat_lng(zip_code: str):
     try:
         url = "https://atlas.microsoft.com/search/address/json"
@@ -197,7 +198,7 @@ def get_lat_lng(zip_code: str):
         raise HTTPException(status_code=400, detail=f"Failed to geocode ZIP code {zip_code}")
 
 
-@app.get("/geocode_zip/", tags=["Utilities"])
+@app.get("/api/geocode_zip/", tags=["Utilities"])
 def geocode_zip(zip_code: str):
     try:
         lat, lng = get_lat_lng(zip_code)
@@ -207,7 +208,7 @@ def geocode_zip(zip_code: str):
         raise HTTPException(status_code=400, detail="Failed to geocode ZIP code")
 
 
-@app.get("/find_clubs/", tags=["Clubs"], summary="Find Clubs", description="Find golf clubs based on various criteria.")
+@app.get("/api/find_clubs/", tags=["Clubs"], summary="Find Clubs", description="Find golf clubs based on various criteria.")
 def find_clubs(
     zip_code: str,
     radius: int = 10,
@@ -378,7 +379,7 @@ class UpdateGolferProfileResponse(BaseModel):
     preferred_tees: str | None  # Allow preferred_tees to be None
 
 # Endpoint for user registration
-@app.post("/register", tags=["Auth"], summary="Register User", description="Register a new user and send a verification email.")
+@app.post("/api/register", tags=["Auth"], summary="Register User", description="Register a new user and send a verification email.")
 async def register_user(user: GolferProfileRequest):
     try:
         # Check if email already exists
@@ -420,7 +421,7 @@ async def register_user(user: GolferProfileRequest):
         raise HTTPException(status_code=400, detail=f"Failed to register user: {e}")
 
 # Endpoint for email verification
-@app.get("/verify-email", tags=["Auth"], summary="Verify Email", description="Verify the user's email address.")
+@app.get("/api/verify-email", tags=["Auth"], summary="Verify Email", description="Verify the user's email address.")
 async def verify_email(token: str):
     try:
         email = confirm_verification_token(token)
@@ -444,7 +445,7 @@ class LoginRequest(BaseModel):
     username: str
     password: str
 
-@app.post("/login", tags=["Auth"], summary="Login User", description="Authenticate a user and return a JWT token.")
+@app.post("/api/login", tags=["Auth"], summary="Login User", description="Authenticate a user and return a JWT token.")
 async def login_user(request: LoginRequest):
     try:
         query_get_user = "SELECT * FROM golfer_profile WHERE email = %s"
@@ -463,7 +464,7 @@ async def login_user(request: LoginRequest):
         raise HTTPException(status_code=500, detail="Internal server error")
 
 # Endpoint for getting user profile
-@app.get("/get-golfer-profile", tags=["Golfers"], response_model=GolferProfileResponse, summary="Get Golfer Profile", description="Retrieve the profile of the authenticated golfer or check if an email exists.")
+@app.get("/api/get-golfer-profile", tags=["Golfers"], response_model=GolferProfileResponse, summary="Get Golfer Profile", description="Retrieve the profile of the authenticated golfer or check if an email exists.")
 async def get_golfer_profile(golfer_id: str = None, email: str = None, token: str = Depends(oauth2_scheme)):
     """
     Retrieve the profile of the authenticated golfer or check if an email exists.
@@ -533,7 +534,7 @@ def verify_token(token: str = Depends(oauth2_scheme)):
         raise HTTPException(status_code=401, detail="Invalid token")
 
 # Endpoint for updating golfer profile
-@app.put("/update-golfer-profile", tags=["Golfers"], response_model=UpdateGolferProfileResponse, summary="Update Golfer Profile", description="Update the profile of the authenticated golfer.")
+@app.put("/api/update-golfer-profile", tags=["Golfers"], response_model=UpdateGolferProfileResponse, summary="Update Golfer Profile", description="Update the profile of the authenticated golfer.")
 async def update_golfer_profile(profile: UpdateGolferProfileRequest, token: str = Depends(verify_token)):
     """
     Update the profile of the authenticated golfer.
@@ -571,7 +572,7 @@ def create_access_token(data: dict, expires_delta: timedelta = timedelta(minutes
     return encoded_jwt
 
 # User Authentication
-@app.post("/token", tags=["Auth"])
+@app.post("/api/token", tags=["Auth"])
 async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     try:
         with get_db_connection() as conn:
@@ -590,7 +591,7 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
 class PasswordResetRequest(BaseModel):
     email: str
 
-@app.post("/password-reset-request", tags=["Auth"], summary="Request Password Reset", description="Request a password reset email.")
+@app.post("/api/password-reset-request", tags=["Auth"], summary="Request Password Reset", description="Request a password reset email.")
 async def password_reset_request(request: PasswordResetRequest):
     try:
         query_get_user = "SELECT * FROM golfer_profile WHERE email = %s"
@@ -616,7 +617,7 @@ class PasswordResetConfirmRequest(BaseModel):
     token: str
     password: str
 
-@app.post("/password-reset-confirm", tags=["Auth"], summary="Confirm Password Reset", description="Confirm password reset with token.")
+@app.post("/api/password-reset-confirm", tags=["Auth"], summary="Confirm Password Reset", description="Confirm password reset with token.")
 async def password_reset_confirm(request: PasswordResetConfirmRequest):
     try:
         email = confirm_verification_token(request.token)
@@ -642,7 +643,7 @@ class GolfClubSearchResponse(BaseModel):
     club_id: str
     club_name: str
 
-@app.get("/get_recommendations/", tags=["Recommendations"], summary="Get Recommendations", description="Get golf course recommendations based on user preferences.")
+@app.get("/api/get_recommendations/", tags=["Recommendations"], summary="Get Recommendations", description="Get golf course recommendations based on user preferences.")
 async def get_recommendations(
     zip_code: str,
     radius: int = 10,
