@@ -12,5 +12,8 @@
     { "src": "/api/(.*)", "dest": "server/app.py" },
     { "handle": "filesystem" },
     { "src": "/(.*)", "dest": "golf-club-ui/dist/index.html" }
+  ],
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
