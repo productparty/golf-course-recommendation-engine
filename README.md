@@ -19,20 +19,10 @@ As a passionate golfer and experienced tech professional, I wanted to create a t
 - **Backend:** In progress, planning cloud deployment (AWS/Azure/Google Cloud)
 - **Authentication:** Implemented using SendGrid for secure email-based verification.
 
-## Project Goals
-1. Launch the platform by **April 1, 2025**.
-2. Achieve **1,000 paid users** within the first 6 months.
-3. Build a comprehensive database of golf courses powered by user contributions and partnerships.
-
 ## How to Use
 1. **Explore Courses:** Use the advanced search or recommendations to find the perfect course.
 2. **Contribute:** Share reviews or add new courses to enhance the platform.
 3. **Join the Community:** Sign up for early access and enjoy exclusive benefits.
-
-## Investor Benefits
-- Early access to a growing market of 25 million golfers.
-- Recurring revenue through subscription-based memberships.
-- Scalable opportunities with data licensing and partnerships.
 
 ## Get in Touch
 Interested in collaborating or learning more? Reach out!
