@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && cp _redirects dist/_redirects",
     "serve": "vite preview",
     "start": "npm run dev",
     "type-check": "tsc --noEmit",
