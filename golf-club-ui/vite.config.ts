@@ -7,6 +7,7 @@ export default defineConfig(({ mode }) => {
 
   return {
     root: '.',
+    base: '/golf-club-ui/build/', // Ensure this matches the output directory in Vercel config
     plugins: [react()],
     publicDir: path.resolve(__dirname, 'public'),
     build: {
