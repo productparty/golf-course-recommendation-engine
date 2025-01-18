@@ -81,12 +81,12 @@ const LogIn: React.FC = () => {
         </Button>
         {error && <Typography color="error" sx={{ mt: 2 }}>{error}</Typography>}
         <Box sx={{ mt: 2 }}>
-          <Link href="/create-account" variant="body2">
+          <Link href="/golf-club-ui/create-account" variant="body2">
             Need to create an account?
           </Link>
         </Box>
         <Box sx={{ mt: 2 }}>
-          <Link href="/password-reset-request" variant="body2">
+          <Link href="/golf-club-ui/password-reset-request" variant="body2">
             Need to reset your password?
           </Link>
         </Box>

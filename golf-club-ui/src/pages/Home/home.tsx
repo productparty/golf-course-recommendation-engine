@@ -25,25 +25,25 @@ const Home: React.FC = () => {
               <>
                 <ListItem>
                   <ListItemText
-                    primary={<Link to={`${FRONTEND_URL}/find-club`}>Find Club</Link>}
+                    primary={<Link to="/golf-club-ui/find-club">Find Club</Link>}
                     secondary="Search for golf clubs based on location, price range, difficulty, and available technologies."
                   />
                 </ListItem>
                 <ListItem>
                   <ListItemText
-                    primary={<Link to={`${FRONTEND_URL}/recommend-club`}>Recommend Club</Link>}
+                    primary={<Link to="/golf-club-ui/recommend-club">Recommend Club</Link>}
                     secondary="Get personalized golf club recommendations based on your preferences and location."
                   />
                 </ListItem>
                 <ListItem>
                   <ListItemText
-                    primary={<Link to={`${FRONTEND_URL}/submit-club`}>Submit Club</Link>}
+                    primary={<Link to="/golf-club-ui/submit-club">Submit Club</Link>}
                     secondary="Submit information about a new golf club to be added to our database."
                   />
                 </ListItem>
                 <ListItem>
                   <ListItemText
-                    primary={<Link to={`${FRONTEND_URL}/golfer-profile`}>Golfer Profile</Link>}
+                    primary={<Link to="/golf-club-ui/golfer-profile">Golfer Profile</Link>}
                     secondary="View and edit your golfer profile."
                   />
                 </ListItem>
@@ -52,19 +52,19 @@ const Home: React.FC = () => {
               <>
                 <ListItem>
                   <ListItemText
-                    primary={<Link to={`${FRONTEND_URL}/sign-up`}>Sign Up</Link>}
+                    primary={<Link to="/golf-club-ui/sign-up">Sign Up</Link>}
                     secondary="Sign up to receive updates and provide feedback about our platform."
                   />
                 </ListItem>
                 <ListItem>
                   <ListItemText
-                    primary={<Link to={`${FRONTEND_URL}/create-account`}>Create Account</Link>}
+                    primary={<Link to="/golf-club-ui/create-account">Create Account</Link>}
                     secondary="Create a new account to get started."
                   />
                 </ListItem>
                 <ListItem>
                   <ListItemText
-                    primary={<Link to={`${FRONTEND_URL}/login`}>Log In</Link>}
+                    primary={<Link to="/golf-club-ui/login">Log In</Link>}
                     secondary="Log in to your account."
                   />
                 </ListItem>
