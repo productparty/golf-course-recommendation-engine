@@ -1,6 +1,7 @@
 {
   "name": "golf-course-recommendation-engine",
   "version": "1.0.0",
+  "homepage": "https://golf-course-recommendation-engine-mike-watsons-projects.vercel.app/",
   "dependencies": {
     "@sendgrid/mail": "^8.1.4",
     "@types/lodash": "^4.17.14",

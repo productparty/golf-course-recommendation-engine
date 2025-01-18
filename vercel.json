@@ -8,8 +8,9 @@
       "config": { "distDir": "dist" }
     }
   ],
-  "rewrites": [
-    { "source": "/api/(.*)", "destination": "server/app.py" },
-    { "source": "/(.*)", "destination": "golf-club-ui/dist/index.html" }
-  ]
+  "routes": [
+    { "src": "/api/(.*)", "dest": "server/app.py" },
+    { "src": "/(.*)", "dest": "golf-club-ui/dist/$1" }
+  ],
+  "cleanUrls": true
 }
