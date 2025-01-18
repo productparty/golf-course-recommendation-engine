@@ -12,5 +12,8 @@
     { "src": "/api/(.*)", "dest": "server/app.py" },
     { "src": "/golf-club-ui/(.*)", "dest": "golf-club-ui/dist/$1" },
     { "src": "/(.*)", "dest": "golf-club-ui/dist/index.html" }
+  ],
+  "rewrites": [
+    { "source": "/golf-club-ui/:path*", "destination": "/golf-club-ui/index.html" }
   ]
 }
