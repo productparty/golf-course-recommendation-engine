@@ -21,10 +21,11 @@
   "scripts": {
     "start:backend": "cd server && python app.py",
     "start:frontend": "npm start --prefix golf-club-ui",
-    "start:all": "concurrently \"npm run start:backend\" \"npm run start:frontend\"",
+    "start:all": "npm run build && npm run start",
     "build:frontend": "npm run build --prefix golf-club-ui",
-    "build": "cd golf-club-ui && npm run build && cd .. && echo 'Build completed, contents of build directory:' && ls -R golf-club-ui/build",
-    "postinstall": "cd golf-club-ui && npm install && npm run build"
+    "build": "cd golf-club-ui && vite build --config vite.config.ts",
+    "postinstall": "cd golf-club-ui && npm install && npm run build",
+    "start": "concurrently \"npm run start:backend\" \"npm run start:frontend\""
   },
   "devDependencies": {
     "@types/lodash.debounce": "^4.0.9",

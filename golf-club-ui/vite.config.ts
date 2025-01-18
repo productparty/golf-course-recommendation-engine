@@ -6,16 +6,16 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), ''); // Load from root
 
   return {
-    root: '.',
-    base: '/golf-club-ui/dist/', // Ensure this matches the output directory in Vercel config
+    root: path.resolve(__dirname, '.'), // Ensure this points to the correct root directory
+    base: '/', // Ensure this matches the output directory in Vercel config
     plugins: [react()],
     publicDir: path.resolve(__dirname, 'public'),
     build: {
-      outDir: path.resolve(__dirname, 'dist'), // Ensure this matches the output directory in Vercel config
+      outDir: 'dist',
       emptyOutDir: true,
       rollupOptions: {
         input: path.resolve(__dirname, 'index.html'),
-      },
+      }
     },
     resolve: {
       alias: {
@@ -39,8 +39,7 @@ export default defineConfig(({ mode }) => {
       port: 4173,
     },
     define: {
-      'import.meta.env': {
-        ...env,
+      'process.env': {
         REACT_APP_API_URL: env.REACT_APP_API_URL,
         FRONTEND_URL: env.FRONTEND_URL,
       }, // Expose env variables
