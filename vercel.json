@@ -8,12 +8,10 @@
       "config": { "distDir": "dist" }
     }
   ],
-  "routes": [
-    { "src": "/api/(.*)", "dest": "server/app.py" },
-    { "src": "/golf-club-ui/(.*)", "dest": "golf-club-ui/dist/$1" },
-    { "src": "/(.*)", "dest": "golf-club-ui/dist/index.html" }
-  ],
   "rewrites": [
-    { "source": "/golf-club-ui/:path*", "destination": "/golf-club-ui/index.html" }
+    { "source": "/api/(.*)", "destination": "/server/app.py" },
+    { "source": "/golf-club-ui/(.*)", "destination": "/golf-club-ui/dist/$1" },
+    { "source": "/golf-club-ui/:path*", "destination": "/golf-club-ui/index.html" },
+    { "source": "/(.*)", "destination": "/golf-club-ui/dist/index.html" }
   ]
 }
