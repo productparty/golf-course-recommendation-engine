@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Set default PORT if not provided
+PORT="${PORT:-8000}"
+
 # Print environment info
 echo "Starting application..."
 echo "HOSTNAME: $(hostname)"
@@ -19,4 +22,4 @@ while ! nc -z localhost $PORT; do
 done
 
 # Start the application
-exec python -m uvicorn app:app --host 0.0.0.0 --port $PORT --log-level debug --timeout-keep-alive 75 
+exec uvicorn app:app --host 0.0.0.0 --port "$PORT" --log-level debug --timeout-keep-alive 75

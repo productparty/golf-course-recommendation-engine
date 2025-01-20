@@ -4,7 +4,9 @@ WORKDIR /app
 
 # Install build dependencies
 RUN apt-get update && \
-    apt-get install -y gcc python3-dev libpq-dev netcat-traditional curl
+    apt-get install -y gcc python3-dev libpq-dev netcat-traditional curl && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first
 COPY requirements.txt .
@@ -19,16 +21,8 @@ ENV PORT=8000
 ENV ALLOWED_ORIGINS="https://golf-club-ui.vercel.app"
 ENV MAX_WORKERS=4
 
-# Create a wrapper script that properly handles the PORT variable
-RUN echo '#!/bin/bash\n\
-PORT="${PORT:-8000}"\n\
-echo "Starting server on port: $PORT"\n\
-exec uvicorn app:app \
-    --host 0.0.0.0 \
-    --port "$PORT" \
-    --workers 4 \
-    --log-level debug' > /app/start.sh && \
-    chmod +x /app/start.sh
+# Ensure start.sh is executable
+RUN chmod +x start.sh
 
 # Print debug info
 RUN echo "Python version:" && python --version && \
@@ -38,5 +32,5 @@ RUN echo "Python version:" && python --version && \
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:${PORT}/health || exit 1
 
-# Use the wrapper script
-CMD ["/bin/bash", "/app/start.sh"]
+# Use the existing start.sh script
+CMD ["./start.sh"]
