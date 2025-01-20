@@ -14,12 +14,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Set environment variables
-ENV PORT=8000
 ENV PYTHONUNBUFFERED=1
 
 # Print debug info at startup
 RUN echo "Python version:" && python --version && \
     echo "Installed packages:" && pip list
 
-# Start command
-CMD ["python", "-m", "uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000", "--log-level", "debug"]
+# Use the same command as railway.json
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "${PORT:-8000}"]
