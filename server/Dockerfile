@@ -1,6 +1,6 @@
 FROM python:3.10-slim
 
-WORKDIR /app
+WORKDIR /server
 
 # Install build dependencies
 RUN apt-get update && \
@@ -21,8 +21,20 @@ ENV PORT=8000
 ENV ALLOWED_ORIGINS="https://golf-club-ui.vercel.app"
 ENV MAX_WORKERS=4
 
-# Ensure start.sh is executable
-RUN chmod +x start.sh
+# List contents of /server for debugging
+RUN ls -la /server
+
+# Ensure start.sh is executable (if it exists)
+RUN if [ -f start.sh ]; then chmod +x start.sh; fi
+
+# Create start.sh file if it doesn't exist
+RUN if [ ! -f start.sh ]; then \
+    echo '#!/bin/bash' > start.sh && \
+    echo 'PORT="${PORT:-8000}"' >> start.sh && \
+    echo 'echo "Starting server on port: $PORT"' >> start.sh && \
+    echo 'exec uvicorn app:app --host 0.0.0.0 --port "$PORT" --workers 4 --log-level debug' >> start.sh && \
+    chmod +x start.sh; \
+    fi
 
 # Print debug info
 RUN echo "Python version:" && python --version && \
@@ -32,5 +44,5 @@ RUN echo "Python version:" && python --version && \
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:${PORT}/health || exit 1
 
-# Use the existing start.sh script
+# Use the start.sh script
 CMD ["./start.sh"]
