@@ -1,17 +1,18 @@
 FROM python:3.10-slim
 
-WORKDIR /app/server
+# Set working directory
+WORKDIR /app
 
 # Install build dependencies
 RUN apt-get update && \
     apt-get install -y gcc python3-dev libpq-dev
 
 # Copy requirements first for better caching
-COPY server/requirements.txt .
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy only the server code
-COPY server/ .
+# Copy application code
+COPY . .
 
 # Set environment variables
 ENV PORT=8000
