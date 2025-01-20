@@ -2,20 +2,16 @@ FROM python:3.10-slim
 
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    gcc \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install Python dependencies
+# Install only the essential packages
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
-COPY . .
+# Copy only necessary files
+COPY app.py .
+COPY utils/ utils/
 
-# Set environment variables
+# Set environment variable
 ENV PORT=8000
 
 # Start the application
-CMD uvicorn app:app --host 0.0.0.0 --port $PORT
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]

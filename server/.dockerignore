@@ -17,4 +17,8 @@ coverage.xml
 .pytest_cache
 .env
 .venv
-.DS_Store 
+.DS_Store
+*
+!app.py
+!utils/
+!requirements.txt 
