@@ -699,7 +699,30 @@ app.include_router(api_router, prefix="/api")
 
 @app.get("/")
 async def root():
-    return {"status": "ok", "message": "Server is running"}
+    """Root endpoint for health checks"""
+    try:
+        # Test database connection
+        with get_db_connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute('SELECT 1')
+        
+        # Test Supabase connection
+        supabase_status = "ok" if supabase else "not configured"
+        
+        return {
+            "status": "ok",
+            "message": "Server is running",
+            "database": "connected",
+            "supabase": supabase_status,
+            "environment": os.environ.get("RAILWAY_ENVIRONMENT_NAME", "unknown")
+        }
+    except Exception as e:
+        logger.error(f"Health check failed: {str(e)}")
+        return {
+            "status": "error",
+            "message": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
 
 @app.get("/api/test")
 async def test():

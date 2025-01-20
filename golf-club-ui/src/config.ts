@@ -28,4 +28,8 @@ console.log('Config:', {
   ENV: import.meta.env.MODE
 });
 
+// Add this to help debug
+console.log('API URL:', import.meta.env.VITE_API_URL);
+console.log('APP URL:', import.meta.env.VITE_APP_URL);
+
 // When deployed, VITE_API_URL will be something like: https://your-app.railway.app
