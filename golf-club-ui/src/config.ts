@@ -13,15 +13,14 @@ console.log('All env variables:', import.meta.env); // Debug all env vars
 const formatApiUrl = (url: string | undefined) => {
   if (!url) {
     console.warn('API_URL is undefined in environment variables');
-    return process.env.NODE_ENV === 'production' 
-      ? 'https://golf-course-recommendation-engin-production.up.railway.app'
-      : 'http://localhost:8000';
+    return 'https://golf-course-recommendation-engin-production.up.railway.app';
   }
   if (!url.startsWith('http')) {
     url = `https://${url}`;
   }
   return url.endsWith('/') ? url.slice(0, -1) : url;
 };
+
 
 const apiUrl = formatApiUrl(API_URL);
 console.log('Formatted API URL:', apiUrl); // Debug formatted URL
