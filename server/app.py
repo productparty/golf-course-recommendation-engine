@@ -116,9 +116,17 @@ async def global_exception_handler(request: Request, exc: Exception):
         content={"error": "Internal server error", "details": str(exc)},
     )
 
-@api_router.get("/health", tags=["Utilities"], summary="Health Check", description="Check the health of the API.")
-def health_check():
-    return {"status": "ok"}
+@api_router.get("/health", tags=["Health"])
+async def health_check():
+    try:
+        # Test database connection
+        with get_db_connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute("SELECT 1")
+        return {"status": "healthy", "database": "connected"}
+    except Exception as e:
+        logger.error(f"Health check failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 # Geocode ZIP Code
 @api_router.get("/geocode_zip/", tags=["Utilities"])

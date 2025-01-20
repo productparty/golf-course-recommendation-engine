@@ -1,6 +1,12 @@
+console.log('Environment Variables:', {
+  VITE_API_URL: import.meta.env.VITE_API_URL,
+  MODE: import.meta.env.MODE,
+  ALL_ENV: import.meta.env
+});
+
 const API_URL = import.meta.env.VITE_API_URL;
 if (!API_URL) {
-  console.error('VITE_API_URL is not defined');
+  console.error('VITE_API_URL is not defined in environment');
 }
 
 export const config = {
@@ -10,7 +16,7 @@ export const config = {
   APP_URL: import.meta.env.VITE_APP_URL
 };
 
-console.log('Runtime Config:', config);
+console.log('Final Config:', config);
 
 // Add this for debugging
 console.log('Config:', {
