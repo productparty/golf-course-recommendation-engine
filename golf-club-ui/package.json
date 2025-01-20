@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build --mode production",
+    "build": "tsc && VITE_API_URL=https://golf-course-recommendation-engin-production.up.railway.app vite build --mode production",
     "preview": "vite preview",
     "serve": "vite preview",
     "start": "npm run dev",
