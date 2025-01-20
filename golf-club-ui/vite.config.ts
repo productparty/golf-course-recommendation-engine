@@ -4,6 +4,7 @@ import path from 'path';
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
+  const apiUrl = env.VITE_API_URL || 'http://localhost:8000';
 
   return {
     root: path.resolve(__dirname, '.'),
@@ -29,7 +30,7 @@ export default defineConfig(({ mode }) => {
       },
       proxy: {
         '/api': {
-          target: env.VITE_REACT_APP_API_URL || 'http://localhost:8000',
+          target: apiUrl,
           changeOrigin: true,
           secure: false,
         },
@@ -39,7 +40,7 @@ export default defineConfig(({ mode }) => {
       port: 4173,
     },
     define: {
-      'import.meta.env.VITE_REACT_APP_API_URL': JSON.stringify(env.VITE_REACT_APP_API_URL),
+      'import.meta.env.VITE_API_URL': JSON.stringify(apiUrl),
       'import.meta.env.MODE': JSON.stringify(env.MODE),
       'import.meta.env.BASE_URL': JSON.stringify(env.BASE_URL),
       'import.meta.env.VITE_SUPABASE_URL': JSON.stringify(env.VITE_SUPABASE_URL),

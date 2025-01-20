@@ -1,7 +1,6 @@
 {
   "version": 2,
   "builds": [
-    { "src": "server/app.py", "use": "@vercel/python" },
     {
       "src": "golf-club-ui/package.json",
       "use": "@vercel/static-build",
@@ -9,9 +8,6 @@
     }
   ],
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/server/app.py" },
-    { "source": "/golf-club-ui/(.*)", "destination": "/golf-club-ui/dist/$1" },
-    { "source": "/golf-club-ui/:path*", "destination": "/golf-club-ui/index.html" },
     { "source": "/(.*)", "destination": "/golf-club-ui/dist/index.html" }
   ]
 }
