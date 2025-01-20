@@ -8,11 +8,12 @@ console.log('Environment Variables:', {
 const API_URL = import.meta.env.VITE_API_URL;
 console.log('API URL:', API_URL); // Add this for debugging
 
+if (!API_URL) {
+  console.warn('API_URL is not set in environment variables');
+}
+
 export const config = {
-  // Add https:// prefix if not present
-  API_URL: API_URL ? 
-    (API_URL.startsWith('http') ? API_URL : `https://${API_URL}`) : 
-    'http://localhost:8000',
+  API_URL: API_URL || 'http://localhost:8000', // Fallback for local development
   SUPABASE_URL: import.meta.env.VITE_SUPABASE_URL,
   SUPABASE_ANON_KEY: import.meta.env.VITE_SUPABASE_ANON_KEY,
   APP_URL: import.meta.env.VITE_APP_URL

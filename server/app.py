@@ -56,16 +56,17 @@ app = FastAPI(
 api_router = APIRouter()
 
 # Update CORS middleware configuration
+ALLOWED_ORIGINS = [
+    os.getenv("FRONTEND_URL", "https://golf-club-ui.vercel.app"),
+    "http://localhost:5173",  # Local development
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        os.getenv("ALLOWED_ORIGINS", "https://golf-club-ui.vercel.app"),
-        "http://localhost:5173",  # Local development
-    ],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
-    expose_headers=["*"]
 )
 
 # Add debug logging before creating DATABASE_CONFIG

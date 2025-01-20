@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Typography, TextField, Button, MenuItem, Select, InputLabel, FormControl, Box, SelectChangeEvent } from '@mui/material';
 import './FindClub.css';
-import { API_BASE_URL, debugApiConfig } from '../../utils/api';
+import { config } from '../../config';
 import PageLayout from '../../components/PageLayout';
 
 interface GolfClub {
@@ -42,6 +42,10 @@ const FindClub: React.FC = () => {
 
   const fetchClubs = async (pageNumber: number) => {
     try {
+      if (!config.API_URL) {
+        throw new Error('API URL is not configured');
+      }
+
       if (!zipCode) {
         setClubError('Please enter a ZIP code');
         return;
@@ -53,7 +57,7 @@ const FindClub: React.FC = () => {
       const page = Math.max(1, pageNumber || 1);
       const offset = (page - 1) * 5;
       
-      const apiUrl = `${API_BASE_URL}/find_clubs/`;
+      const apiUrl = `${config.API_URL}/find_clubs/`;
       const params = new URLSearchParams({
         zip_code: zipCode,
         radius: radius.toString(),
@@ -66,16 +70,16 @@ const FindClub: React.FC = () => {
       if (difficulty) params.append('difficulty', difficulty);
       if (findTechnologies.length > 0) params.append('technologies', findTechnologies.join(','));
 
-      console.log('Fetching from:', `${apiUrl}?${params.toString()}`);
+      const fullUrl = `${apiUrl}?${params.toString()}`;
+      console.log('Full request URL:', fullUrl);
 
-      const response = await fetch(`${apiUrl}?${params.toString()}`);
-      const data = await response.json();
-
-      console.log('API Response:', data);
-
+      const response = await fetch(fullUrl);
       if (!response.ok) {
-        throw new Error(data.detail?.message || 'Failed to fetch clubs');
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
+
+      const data = await response.json();
+      console.log('API Response:', data);
 
       if (data.results && Array.isArray(data.results)) {
         setResults(data.results);
@@ -86,9 +90,10 @@ const FindClub: React.FC = () => {
         setClubError('Unexpected response format from server');
       }
 
-    } catch (err) {
-      console.error('Error in fetchClubs:', err);
-      setClubError(err instanceof Error ? err.message : 'Failed to fetch clubs');
+    } catch (error) {
+      console.error('Error in fetchClubs:', error);
+      setClubError(error instanceof Error ? error.message : 'Failed to fetch clubs');
+      setResults([]);
     }
   };
 
@@ -105,7 +110,7 @@ const FindClub: React.FC = () => {
   };
 
   useEffect(() => {
-    debugApiConfig();
+    // Placeholder for any additional effects
   }, []);
 
   return (
