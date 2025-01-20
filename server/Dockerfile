@@ -1,23 +1,23 @@
-# Base image
-FROM python:3.10-slim
+# Build stage
+FROM python:3.10-slim as builder
 
-# Set working directory
 WORKDIR /app
 
-# Set PYTHONPATH
-ENV PYTHONPATH=/app
-
-# Copy project requirements
+# Install only required dependencies
 COPY requirements.txt .
-
-# Install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
+# Final stage
+FROM python:3.10-slim
+
+WORKDIR /app
+
+# Copy only necessary files
+COPY --from=builder /usr/local/lib/python3.10/site-packages/ /usr/local/lib/python3.10/site-packages/
 COPY . .
 
-# Expose the port FastAPI will run on
-EXPOSE 8000
+# Set environment variables
+ENV PORT=8000
 
-# Set the command to run FastAPI
+# Start the application
 CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
