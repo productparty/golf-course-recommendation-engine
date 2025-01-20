@@ -3,6 +3,7 @@ import { Container, Typography, TextField, Button, Box } from '@mui/material';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../supabaseClient'  // Use shared client
+import { config } from '../../config';
 
 const LogIn: React.FC = () => {
   const [username, setUsername] = useState('');
@@ -11,14 +12,13 @@ const LogIn: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { session } = useAuth();
-  const apiUrl = import.meta.env.VITE_REACT_APP_API_URL?.replace(/\/+$/, '') || 'http://localhost:8000';
 
   useEffect(() => {
-    console.log('API URL:', apiUrl);
+    console.log('API URL:', config.API_URL);
     if (session) {
       navigate('/');
     }
-  }, [session, navigate, apiUrl]);
+  }, [session, navigate]);
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Container, Typography, TextField, Button, Box, Alert, Link } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../supabaseClient'  // Use shared client
+import { config } from '../../config';
 
 const CreateAccount = () => {
   const [email, setEmail] = useState('');
@@ -14,8 +15,6 @@ const CreateAccount = () => {
     password: '',
   });
   const navigate = useNavigate();
-
-  const apiUrl = import.meta.env.VITE_REACT_APP_API_URL?.replace(/\/+$/, '') || 'http://localhost:8000';
 
   const validateInputs = (email: string, password: string) => {
     const errors: { email: string; password: string } = { email: '', password: '' };
