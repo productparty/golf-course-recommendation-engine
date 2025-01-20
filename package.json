@@ -6,6 +6,10 @@
     "build": "cd golf-club-ui && npm install && npm run build"
   },
   "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
+    "@mui/icons-material": "^6.4.0",
+    "@mui/material": "^6.4.0",
     "@sendgrid/mail": "^8.1.4",
     "@types/lodash": "^4.17.14",
     "lodash": "^4.17.21",
