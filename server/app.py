@@ -70,13 +70,13 @@ logger.info(f"DB_PORT: {os.getenv('DB_PORT')}")
 logger.info(f"DB_USER: {os.getenv('DB_USER')}")
 logger.info(f"DB_NAME: {os.getenv('DB_NAME')}")
 
-# Database Config - Hardcode for testing
+# Update DATABASE_CONFIG to use environment variables
 DATABASE_CONFIG = {
-    "dbname": "postgres",
-    "user": "postgres.nkknwkentrbbyzgqgpfd",
-    "password": "Watso3mj16!",  # Your actual password
-    "host": "aws-0-us-east-2.pooler.supabase.com",
-    "port": "6543",
+    "dbname": os.getenv("DB_NAME", "postgres"),
+    "user": os.getenv("DB_USER", "postgres.nkknwkentrbbyzgqgpfd"),
+    "password": os.getenv("DB_PASSWORD"),
+    "host": os.getenv("DB_HOST", "aws-0-us-east-2.pooler.supabase.com"),
+    "port": os.getenv("DB_PORT", "6543"),
     "sslmode": "require"
 }
 
@@ -87,12 +87,11 @@ logger.info(debug_config)
 
 AZURE_MAPS_API_KEY = os.getenv("AZURE_MAPS_API_KEY")
 
-# Initialize Supabase client
+# Update Supabase initialization
 def get_supabase_client():
     try:
-        # Use the values directly instead of environment variables
-        supabase_url = "https://nkknwkentrbbyzgqgpfd.supabase.co"
-        supabase_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ra253a2VudHJiYnl6Z3FncGZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzcyMzA4MzYsImV4cCI6MjA1MjgwNjgzNn0.OyizXugP02ciUdXTOWxfTrp1HwsMgBM7FyeJ8le0_mM"
+        supabase_url = os.getenv("SUPABASE_URL")
+        supabase_key = os.getenv("SUPABASE_KEY")
         return create_client(supabase_url, supabase_key)
     except Exception as e:
         logger.error(f"Failed to initialize Supabase client: {str(e)}")

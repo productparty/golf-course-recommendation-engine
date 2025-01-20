@@ -1,137 +1,166 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Typography, TextField, Button, MenuItem, Select, InputLabel, FormControl, Box, SelectChangeEvent } from '@mui/material';
+import { Container, Typography, TextField, Button, MenuItem, Select, InputLabel, FormControl, Box, SelectChangeEvent, Alert } from '@mui/material';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import PageLayout from '../../components/PageLayout';
+import { config } from '../../config';
+
+interface ClubData {
+  club_name: string;
+  address: string;
+  city: string;
+  state: string;
+  zip_code: string;
+  price_tier: string;
+  difficulty: string;
+}
 
 const priceTiers = ['$', '$$', '$$$'];
 const difficulties = ['Easy', 'Medium', 'Hard'];
 const states = ['AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA', 'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD', 'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ', 'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC', 'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY'];
 
-const SubmitClub: React.FC = () => {
+const SubmitClub = () => {
   const { session } = useAuth();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (!session) {
-      navigate('/login');
-    }
-  }, [session, navigate]);
-
-  const [formData, setFormData] = useState({
+  const [clubData, setClubData] = useState<ClubData>({
     club_name: '',
+    address: '',
     city: '',
     state: '',
+    zip_code: '',
     price_tier: '',
     difficulty: ''
   });
+  const [error, setError] = useState<string>('');
+  const [success, setSuccess] = useState<boolean>(false);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | SelectChangeEvent<string>) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    try {
+      const response = await fetch(`${config.API_URL}/api/submit-club`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token}`
+        },
+        body: JSON.stringify(clubData)
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to submit club');
+      }
+
+      setSuccess(true);
+      setClubData({
+        club_name: '',
+        address: '',
+        city: '',
+        state: '',
+        zip_code: '',
+        price_tier: '',
+        difficulty: ''
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to submit club');
+    }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!session) {
-      navigate('/login');
-      return;
-    }
-
-    const mailtoLink = `mailto:mwatson1983@gmail.com?subject=Submit Club Form Submission&body=${encodeURIComponent(
-      `Club Name: ${formData.club_name}\nCity: ${formData.city}\nState: ${formData.state}\nPrice Tier: ${formData.price_tier}\nDifficulty: ${formData.difficulty}`
-    )}`;
-    window.location.href = mailtoLink;
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = event.target;
+    setClubData(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
   return (
-    <Container maxWidth="sm">
-      <Typography variant="h4" component="h1" gutterBottom>
-        Submit Club
-      </Typography>
-      <Typography variant="body1" gutterBottom>
-        Please fill out the form below to submit a new golf club to our database.
-      </Typography>
-      <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
-        <TextField
-          fullWidth
-          label="Club Name"
-          name="club_name"
-          value={formData.club_name}
-          onChange={handleChange}
-          required
-          margin="normal"
-          sx={{ backgroundColor: 'white' }}
-        />
-        <TextField
-          fullWidth
-          label="City"
-          name="city"
-          value={formData.city}
-          onChange={handleChange}
-          required
-          margin="normal"
-          sx={{ backgroundColor: 'white' }}
-        />
-        <FormControl fullWidth margin="normal" sx={{ backgroundColor: 'white' }}>
-          <InputLabel>State</InputLabel>
-          <Select
+    <PageLayout title="Submit Golf Club">
+      <Container maxWidth="sm">
+        <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
+          <TextField
+            fullWidth
+            label="Club Name"
+            name="club_name"
+            value={clubData.club_name}
+            onChange={handleChange}
+            required
+            margin="normal"
+          />
+          <TextField
+            fullWidth
+            label="Address"
+            name="address"
+            value={clubData.address}
+            onChange={handleChange}
+            required
+            margin="normal"
+          />
+          <TextField
+            fullWidth
+            label="City"
+            name="city"
+            value={clubData.city}
+            onChange={handleChange}
+            required
+            margin="normal"
+          />
+          <TextField
+            fullWidth
+            label="State"
             name="state"
-            value={formData.state}
+            value={clubData.state}
             onChange={handleChange}
             required
-          >
-            <MenuItem value="">
-              <em>Select State</em>
-            </MenuItem>
-            {states.map((state) => (
-              <MenuItem key={state} value={state}>
-                {state}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-        <FormControl fullWidth margin="normal" sx={{ backgroundColor: 'white' }}>
-          <InputLabel>Price Tier</InputLabel>
-          <Select
+            margin="normal"
+          />
+          <TextField
+            fullWidth
+            label="ZIP Code"
+            name="zip_code"
+            value={clubData.zip_code}
+            onChange={handleChange}
+            required
+            margin="normal"
+          />
+          <TextField
+            fullWidth
+            label="Price Tier ($, $$, $$$)"
             name="price_tier"
-            value={formData.price_tier}
+            value={clubData.price_tier}
             onChange={handleChange}
             required
-          >
-            <MenuItem value="">
-              <em>Select Price Tier</em>
-            </MenuItem>
-            {priceTiers.map((tier) => (
-              <MenuItem key={tier} value={tier}>
-                {tier}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-        <FormControl fullWidth margin="normal" sx={{ backgroundColor: 'white' }}>
-          <InputLabel>Difficulty</InputLabel>
-          <Select
+            margin="normal"
+          />
+          <TextField
+            fullWidth
+            label="Difficulty (Easy, Medium, Hard)"
             name="difficulty"
-            value={formData.difficulty}
+            value={clubData.difficulty}
             onChange={handleChange}
             required
+            margin="normal"
+          />
+          <Button
+            type="submit"
+            variant="contained"
+            color="primary"
+            fullWidth
+            sx={{ mt: 3, mb: 2 }}
           >
-            <MenuItem value="">
-              <em>Select Difficulty</em>
-            </MenuItem>
-            {difficulties.map((level) => (
-              <MenuItem key={level} value={level}>
-                {level}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-        <Button type="submit" variant="contained" color="primary" sx={{ mt: 2 }}>
-          Submit
-        </Button>
-      </Box>
-    </Container>
+            Submit Club
+          </Button>
+          {error && (
+            <Alert severity="error" sx={{ mt: 2 }}>
+              {error}
+            </Alert>
+          )}
+          {success && (
+            <Alert severity="success" sx={{ mt: 2 }}>
+              Club submitted successfully!
+            </Alert>
+          )}
+        </Box>
+      </Container>
+    </PageLayout>
   );
 };
 
