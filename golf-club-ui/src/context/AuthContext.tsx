@@ -2,8 +2,16 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { createClient, Session } from '@supabase/supabase-js'
 
 const supabase = createClient(
-  "https://nkknwkentrbbyzgqgpfd.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ra253a2VudHJiYnl6Z3FncGZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzcyMzA4MzYsImV4cCI6MjA1MjgwNjgzNn0.OyizXugP02ciUdXTOWxfTrp1HwsMgBM7FyeJ8le0_mM"
+  import.meta.env.VITE_SUPABASE_URL,
+  import.meta.env.VITE_SUPABASE_ANON_KEY,
+  {
+    auth: {
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: true,
+      flowType: 'pkce'
+    }
+  }
 )
 
 export const AuthContext = createContext<{
@@ -40,6 +48,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signOut = async () => {
     await supabase.auth.signOut();
+  };
+
+  const signInWithEmail = async (email: string) => {
+    return supabase.auth.signInWithOtp({
+      email,
+      options: {
+        emailRedirectTo: import.meta.env.VITE_APP_URL || 'https://golf-club-ui.vercel.app'
+      }
+    });
   };
 
   return (
