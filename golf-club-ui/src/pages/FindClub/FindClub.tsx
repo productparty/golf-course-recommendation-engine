@@ -57,7 +57,10 @@ const FindClub: React.FC = () => {
       const page = Math.max(1, pageNumber || 1);
       const offset = (page - 1) * 5;
       
-      const apiUrl = `${config.API_URL}/find_clubs/`;
+      // Add /api prefix to the endpoint
+      const apiUrl = `${config.API_URL}/api/find_clubs/`;
+      console.log('Making request to:', apiUrl);
+
       const params = new URLSearchParams({
         zip_code: zipCode,
         radius: radius.toString(),

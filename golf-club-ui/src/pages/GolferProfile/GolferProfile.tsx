@@ -13,6 +13,7 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import { API_BASE_URL } from '../../utils/api';
 import PageLayout from '../../components/PageLayout';
+import { config } from '../../config';
 
 interface GolferProfile {
   golfer_id: string;
@@ -55,7 +56,7 @@ const GolferProfile: React.FC = () => {
       try {
         if (!session?.access_token) return;
 
-        const response = await fetch(`${API_BASE_URL}/get-golfer-profile`, {
+        const response = await fetch(`${config.API_URL}/api/get-golfer-profile`, {
           headers: {
             'Authorization': `Bearer ${session.access_token}`
           }
