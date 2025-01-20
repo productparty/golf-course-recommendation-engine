@@ -1,151 +1,290 @@
 import React, { useState } from 'react';
-import axios from 'axios';
-import { Container, Typography, TextField, Button, MenuItem, Select, InputLabel, FormControl, Box } from '@mui/material';
+import { Container, Typography, TextField, Button, MenuItem, Select, InputLabel, FormControl, Box, SelectChangeEvent } from '@mui/material';
 import './RecommendClub.css';
+import { useAuth } from '../../context/AuthContext';
+import { API_BASE_URL } from '../../utils/api';
+import PageLayout from '../../components/PageLayout';
 
 interface GolfClub {
+  global_id: string;
   club_name: string;
+  address: string;
   city: string;
   state: string;
+  zip_code: string;
   distance_miles: number;
   price_tier?: string;
   difficulty?: string;
-  recommendation_score?: number;
+  available_technologies?: string[];
+  recommendation_score: number;
 }
 
 const RecommendClub: React.FC = () => {
+  const { session } = useAuth();
   const [zipCode, setZipCode] = useState<string>('');
   const [radius, setRadius] = useState<number>(10);
   const [recommendations, setRecommendations] = useState<GolfClub[]>([]);
   const [recommendationError, setRecommendationError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const fetchRecommendations = async () => {
+  const fetchRecommendations = async (pageNumber: number = 1) => {
     try {
-      const token = localStorage.getItem('authToken');
-      if (!token) {
+      setIsLoading(true);
+      if (!session) {
         setRecommendationError('You must be logged in to get recommendations.');
         return;
       }
 
-      const params = {
-        zip_code: zipCode,
-        radius,
-      };
+      if (!zipCode) {
+        setRecommendationError('Please enter a ZIP code');
+        return;
+      }
 
-      const response = await axios.get<{ results: GolfClub[] }>(
-        `${process.env.REACT_APP_API_URL}/get_recommendations/`,
+      const offset = (pageNumber - 1) * 5;
+      
+      const response = await fetch(
+        `${API_BASE_URL}/get_recommendations/?` +
+        new URLSearchParams({
+          zip_code: zipCode,
+          radius: radius.toString(),
+          limit: '5',
+          offset: offset.toString()
+        }),
         {
-          params,
           headers: {
-            'Authorization': `Bearer ${token}`,
+            'Authorization': `Bearer ${session.access_token}`,
           },
         }
       );
 
-      if (response.status === 200 && response.data.results) {
-        setRecommendations(response.data.results);
-        setRecommendationError(null);
+      const data = await response.json();
+
+      console.log('Recommendations response:', data);
+
+      if (!response.ok) {
+        throw new Error(data.detail || 'Failed to fetch recommendations');
+      }
+
+      if (data.results && Array.isArray(data.results)) {
+        setRecommendations(data.results);
+        setTotalPages(data.total_pages);
+        setCurrentPage(data.page);
       } else {
         setRecommendationError('No recommendations found.');
       }
     } catch (err) {
-      setRecommendationError('Failed to fetch recommendations.');
+      setRecommendationError(err instanceof Error ? err.message : 'Failed to fetch recommendations');
       console.error('Error fetching recommendations:', err);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="recommend-club-container">
-      {/* Top Image Section */}
-      <div className="top-image">
-        <img
-          src="/golfclubheader.jpg" // Replace with your image path
-          alt="Promotional banner"
-          className="header-image"
-        />
-      </div>
-
-      {/* Content Section */}
+    <PageLayout title="Recommended Golf Clubs">
       <div className="content">
-        {/* Filters Section */}
         <aside className="filters">
           <Typography variant="h4" component="h1" gutterBottom>
             Recommend Club
           </Typography>
           <Typography variant="body1" gutterBottom>
-            Use the form below to get personalized golf club recommendations based on your profile.
+            Get personalized golf club recommendations based on your profile preferences
           </Typography>
-          <Box sx={{ mt: 2}}>
-            <div className="form-group">
-              <div className="input-group" style={{ width: '100%' }}>
-                <TextField
-                  fullWidth
-                  id="zipCode"
-                  value={zipCode}
-                  onChange={(e) => setZipCode(e.target.value)}
-                  placeholder="Enter ZIP code"
-                  title="Enter the ZIP code of the area you want to search in"
-                  margin="normal"
-                  sx={{ backgroundColor: 'white', border: 'none', width: '100%' }} // Ensure full width
-                />
-                <span className="input-group-text">
-                  <i className="fas fa-ellipsis-h"></i> {/* Adjust this to your icon */}
-                </span>
-              </div>
-            </div>
-            <FormControl fullWidth margin="normal" sx={{ backgroundColor: 'white' }}>
-              <InputLabel id="radius-label" shrink>Radius (miles)</InputLabel>
+          <Box sx={{ mt: 2 }}>
+            <TextField
+              fullWidth
+              label="ZIP Code"
+              value={zipCode}
+              onChange={(e) => setZipCode(e.target.value)}
+              margin="normal"
+              inputProps={{ maxLength: 5 }}
+            />
+            <FormControl fullWidth margin="normal">
+              <InputLabel>Radius (miles)</InputLabel>
               <Select
-                labelId="radius-label"
-                label="Radius (miles)"
                 value={radius}
                 onChange={(e) => setRadius(Number(e.target.value))}
-                title="Select the search radius in miles"
-                sx={{ height: '56px' }}
               >
                 {[1, 5, 10, 25, 50, 100].map((r) => (
-                  <MenuItem key={r} value={r}>
-                    {r}
-                  </MenuItem>
+                  <MenuItem key={r} value={r}>{r}</MenuItem>
                 ))}
               </Select>
             </FormControl>
-            <Button onClick={fetchRecommendations} variant="contained" color="primary" sx={{ mt: 2 }}>
-              Get Recommendations
+            <Button 
+              onClick={() => fetchRecommendations(1)}
+              variant="contained"
+              color="primary"
+              sx={{ mt: 2 }}
+              disabled={isLoading}
+            >
+              {isLoading ? 'Loading...' : 'Get Recommendations'}
             </Button>
-            {recommendationError && <Typography color="error" sx={{ mt: 2 }}>{recommendationError}</Typography>}
           </Box>
+          {recommendationError && (
+            <Typography color="error" sx={{ mt: 2 }}>
+              {recommendationError}
+            </Typography>
+          )}
         </aside>
 
-        {/* Results Section */}
         <section className="results">
           <Typography variant="h5" component="h2" gutterBottom>
             Recommendations
           </Typography>
           {recommendations.length > 0 ? (
-            <Box sx={{ maxHeight: '600px', overflowY: 'auto', mt: 2 }}>
-              <ol className="results">
-                {recommendations.map((rec, idx) => (
-                  <li key={idx} className="result-item">
-                    <div className="result-left">
-                      <Typography variant="h6">{rec.club_name}</Typography>
-                      <Typography variant="body2">{rec.city}, {rec.state} ({rec.distance_miles.toFixed(2)} miles)</Typography>
-                      {rec.price_tier && <Typography variant="body2">Price Range: {rec.price_tier}</Typography>}
-                      {rec.difficulty && <Typography variant="body2">Difficulty Level: {rec.difficulty}</Typography>}
-                      {rec.recommendation_score !== undefined && (
-                        <Typography variant="body2">Recommendation Score: {rec.recommendation_score.toFixed(2)}</Typography>
-                      )}
-                    </div>
-                  </li>
-                ))}
-              </ol>
-            </Box>
+            <>
+              {recommendations.map((club) => (
+                <Box 
+                  key={club.global_id} 
+                  sx={{ 
+                    mb: 2, 
+                    p: 2, 
+                    bgcolor: 'background.paper',
+                    borderBottom: '1px solid #e0e0e0',
+                    display: 'flex',
+                    justifyContent: 'space-between'
+                  }}
+                >
+                  {/* Left side - Club name and address */}
+                  <Box sx={{ flex: '1' }}>
+                    <Typography 
+                      variant="h6" 
+                      sx={{ 
+                        fontWeight: 'bold',
+                        mb: 0.5
+                      }}
+                    >
+                      {club.club_name}
+                    </Typography>
+                    <Typography 
+                      variant="body2" 
+                      color="text.secondary"
+                      sx={{ mb: 0.5 }}
+                    >
+                      {club.address}
+                    </Typography>
+                    <Typography 
+                      variant="body2" 
+                      color="text.secondary"
+                      sx={{ mb: 1 }}
+                    >
+                      {club.city}, {club.state} {club.zip_code} ({club.distance_miles.toFixed(1)} miles)
+                    </Typography>
+                    <Typography 
+                      variant="body2" 
+                      sx={{ 
+                        color: 'primary.main',
+                        fontWeight: 'bold'
+                      }}
+                    >
+                      Recommendation Score: {club.recommendation_score.toFixed(1)}%
+                    </Typography>
+                  </Box>
+
+                  {/* Right side - Club details */}
+                  <Box 
+                    sx={{ 
+                      display: 'flex', 
+                      flexDirection: 'column', 
+                      alignItems: 'flex-end',
+                      minWidth: '200px'
+                    }}
+                  >
+                    {club.price_tier && (
+                      <Typography 
+                        variant="body2" 
+                        sx={{ 
+                          mb: 0.5,
+                          bgcolor: 'primary.light',
+                          color: 'white',
+                          px: 1,
+                          py: 0.5,
+                          borderRadius: 1,
+                          display: 'inline-block'
+                        }}
+                      >
+                        Price: {club.price_tier}
+                      </Typography>
+                    )}
+                    {club.difficulty && (
+                      <Typography 
+                        variant="body2"
+                        sx={{ 
+                          mb: 0.5,
+                          bgcolor: 
+                            club.difficulty === 'Easy' ? 'success.light' : 
+                            club.difficulty === 'Medium' ? 'warning.light' : 
+                            'error.light',
+                          color: 'white',
+                          px: 1,
+                          py: 0.5,
+                          borderRadius: 1,
+                          display: 'inline-block'
+                        }}
+                      >
+                        Difficulty: {club.difficulty}
+                      </Typography>
+                    )}
+                  </Box>
+                </Box>
+              ))}
+              <Box sx={{ mt: 2, display: 'flex', gap: 1, justifyContent: 'center', alignItems: 'center' }}>
+                <Button
+                  onClick={() => fetchRecommendations(1)}
+                  disabled={currentPage === 1 || isLoading}
+                >
+                  First
+                </Button>
+                <Button
+                  onClick={() => fetchRecommendations(currentPage - 1)}
+                  disabled={currentPage === 1 || isLoading}
+                >
+                  Previous
+                </Button>
+                
+                {/* Page numbers */}
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  const pageNum = currentPage - 2 + i;
+                  if (pageNum > 0 && pageNum <= totalPages) {
+                    return (
+                      <Button
+                        key={pageNum}
+                        onClick={() => fetchRecommendations(pageNum)}
+                        variant={pageNum === currentPage ? "contained" : "outlined"}
+                        disabled={isLoading}
+                      >
+                        {pageNum}
+                      </Button>
+                    );
+                  }
+                  return null;
+                })}
+                
+                <Button
+                  onClick={() => fetchRecommendations(currentPage + 1)}
+                  disabled={currentPage === totalPages || isLoading}
+                >
+                  Next
+                </Button>
+                <Button
+                  onClick={() => fetchRecommendations(totalPages)}
+                  disabled={currentPage === totalPages || isLoading}
+                >
+                  Last
+                </Button>
+                <Typography variant="body2">
+                  Page {currentPage} of {totalPages}
+                </Typography>
+              </Box>
+            </>
           ) : (
-            <Typography variant="body1">No recommendations found.</Typography>
+            <Typography>No recommendations found.</Typography>
           )}
         </section>
       </div>
-    </div>
+    </PageLayout>
   );
 };
 

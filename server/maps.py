@@ -1,6 +1,24 @@
+import os
+from pathlib import Path
+from dotenv import load_dotenv
 import requests
 
-AZURE_MAPS_API_KEY = "9NGtm5ACQVDOOMBQ4lZRzoE2J5JxN9st9uSftyEvjmaMpyrSZ247JQQJ99ALACYeBjFulBLoAAAgAZMP103l"
+# Load environment variables
+BASE_DIR = Path(__file__).resolve().parent
+load_dotenv(os.path.join(BASE_DIR, '.env'))
+
+AZURE_MAPS_API_KEY = os.getenv("AZURE_MAPS_API_KEY")
+
+def geocode_address(zip_code):
+    url = "https://atlas.microsoft.com/search/address/json"
+    params = {
+        "api-version": "1.0",
+        "subscription-key": AZURE_MAPS_API_KEY,
+        "query": zip_code,
+    }
+    response = requests.get(url, params=params)
+    response.raise_for_status()
+    return response.json()
 
 def validate_address(address: str, city: str, state: str):
     """

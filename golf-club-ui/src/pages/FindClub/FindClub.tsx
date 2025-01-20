@@ -1,16 +1,20 @@
-import React, { useState } from 'react';
-import axios from 'axios';
+import React, { useState, useEffect } from 'react';
 import { Container, Typography, TextField, Button, MenuItem, Select, InputLabel, FormControl, Box, SelectChangeEvent } from '@mui/material';
 import './FindClub.css';
+import { API_BASE_URL, debugApiConfig } from '../../utils/api';
+import PageLayout from '../../components/PageLayout';
 
 interface GolfClub {
+  global_id: string;
   club_name: string;
+  address: string;
   city: string;
   state: string;
+  zip_code: string;
   distance_miles: number;
   price_tier?: string;
   difficulty?: string;
-  technologies?: string[];
+  available_technologies?: string[];
 }
 
 const technologyOptions = [
@@ -32,40 +36,67 @@ const FindClub: React.FC = () => {
   const [difficulty, setDifficulty] = useState<'' | 'Easy' | 'Medium' | 'Hard'>('');
   const [findTechnologies, setFindTechnologies] = useState<string[]>([]);
   const [results, setResults] = useState<GolfClub[]>([]);
-  const [page, setPage] = useState<number>(1);
-  const [totalPages, setTotalPages] = useState<number>(1);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [clubError, setClubError] = useState<string | null>(null);
 
   const fetchClubs = async (pageNumber: number) => {
     try {
-      const params: any = {
-        zip_code: zipCode,
-        radius,
-        limit: 5,  // Limit the number of results to 5
-        offset: (pageNumber - 1) * 5,
-      };
+      if (!zipCode) {
+        setClubError('Please enter a ZIP code');
+        return;
+      }
 
-      if (priceRange) params.price_tier = priceRange;
-      if (difficulty) params.difficulty = difficulty;
-      if (findTechnologies.length > 0) params.technologies = findTechnologies.join(',');
-
-      const response = await axios.get<{ results: GolfClub[]; total: number }>(
-        `${process.env.REACT_APP_API_URL}/find_clubs/`,
-        { params }
-      );
-
-      setResults(response.data.results);
-      setTotalPages(Math.ceil(response.data.total / 5));
       setClubError(null);
+      
+      // Ensure pageNumber is valid
+      const page = Math.max(1, pageNumber || 1);
+      const offset = (page - 1) * 5;
+      
+      const apiUrl = `${API_BASE_URL}/find_clubs/`;
+      const params = new URLSearchParams({
+        zip_code: zipCode,
+        radius: radius.toString(),
+        limit: '5',
+        offset: offset.toString()  // Now this will always be a valid number
+      });
+
+      // Add optional filters if selected
+      if (priceRange) params.append('price_tier', priceRange);
+      if (difficulty) params.append('difficulty', difficulty);
+      if (findTechnologies.length > 0) params.append('technologies', findTechnologies.join(','));
+
+      console.log('Fetching from:', `${apiUrl}?${params.toString()}`);
+
+      const response = await fetch(`${apiUrl}?${params.toString()}`);
+      const data = await response.json();
+
+      console.log('API Response:', data);
+
+      if (!response.ok) {
+        throw new Error(data.detail?.message || 'Failed to fetch clubs');
+      }
+
+      if (data.results && Array.isArray(data.results)) {
+        setResults(data.results);
+        setTotalPages(Math.max(1, data.total_pages || 1));  // Ensure at least 1 page
+        setCurrentPage(data.page || 1);  // Ensure valid current page
+      } else {
+        console.error('Unexpected response format:', data);
+        setClubError('Unexpected response format from server');
+      }
+
     } catch (err) {
-      setClubError('Failed to fetch golf clubs.');
-      console.error('Error fetching clubs:', err);
+      console.error('Error in fetchClubs:', err);
+      setClubError(err instanceof Error ? err.message : 'Failed to fetch clubs');
     }
   };
 
   const handlePageChange = (newPage: number) => {
-    setPage(newPage);
-    fetchClubs(newPage);
+    // Ensure newPage is within valid range
+    const validPage = Math.max(1, Math.min(newPage, totalPages));
+    setCurrentPage(validPage);
+    fetchClubs(validPage);
   };
 
   const handleTechnologiesChange = (event: SelectChangeEvent<string[]>) => {
@@ -73,69 +104,45 @@ const FindClub: React.FC = () => {
     setFindTechnologies(selectedOptions);
   };
 
-  return (
-    <div className="find-club-container">
-      {/* Top Image Section */}
-      <div className="top-image">
-        <img
-          src="/golfclubheader.jpg" // Replace with your image path
-          alt="Promotional banner"
-          className="header-image"
-        />
-      </div>
+  useEffect(() => {
+    debugApiConfig();
+  }, []);
 
-      {/* Content Section */}
+  return (
+    <PageLayout title="Find Golf Clubs">
       <div className="content">
-        {/* Filters Section */}
         <aside className="filters">
           <Typography variant="h4" component="h1" gutterBottom>
             Find Club
           </Typography>
           <Typography variant="body1" gutterBottom>
-            Search for golf clubs in your area by filling out the form below with your preferences.
+            Search for golf clubs in your area
           </Typography>
           <Box sx={{ mt: 2 }}>
-            <div className="form-group">
-              <div className="input-group" style={{ width: '100%' }}>
-                <TextField
-                  fullWidth
-                  id="zipCode"
-                  value={zipCode}
-                  onChange={(e) => setZipCode(e.target.value)}
-                  placeholder="Enter ZIP code"
-                  title="Enter the ZIP code of the area you want to search in"
-                  margin="normal"
-                  sx={{ backgroundColor: 'white', border: 'none', width: '100%' }} // Ensure full width
-                  inputProps={{ maxLength: 5 }} // Ensure ZIP code is limited to 5 characters
-                />
-                <span className="input-group-text">
-                  <i className="fas fa-ellipsis-h"></i> {/* Adjust this to your icon */}
-                </span>
-              </div>
-            </div>
-            <FormControl fullWidth margin="normal" sx={{ backgroundColor: 'white' }}>
-              <InputLabel id="radius-label" shrink>Radius (miles)</InputLabel>
+            <TextField
+              fullWidth
+              label="ZIP Code"
+              value={zipCode}
+              onChange={(e) => setZipCode(e.target.value)}
+              margin="normal"
+              inputProps={{ maxLength: 5 }}
+            />
+            <FormControl fullWidth margin="normal">
+              <InputLabel>Radius (miles)</InputLabel>
               <Select
-                labelId="radius-label"
-                label="Radius (miles)"
                 value={radius}
                 onChange={(e) => setRadius(Number(e.target.value))}
-                title="Select the search radius in miles"
-                sx={{ height: '56px' }} // Adjust height
               >
                 {[1, 5, 10, 25, 50, 100].map((r) => (
-                  <MenuItem key={r} value={r}>
-                    {r}
-                  </MenuItem>
+                  <MenuItem key={r} value={r}>{r}</MenuItem>
                 ))}
               </Select>
             </FormControl>
-            <FormControl fullWidth margin="normal" sx={{ backgroundColor: 'white' }}>
+            <FormControl fullWidth margin="normal">
               <InputLabel>Price Range</InputLabel>
               <Select
                 value={priceRange}
                 onChange={(e) => setPriceRange(e.target.value as '' | '$' | '$$' | '$$$')}
-                title="Select the preferred price range"
               >
                 <MenuItem value="">All</MenuItem>
                 <MenuItem value="$">$</MenuItem>
@@ -143,12 +150,11 @@ const FindClub: React.FC = () => {
                 <MenuItem value="$$$">$$$</MenuItem>
               </Select>
             </FormControl>
-            <FormControl fullWidth margin="normal" sx={{ backgroundColor: 'white' }}>
-              <InputLabel>Difficulty Level</InputLabel>
+            <FormControl fullWidth margin="normal">
+              <InputLabel>Difficulty</InputLabel>
               <Select
                 value={difficulty}
                 onChange={(e) => setDifficulty(e.target.value as '' | 'Easy' | 'Medium' | 'Hard')}
-                title="Select the difficulty level"
               >
                 <MenuItem value="">All</MenuItem>
                 <MenuItem value="Easy">Easy</MenuItem>
@@ -156,93 +162,212 @@ const FindClub: React.FC = () => {
                 <MenuItem value="Hard">Hard</MenuItem>
               </Select>
             </FormControl>
-            <FormControl fullWidth margin="normal" sx={{ backgroundColor: 'white' }}>
+            <FormControl fullWidth margin="normal">
               <InputLabel>Technologies</InputLabel>
               <Select
                 multiple
                 value={findTechnologies}
                 onChange={handleTechnologiesChange}
-                title="Select the preferred technologies"
               >
                 {technologyOptions.map((tech) => (
-                  <MenuItem key={tech} value={tech}>
-                    {tech}
-                  </MenuItem>
+                  <MenuItem key={tech} value={tech}>{tech}</MenuItem>
                 ))}
               </Select>
             </FormControl>
-            <Button onClick={() => fetchClubs(1)} variant="contained" color="primary" sx={{ mt: 2 }}>
+            <Button 
+              onClick={() => fetchClubs(1)} 
+              variant="contained" 
+              color="primary" 
+              sx={{ mt: 2 }}
+            >
               Find Clubs
             </Button>
-            {clubError && <Typography color="error" sx={{ mt: 2 }}>{clubError}</Typography>}
           </Box>
+          {clubError && (
+            <Typography color="error" sx={{ mt: 2 }}>
+              {clubError}
+            </Typography>
+          )}
         </aside>
 
-        {/* Results Section */}
         <section className="results">
-          <Typography variant="h5" component="h2" gutterBottom>
+          <Typography variant="h5" gutterBottom>
             Search Results
           </Typography>
           {results.length > 0 ? (
-            <Box sx={{ maxHeight: '600px', overflowY: 'auto', mt: 2 }}>
-              <ol className="results">
-                {results.map((club, idx) => (
-                  <li key={idx} className="result-item">
-                    <div className="result-left">
-                      <Typography variant="h6">{club.club_name}</Typography>
-                      <Typography variant="body2">{club.city}, {club.state} ({club.distance_miles.toFixed(2)} miles)</Typography>
-                    </div>
-                    <div className="result-right">
-                      {club.price_tier && <Typography variant="body2">Price Range: {club.price_tier}</Typography>}
-                      {club.difficulty && <Typography variant="body2">Difficulty Level: {club.difficulty}</Typography>}
-                      {club.technologies && club.technologies.length > 0 && (
-                        <Typography variant="body2">Technologies: {club.technologies.join(', ')}</Typography>
-                      )}
-                    </div>
-                  </li>
-                ))}
-              </ol>
-              <Box className="pagination" sx={{ mt: 2 }}>
-                <Button onClick={() => handlePageChange(1)} disabled={page === 1}>
+            <>
+              {results.map((club) => (
+                <Box 
+                  key={club.global_id} 
+                  sx={{ 
+                    mb: 2, 
+                    p: 2, 
+                    bgcolor: 'background.paper',
+                    borderBottom: '1px solid #e0e0e0',
+                    display: 'flex',
+                    justifyContent: 'space-between'
+                  }}
+                >
+                  {/* Left side - Club name and address */}
+                  <Box sx={{ flex: '1' }}>
+                    <Typography 
+                      variant="h6" 
+                      sx={{ 
+                        fontWeight: 'bold',
+                        mb: 0.5
+                      }}
+                    >
+                      {club.club_name}
+                    </Typography>
+                    <Typography 
+                      variant="body2" 
+                      color="text.secondary"
+                      sx={{ mb: 0.5 }}
+                    >
+                      {club.address}
+                    </Typography>
+                    <Typography 
+                      variant="body2" 
+                      color="text.secondary"
+                      sx={{ mb: 1 }}
+                    >
+                      {club.city}, {club.state} {club.zip_code} ({club.distance_miles.toFixed(1)} miles)
+                    </Typography>
+                  </Box>
+
+                  {/* Right side - Club details */}
+                  <Box 
+                    sx={{ 
+                      display: 'flex', 
+                      flexDirection: 'column', 
+                      alignItems: 'flex-end',
+                      minWidth: '200px'
+                    }}
+                  >
+                    {club.price_tier && (
+                      <Typography 
+                        variant="body2" 
+                        sx={{ 
+                          mb: 0.5,
+                          bgcolor: 'primary.light',
+                          color: 'white',
+                          px: 1,
+                          py: 0.5,
+                          borderRadius: 1,
+                          display: 'inline-block'
+                        }}
+                      >
+                        Price: {club.price_tier}
+                      </Typography>
+                    )}
+                    {club.difficulty && (
+                      <Typography 
+                        variant="body2"
+                        sx={{ 
+                          mb: 0.5,
+                          bgcolor: 
+                            club.difficulty === 'Easy' ? 'success.light' : 
+                            club.difficulty === 'Medium' ? 'warning.light' : 
+                            'error.light',
+                          color: 'white',
+                          px: 1,
+                          py: 0.5,
+                          borderRadius: 1,
+                          display: 'inline-block'
+                        }}
+                      >
+                        Difficulty: {club.difficulty}
+                      </Typography>
+                    )}
+                    {club.available_technologies && club.available_technologies.length > 0 && (
+                      <Box sx={{ textAlign: 'right' }}>
+                        <Typography 
+                          variant="body2" 
+                          sx={{ 
+                            color: 'text.secondary',
+                            fontStyle: 'italic',
+                            mb: 0.5
+                          }}
+                        >
+                          Available Technologies:
+                        </Typography>
+                        <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'flex-end', gap: 0.5 }}>
+                          {club.available_technologies.map((tech, idx) => (
+                            <Typography
+                              key={idx}
+                              variant="body2"
+                              sx={{
+                                bgcolor: 'info.light',
+                                color: 'white',
+                                px: 1,
+                                py: 0.5,
+                                borderRadius: 1,
+                                fontSize: '0.75rem'
+                              }}
+                            >
+                              {tech}
+                            </Typography>
+                          ))}
+                        </Box>
+                      </Box>
+                    )}
+                  </Box>
+                </Box>
+              ))}
+              <Box sx={{ mt: 2, display: 'flex', gap: 1, justifyContent: 'center', alignItems: 'center' }}>
+                <Button
+                  onClick={() => handlePageChange(1)}
+                  disabled={currentPage === 1}
+                >
                   First
                 </Button>
                 <Button
-                  onClick={() => handlePageChange(Math.max(1, page - 1))}
-                  disabled={page === 1}
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
                 >
                   Previous
                 </Button>
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                  (pageNumber) => (
-                    <Button
-                      key={pageNumber}
-                      onClick={() => handlePageChange(pageNumber)}
-                      disabled={page === pageNumber}
-                    >
-                      {pageNumber}
-                    </Button>
-                  )
-                )}
+                
+                {/* Page numbers */}
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  const pageNum = currentPage - 2 + i;
+                  if (pageNum > 0 && pageNum <= totalPages) {
+                    return (
+                      <Button
+                        key={pageNum}
+                        onClick={() => handlePageChange(pageNum)}
+                        variant={pageNum === currentPage ? "contained" : "outlined"}
+                      >
+                        {pageNum}
+                      </Button>
+                    );
+                  }
+                  return null;
+                })}
+                
                 <Button
-                  onClick={() => handlePageChange(page + 1)}
-                  disabled={page === totalPages}
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
                 >
                   Next
                 </Button>
                 <Button
                   onClick={() => handlePageChange(totalPages)}
-                  disabled={page === totalPages}
+                  disabled={currentPage === totalPages}
                 >
                   Last
                 </Button>
+                <Typography variant="body2">
+                  Page {currentPage} of {totalPages}
+                </Typography>
               </Box>
-            </Box>
+            </>
           ) : (
-            <Typography variant="body1">No results found.</Typography>
+            <Typography>No clubs found.</Typography>
           )}
         </section>
       </div>
-    </div>
+    </PageLayout>
   );
 };
 

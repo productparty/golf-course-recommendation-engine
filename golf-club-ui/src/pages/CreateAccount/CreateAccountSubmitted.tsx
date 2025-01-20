@@ -8,19 +8,20 @@ const CreateAccountSubmitted: React.FC = () => {
   return (
     <Container maxWidth="sm">
       <Typography variant="h4" component="h1" gutterBottom>
-        Account Created
+        Verify Your Email
       </Typography>
       <Box sx={{ mt: 2 }}>
         <Typography variant="body1">
-          Your account has been created successfully! Please check your email to confirm your account before moving forward.
+          Please check your email for a verification link from Supabase.
+          You won't be able to log in until you verify your email address.
         </Typography>
         <Button
           variant="contained"
           color="primary"
           sx={{ mt: 2 }}
-          onClick={() => navigate('/find-my-club')}
+          onClick={() => navigate('/golf-club-ui/login')}
         >
-          Find My Club
+          Go to Login
         </Button>
       </Box>
     </Container>

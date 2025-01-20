@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Container, Typography, TextField, Button, Box, Alert, Link } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '../../supabaseClient'  // Use shared client
 
 const CreateAccount = () => {
   const [email, setEmail] = useState('');
@@ -13,6 +14,8 @@ const CreateAccount = () => {
     password: '',
   });
   const navigate = useNavigate();
+
+  const apiUrl = import.meta.env.VITE_REACT_APP_API_URL?.replace(/\/+$/, '') || 'http://localhost:8000';
 
   const validateInputs = (email: string, password: string) => {
     const errors: { email: string; password: string } = { email: '', password: '' };
@@ -51,40 +54,22 @@ const CreateAccount = () => {
     }
 
     try {
-      // Register user
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/register`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email,
-          password,
-        }),
-      });
-
-      if (!response.ok) {
-        const contentType = response.headers.get('content-type');
-        if (contentType && contentType.includes('application/json')) {
-          const errorData = await response.json();
-          throw new Error(errorData.detail || 'Failed to register user');
-        } else {
-          const errorText = await response.text();
-          throw new Error(errorText || 'Failed to register user');
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/verify-email`
         }
-      }
+      })
 
-      setSuccess(true);
-      navigate('/create-account-submitted');
+      if (error) throw error
+
+      // Profile will be created automatically when they first access /golfer-profile
+      navigate('/create-account-submitted')
     } catch (error) {
-      if (error instanceof Error) {
-        setError(error.message);
-      } else {
-        setError('An unexpected error occurred.');
-      }
-      console.error('Error details:', error); // Log detailed error
+      setError(error instanceof Error ? error.message : 'An unexpected error occurred')
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
   };
 

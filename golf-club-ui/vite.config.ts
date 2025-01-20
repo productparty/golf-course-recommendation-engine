@@ -3,11 +3,11 @@ import react from '@vitejs/plugin-react';
 import path from 'path';
 
 export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, process.cwd(), ''); // Load from root
+  const env = loadEnv(mode, process.cwd(), '');
 
   return {
-    root: path.resolve(__dirname, '.'), // Ensure this points to the correct root directory
-    base: '/golf-club-ui/', // Ensure this matches the output directory in Vercel config
+    root: path.resolve(__dirname, '.'),
+    base: '/',
     plugins: [react()],
     publicDir: path.resolve(__dirname, 'public'),
     build: {
@@ -29,7 +29,7 @@ export default defineConfig(({ mode }) => {
       },
       proxy: {
         '/api': {
-          target: env.REACT_APP_API_URL || 'http://localhost:8080',
+          target: env.VITE_REACT_APP_API_URL || 'http://localhost:8000',
           changeOrigin: true,
           secure: false,
         },
@@ -39,10 +39,12 @@ export default defineConfig(({ mode }) => {
       port: 4173,
     },
     define: {
-      'process.env': {
-        REACT_APP_API_URL: env.REACT_APP_API_URL,
-        FRONTEND_URL: env.FRONTEND_URL,
-      }, // Expose env variables
+      'import.meta.env.VITE_REACT_APP_API_URL': JSON.stringify(env.VITE_REACT_APP_API_URL),
+      'import.meta.env.MODE': JSON.stringify(env.MODE),
+      'import.meta.env.BASE_URL': JSON.stringify(env.BASE_URL),
+      'import.meta.env.VITE_SUPABASE_URL': JSON.stringify(env.VITE_SUPABASE_URL),
+      'import.meta.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(env.VITE_SUPABASE_ANON_KEY),
     },
+    envDir: path.resolve(__dirname),
   };
 });

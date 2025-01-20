@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Typography, TextField, Button, Box, Link } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
+import { Container, Typography, TextField, Button, Box } from '@mui/material';
+import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { supabase } from '../../supabaseClient'  // Use shared client
 
 const LogIn: React.FC = () => {
   const [username, setUsername] = useState('');
@@ -9,13 +10,15 @@ const LogIn: React.FC = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { login, isLoggedIn } = useAuth();
+  const { session } = useAuth();
+  const apiUrl = import.meta.env.VITE_REACT_APP_API_URL?.replace(/\/+$/, '') || 'http://localhost:8000';
 
   useEffect(() => {
-    if (isLoggedIn) {
+    console.log('API URL:', apiUrl);
+    if (session) {
       navigate('/');
     }
-  }, [isLoggedIn, navigate]);
+  }, [session, navigate, apiUrl]);
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -23,28 +26,16 @@ const LogIn: React.FC = () => {
     setError('');
 
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ username, password }),
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: username,
+        password,
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Failed to log in');
-      }
+      if (error) throw error;
 
-      const data = await response.json();
-      localStorage.setItem('authToken', data.access_token);
-      login();
+      navigate('/');
     } catch (error) {
-      if (error instanceof Error) {
-        setError(error.message);
-      } else {
-        setError('An unexpected error occurred.');
-      }
+      setError(error instanceof Error ? error.message : 'An unexpected error occurred');
     } finally {
       setLoading(false);
     }
@@ -81,14 +72,18 @@ const LogIn: React.FC = () => {
         </Button>
         {error && <Typography color="error" sx={{ mt: 2 }}>{error}</Typography>}
         <Box sx={{ mt: 2 }}>
-          <Link href="/golf-club-ui/create-account" variant="body2">
-            Need to create an account?
-          </Link>
+          <RouterLink to="/create-account" style={{ textDecoration: 'none', color: 'inherit' }}>
+            <Typography variant="body2" color="primary">
+              Need to create an account?
+            </Typography>
+          </RouterLink>
         </Box>
         <Box sx={{ mt: 2 }}>
-          <Link href="/golf-club-ui/password-reset-request" variant="body2">
-            Need to reset your password?
-          </Link>
+          <RouterLink to="/password-reset" style={{ textDecoration: 'none', color: 'inherit' }}>
+            <Typography variant="body2" color="primary">
+              Need to reset your password?
+            </Typography>
+          </RouterLink>
         </Box>
       </Box>
     </Container>
@@ -96,3 +91,4 @@ const LogIn: React.FC = () => {
 };
 
 export default LogIn;
+

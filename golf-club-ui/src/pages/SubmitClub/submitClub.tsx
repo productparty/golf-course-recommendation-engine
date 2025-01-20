@@ -1,11 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Container, Typography, TextField, Button, MenuItem, Select, InputLabel, FormControl, Box, SelectChangeEvent } from '@mui/material';
+import { useAuth } from '../../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 const priceTiers = ['$', '$$', '$$$'];
 const difficulties = ['Easy', 'Medium', 'Hard'];
 const states = ['AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA', 'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD', 'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ', 'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC', 'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY'];
 
 const SubmitClub: React.FC = () => {
+  const { session } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!session) {
+      navigate('/login');
+    }
+  }, [session, navigate]);
+
   const [formData, setFormData] = useState({
     club_name: '',
     city: '',
@@ -19,8 +30,14 @@ const SubmitClub: React.FC = () => {
     setFormData({ ...formData, [name]: value });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!session) {
+      navigate('/login');
+      return;
+    }
+
     const mailtoLink = `mailto:mwatson1983@gmail.com?subject=Submit Club Form Submission&body=${encodeURIComponent(
       `Club Name: ${formData.club_name}\nCity: ${formData.city}\nState: ${formData.state}\nPrice Tier: ${formData.price_tier}\nDifficulty: ${formData.difficulty}`
     )}`;

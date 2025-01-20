@@ -1,13 +1,19 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import styles from '../builderio/navigation/Navigation.module.css';
 
 const Header: React.FC = () => {
-  const { isLoggedIn, logout } = useAuth();
+  const { session, signOut } = useAuth();
+  const navigate = useNavigate();
 
   const handleImageError = (event: React.SyntheticEvent<HTMLImageElement, Event>) => {
     event.currentTarget.src = 'path/to/fallback-image.png'; // Provide a path to your fallback image
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
   };
 
   return (
@@ -34,17 +40,22 @@ const Header: React.FC = () => {
       </div>
       <nav className={styles.navLinks} style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'flex-end', gap: '10px' }}>
         <Link to="/" className={styles.navLink}>Home</Link>
-        {isLoggedIn ? (
+        {session ? (
           <>
             <Link to="/find-club" className={styles.navLink}>Find Club</Link>
             <Link to="/recommend-club" className={styles.navLink}>Recommend Club</Link>
             <Link to="/submit-club" className={styles.navLink}>Submit Club</Link>
             <Link to="/golfer-profile" className={styles.navLink}>Golfer Profile</Link>
-            <button onClick={logout} className={styles.navLink} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>Logout</button>
+            <button 
+              onClick={handleSignOut} 
+              className={styles.navLink} 
+              style={{ background: 'none', border: 'none', cursor: 'pointer' }}
+            >
+              Sign Out
+            </button>
           </>
         ) : (
           <>
-            <Link to="/sign-up" className={styles.navLink}>Sign Up</Link>
             <Link to="/create-account" className={styles.navLink}>Create Account</Link>
             <Link to="/login" className={styles.navLink}>Log In</Link>
           </>

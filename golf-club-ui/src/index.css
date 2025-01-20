@@ -24,10 +24,9 @@ a:hover {
 
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
+  padding: 0;
+  background-color: #F5F5F5;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 }
 
 h1 {
@@ -65,4 +64,21 @@ button:focus-visible {
   button {
     background-color: #f9f9f9;
   }
+}
+
+.header-image {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  margin-bottom: 2rem;
+}
+
+.top-image {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+}
+
+.MuiContainer-root {
+  min-height: calc(100vh - 64px - 200px);
 }

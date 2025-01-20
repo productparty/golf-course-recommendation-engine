@@ -23,7 +23,7 @@ const VerifyEmail: React.FC = () => {
       }
 
       try {
-        const response = await fetch(`${process.env.REACT_APP_API_URL}/verify-email?token=${token}`, {
+        const response = await fetch(`${import.meta.env.VITE_REACT_APP_API_URL}/verify-email?token=${token}`, {
           method: 'GET',
         });
 

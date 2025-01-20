@@ -1,67 +1,73 @@
 import React, { useState } from 'react';
 import { Container, Typography, TextField, Button, Box, Alert } from '@mui/material';
+import { supabase } from '../../supabaseClient';
+import PageLayout from '../../components/PageLayout';
 
 const PasswordResetRequest: React.FC = () => {
   const [email, setEmail] = useState('');
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState('');
 
-  const handlePasswordResetRequest = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleResetRequest = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
     setError('');
-    setSuccess(false);
 
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/password-reset-request`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email }),
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password/confirm`,
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Failed to request password reset');
-      }
-
+      if (error) throw error;
       setSuccess(true);
     } catch (error) {
-      if (error instanceof Error) {
-        setError(error.message);
-      } else {
-        setError('An unexpected error occurred.');
-      }
+      setError(error instanceof Error ? error.message : 'Failed to send reset email');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Container maxWidth="sm">
-      <Typography variant="h4" component="h1" gutterBottom>
-        Password Reset
-      </Typography>
-      <Box component="form" onSubmit={handlePasswordResetRequest} sx={{ mt: 2 }}>
-        <TextField
-          fullWidth
-          label="Email"
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-          margin="normal"
-          sx={{ backgroundColor: 'white' }}
-        />
-        <Button type="submit" variant="contained" color="primary" sx={{ mt: 2 }} disabled={loading}>
-          {loading ? 'Loading...' : 'Request Password Reset'}
-        </Button>
-        {error && <Typography color="error" sx={{ mt: 2 }}>{error}</Typography>}
-        {success && <Alert severity="success" sx={{ mt: 2 }}>Password reset email sent! Please check your email.</Alert>}
-      </Box>
-    </Container>
+    <PageLayout title="Reset Password">
+      <Container maxWidth="sm">
+        {!success ? (
+          <Box component="form" onSubmit={handleResetRequest} sx={{ mt: 2 }}>
+            <Typography variant="body1" sx={{ mb: 2 }}>
+              Enter your email address and we'll send you a link to reset your password.
+            </Typography>
+            <TextField
+              fullWidth
+              label="Email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              margin="normal"
+            />
+            <Button 
+              type="submit" 
+              variant="contained" 
+              color="primary" 
+              fullWidth
+              sx={{ mt: 2 }} 
+              disabled={loading}
+            >
+              {loading ? 'Sending...' : 'Send Reset Link'}
+            </Button>
+            {error && (
+              <Alert severity="error" sx={{ mt: 2 }}>
+                {error}
+              </Alert>
+            )}
+          </Box>
+        ) : (
+          <Alert severity="success">
+            Check your email for the password reset link!
+          </Alert>
+        )}
+      </Container>
+    </PageLayout>
   );
 };
 

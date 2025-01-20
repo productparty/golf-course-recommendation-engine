@@ -1,55 +1,64 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { Container, Typography, Box, CircularProgress, TextField, Button, MenuItem, Select, InputLabel, FormControl, Autocomplete, Link } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import debounce from 'lodash.debounce';  // Ensure this import is correct
+import React, { useState, useEffect } from 'react';
+import { 
+  Typography, 
+  TextField, 
+  Button, 
+  MenuItem, 
+  Select, 
+  InputLabel, 
+  FormControl, 
+  Box, 
+  SelectChangeEvent 
+} from '@mui/material';
+import { useAuth } from '../../context/AuthContext';
+import { API_BASE_URL } from '../../utils/api';
+import PageLayout from '../../components/PageLayout';
 
 interface GolferProfile {
+  golfer_id: string;
   email: string;
-  first_name: string;
-  last_name: string;
-  handicap_index: number;
-  preferred_price_range: string;
-  preferred_difficulty: string;
-  preferred_tees: string;  // Include preferred_tees in the profile interface
-  skill_level: string;
-  play_frequency: string;
+  first_name: string | null;
+  last_name: string | null;
+  handicap_index: number | null;
+  preferred_price_range: string | null;
+  preferred_difficulty: string | null;
+  skill_level: string | null;
+  play_frequency: string | null;
   club_id: string | null;
-  club_name: string | null;  // Include club_name in the profile interface
+  club_name: string | null;
+  preferred_tees: string | null;
+  is_verified: boolean;
 }
 
-interface GolfClub {
-  club_id: string;
-  club_name: string;
-}
-
-const GolferProfile = () => {
-  const [profile, setProfile] = useState<GolferProfile | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [editMode, setEditMode] = useState(false);
-  const [clubs, setClubs] = useState<GolfClub[]>([]);
-  const [selectedClub, setSelectedClub] = useState<GolfClub | null>(null);
-  const navigate = useNavigate();
+const GolferProfile: React.FC = () => {
+  const { session } = useAuth();
+  const [profile, setProfile] = useState<GolferProfile>({
+    golfer_id: '',
+    email: '',
+    first_name: null,
+    last_name: null,
+    handicap_index: null,
+    preferred_price_range: null,
+    preferred_difficulty: null,
+    skill_level: null,
+    play_frequency: null,
+    club_id: null,
+    club_name: null,
+    preferred_tees: null,
+    is_verified: false
+  });
+  const [error, setError] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchProfile = async () => {
-      setLoading(true);
-      setError('');
-
-      const token = localStorage.getItem('authToken');
-      if (!token) {
-        setError('In order to view your profile, you must log in first:');
-        setLoading(false);
-        return;
-      }
-
       try {
-        const response = await fetch(`${process.env.REACT_APP_API_URL}/get-golfer-profile`, {
-          method: 'GET',
+        if (!session?.access_token) return;
+
+        const response = await fetch(`${API_BASE_URL}/get-golfer-profile`, {
           headers: {
-            'Authorization': `Bearer ${token}`,
-          },
+            'Authorization': `Bearer ${session.access_token}`
+          }
         });
 
         if (!response.ok) {
@@ -58,241 +67,170 @@ const GolferProfile = () => {
 
         const data = await response.json();
         setProfile(data);
-        if (data.club_id) {
-          setSelectedClub({ club_id: data.club_id, club_name: data.club_name });
-        }
-      } catch (error) {
-        setError('In order to view your profile, you must log in first.');
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load profile');
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
     };
 
     fetchProfile();
-  }, [navigate]);
+  }, [session]);
 
-  useEffect(() => {
-    const fetchInitialClubs = async () => {
-      try {
-        const response = await axios.get<GolfClub[]>(`${process.env.REACT_APP_API_URL}/search-golf-clubs`, {
-          params: { query: '' },
-        });
-        setClubs(response.data);
-      } catch (error) {
-        console.error('Error fetching initial clubs:', error);
-      }
-    };
-
-    fetchInitialClubs();
-  }, []);
-
-  const handleSave = async () => {
-    if (!profile) return;
-
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/update-golfer-profile`, {
+      if (!session?.access_token) {
+        throw new Error('Not authenticated');
+      }
+
+      const response = await fetch(`${API_BASE_URL}/update-golfer-profile`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+          'Authorization': `Bearer ${session.access_token}`
         },
-        body: JSON.stringify({ ...profile, club_id: selectedClub?.club_id || null }),
+        body: JSON.stringify(profile)
       });
 
       if (!response.ok) {
         throw new Error('Failed to update profile');
       }
 
-      setEditMode(false);
-    } catch (error) {
-      if (error instanceof Error) {
-        setError(error.message);
-      } else {
-        setError('An unexpected error occurred.');
-      }
+      setError('');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update profile');
     }
   };
 
-  const fetchClubs = async (query: string) => {
-    try {
-      const response = await axios.get<GolfClub[]>(`${process.env.REACT_APP_API_URL}/search-golf-clubs`, {
-        params: { query },
-      });
-      setClubs(response.data);
-    } catch (error) {
-      console.error('Error fetching clubs:', error);
-    }
+  const handleTextChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = event.target;
+    setProfile(prev => ({ ...prev, [name]: value }));
   };
 
-  const debouncedFetchClubs = useCallback(debounce(fetchClubs, 300), []);
-
-  const handleClubSearch = (event: React.ChangeEvent<{}>, value: string) => {
-    debouncedFetchClubs(value);
+  const handleSelectChange = (event: SelectChangeEvent) => {
+    const { name, value } = event.target;
+    setProfile(prev => ({ ...prev, [name]: value }));
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
-      <Container maxWidth="sm">
-        <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
-          <CircularProgress />
-        </Box>
-      </Container>
-    );
-  }
-
-  if (error) {
-    return (
-      <Container maxWidth="sm">
-        <Typography color="error" sx={{ mt: 2 }}>
-          {error} <Link href="/login">Log in</Link>
-        </Typography>
-      </Container>
+      <PageLayout title="Golfer Profile">
+        <Typography>Loading profile...</Typography>
+      </PageLayout>
     );
   }
 
   return (
-    <Container maxWidth="sm">
-      <Typography variant="h4" component="h1" gutterBottom>
-        Golfer Profile
-      </Typography>
-      <Typography variant="body1" sx={{ mt: 2, textAlign: 'left' }}>
-        Please update your profile with information about you and your game.
-      </Typography>
-      <Box display="flex" justifyContent="space-between" alignItems="center" sx={{ mt: 2 }}>
-        <Button variant="contained" color="primary" onClick={() => setEditMode(true)}>
-          Edit
-        </Button>
-      </Box>
-      {profile && (
-        <Box sx={{ mt: 2 }}>
+    <PageLayout title="Golfer Profile">
+      <Box sx={{ maxWidth: 600, mx: 'auto' }}>
+        <Typography 
+          variant="subtitle1" 
+          sx={{ mb: 3, color: 'text.secondary' }}
+        >
+          Email: {profile.email}
+        </Typography>
+
+        <form onSubmit={handleSubmit}>
           <TextField
             fullWidth
-            label="Email"
-            value={profile.email || ''}
             margin="normal"
-            sx={{ backgroundColor: 'white' }}
-            disabled
-          />
-          <TextField
-            fullWidth
             label="First Name"
+            name="first_name"
             value={profile.first_name || ''}
-            onChange={(e) => setProfile({ ...profile, first_name: e.target.value })}
-            margin="normal"
-            sx={{ backgroundColor: 'white' }}
-            disabled={!editMode}
+            onChange={handleTextChange}
           />
           <TextField
             fullWidth
+            margin="normal"
             label="Last Name"
+            name="last_name"
             value={profile.last_name || ''}
-            onChange={(e) => setProfile({ ...profile, last_name: e.target.value })}
-            margin="normal"
-            sx={{ backgroundColor: 'white' }}
-            disabled={!editMode}
+            onChange={handleTextChange}
           />
           <TextField
             fullWidth
-            label="Handicap Index"
-            type="number"
-            value={profile.handicap_index || 0}
-            onChange={(e) => setProfile({ ...profile, handicap_index: parseFloat(e.target.value) })}
-            inputProps={{ min: 0, max: 40.4, step: 0.1 }}
             margin="normal"
-            sx={{ backgroundColor: 'white' }}
-            disabled={!editMode}
+            label="Handicap Index"
+            name="handicap_index"
+            type="number"
+            value={profile.handicap_index || ''}
+            onChange={handleTextChange}
           />
-          <FormControl fullWidth margin="normal" sx={{ backgroundColor: 'white' }}>
+          <FormControl fullWidth margin="normal">
             <InputLabel>Preferred Price Range</InputLabel>
             <Select
+              name="preferred_price_range"
               value={profile.preferred_price_range || ''}
-              onChange={(e) => setProfile({ ...profile, preferred_price_range: e.target.value })}
+              onChange={handleSelectChange}
               label="Preferred Price Range"
-              disabled={!editMode}
             >
+              <MenuItem value="">None</MenuItem>
               <MenuItem value="$">$</MenuItem>
               <MenuItem value="$$">$$</MenuItem>
               <MenuItem value="$$$">$$$</MenuItem>
             </Select>
           </FormControl>
-          <FormControl fullWidth margin="normal" sx={{ backgroundColor: 'white' }}>
+          <FormControl fullWidth margin="normal">
             <InputLabel>Preferred Difficulty</InputLabel>
             <Select
+              name="preferred_difficulty"
               value={profile.preferred_difficulty || ''}
-              onChange={(e) => setProfile({ ...profile, preferred_difficulty: e.target.value })}
+              onChange={handleSelectChange}
               label="Preferred Difficulty"
-              disabled={!editMode}
             >
+              <MenuItem value="">None</MenuItem>
               <MenuItem value="Easy">Easy</MenuItem>
               <MenuItem value="Medium">Medium</MenuItem>
               <MenuItem value="Hard">Hard</MenuItem>
             </Select>
           </FormControl>
-          <FormControl fullWidth margin="normal" sx={{ backgroundColor: 'white' }}>
-            <InputLabel>Preferred Tees</InputLabel>
-            <Select
-              value={profile.preferred_tees || ''}
-              onChange={(e) => setProfile({ ...profile, preferred_tees: e.target.value })}
-              label="Preferred Tees"
-              disabled={!editMode}
-            >
-              <MenuItem value="Black">Black</MenuItem>
-              <MenuItem value="Blue">Blue</MenuItem>
-              <MenuItem value="White">White</MenuItem>
-              <MenuItem value="Gold">Gold</MenuItem>
-            </Select>
-          </FormControl>
-          <FormControl fullWidth margin="normal" sx={{ backgroundColor: 'white' }}>
+          <FormControl fullWidth margin="normal">
             <InputLabel>Skill Level</InputLabel>
             <Select
+              name="skill_level"
               value={profile.skill_level || ''}
-              onChange={(e) => setProfile({ ...profile, skill_level: e.target.value })}
+              onChange={handleSelectChange}
               label="Skill Level"
-              disabled={!editMode}
             >
+              <MenuItem value="">None</MenuItem>
               <MenuItem value="Beginner">Beginner</MenuItem>
               <MenuItem value="Intermediate">Intermediate</MenuItem>
               <MenuItem value="Advanced">Advanced</MenuItem>
             </Select>
           </FormControl>
-          <FormControl fullWidth margin="normal" sx={{ backgroundColor: 'white' }}>
+          <FormControl fullWidth margin="normal">
             <InputLabel>Play Frequency</InputLabel>
             <Select
+              name="play_frequency"
               value={profile.play_frequency || ''}
-              onChange={(e) => setProfile({ ...profile, play_frequency: e.target.value })}
+              onChange={handleSelectChange}
               label="Play Frequency"
-              disabled={!editMode}
             >
+              <MenuItem value="">None</MenuItem>
               <MenuItem value="Rarely">Rarely</MenuItem>
-              <MenuItem value="Occasionally">Occasionally</MenuItem>
-              <MenuItem value="Regularly">Regularly</MenuItem>
-              <MenuItem value="Frequently">Frequently</MenuItem>
+              <MenuItem value="Sometimes">Sometimes</MenuItem>
+              <MenuItem value="Often">Often</MenuItem>
+              <MenuItem value="Very Often">Very Often</MenuItem>
             </Select>
           </FormControl>
-          <Autocomplete
-            options={clubs}
-            getOptionLabel={(option) => option.club_name}
-            value={selectedClub || null}
-            onChange={(event, newValue) => setSelectedClub(newValue)}
-            onInputChange={handleClubSearch}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                label="Favorite Golf Club"
-                margin="normal"
-                sx={{ backgroundColor: 'white' }}
-                disabled={!editMode}
-              />
-            )}
-          />
-          {editMode && (
-            <Button variant="contained" color="primary" sx={{ mt: 2 }} onClick={handleSave}>
-              Save
-            </Button>
-          )}
-        </Box>
-      )}
-    </Container>
+          <Button
+            type="submit"
+            variant="contained"
+            color="primary"
+            fullWidth
+            sx={{ mt: 3, mb: 2 }}
+          >
+            Save Profile
+          </Button>
+        </form>
+        {error && (
+          <Typography color="error" sx={{ mt: 2 }}>
+            {error}
+          </Typography>
+        )}
+      </Box>
+    </PageLayout>
   );
 };
 

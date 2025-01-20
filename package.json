@@ -1,7 +1,6 @@
 {
   "name": "golf-course-recommendation-engine",
   "version": "1.0.0",
-  "homepage": "https://golf-course-recommendation-engine-mike-watsons-projects.vercel.app/",
   "dependencies": {
     "@sendgrid/mail": "^8.1.4",
     "@types/lodash": "^4.17.14",
@@ -21,8 +20,8 @@
   },
   "scripts": {
     "start:backend": "cd server && python app.py",
-    "start:frontend": "npm start --prefix golf-club-ui",
-    "start:all": "npm run build && npm run start",
+    "start:frontend": "cd golf-club-ui && vite",
+    "start:all": "concurrently \"npm run start:backend\" \"npm run start:frontend\"",
     "build:frontend": "npm run build --prefix golf-club-ui",
     "build": "cd golf-club-ui && vite build --config vite.config.ts",
     "postinstall": "cd golf-club-ui && npm install && npm run build",

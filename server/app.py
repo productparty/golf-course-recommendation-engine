@@ -2,31 +2,42 @@
 import os
 import sys
 from dotenv import load_dotenv
-from utils.recommendation_engine import calculate_recommendation_score
-
-# New imports (add these after the existing imports)
-from fastapi import FastAPI, Query, HTTPException, Request, Depends, Form
+import logging
+from pathlib import Path
+from fastapi import FastAPI, Query, HTTPException, Request, Depends, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from pydantic import BaseModel
 from psycopg2.extras import RealDictCursor
 import psycopg2
-import logging
 import requests
-import jwt  # Ensure this import is correct
-from datetime import datetime, timedelta
-import multipart  # Ensure this import is correct
-from pydantic import BaseModel
-from typing import List
-from passlib.context import CryptContext
-from itsdangerous import URLSafeTimedSerializer
-import bcrypt  # Ensure this import is correct
-import sendgrid
-from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail
+from supabase import create_client
+from utils.recommendation_engine import calculate_recommendation_score
 
-# Load environment variables from .env file
-load_dotenv()
+# Set up logging first
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Get the directory containing app.py
+BASE_DIR = Path(__file__).resolve().parent
+env_path = os.path.join(BASE_DIR, '.env')
+logger.info(f"Loading environment from: {env_path}")
+
+# Force reload environment variables
+if os.path.exists(env_path):
+    logger.info("Environment file exists")
+    load_dotenv(env_path, override=True)  # Add override=True
+else:
+    logger.error(f"Environment file not found at {env_path}")
+
+# Remove any frontend-specific env var logging
+logger.info("=== Backend Environment Variables ===")
+logger.info(f"DB_HOST: {os.getenv('DB_HOST')}")
+logger.info(f"DB_PORT: {os.getenv('DB_PORT')}")
+logger.info(f"AZURE_MAPS_API_KEY: {os.getenv('AZURE_MAPS_API_KEY')}")
+
+# After loading environment variables
+logger.info("================================")
 
 # Define FRONTEND_URL
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
@@ -35,113 +46,59 @@ app = FastAPI(
     title="Golf Course API",
     version="1.0.0",
     description="API for managing golf clubs, courses, reviews, and more.",
-    openapi_prefix="/api"  # Add this line to set the prefix for all routes
 )
+
+# Create API router without prefix
+api_router = APIRouter()
 
 # CORS Middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[FRONTEND_URL],  # Use FRONTEND_URL here
+    allow_origins=[
+        "http://localhost:5173",  # Your frontend development server
+        "https://golf-course-recommendation-engine-mike-watsons-projects.vercel.app"  # Your production frontend
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Logging Setup
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+# Add debug logging before creating DATABASE_CONFIG
+logger.info("Raw environment variables:")
+logger.info(f"DB_HOST: {os.getenv('DB_HOST')}")
+logger.info(f"DB_PORT: {os.getenv('DB_PORT')}")
+logger.info(f"DB_USER: {os.getenv('DB_USER')}")
+logger.info(f"DB_NAME: {os.getenv('DB_NAME')}")
 
-# Database Config
+# Database Config - Hardcode for testing
 DATABASE_CONFIG = {
-    "dbname": os.getenv("DB_NAME"),
-    "user": os.getenv("DB_USER"),
-    "password": os.getenv("DB_PASSWORD"),
-    "host": os.getenv("DB_HOST"),
-    "port": os.getenv("DB_PORT"),
+    "dbname": "postgres",
+    "user": "postgres.nkknwkentrbbyzgqgpfd",
+    "password": "Watso3mj16!",  # Your actual password
+    "host": "aws-0-us-east-2.pooler.supabase.com",
+    "port": "6543",
+    "sslmode": "require"
 }
+
+# Add debug logging
+logger.info("Database config (excluding password):")
+debug_config = {k:v for k,v in DATABASE_CONFIG.items() if k != 'password'}
+logger.info(debug_config)
 
 AZURE_MAPS_API_KEY = os.getenv("AZURE_MAPS_API_KEY")
 
-# JWT Secret Key
-SECRET_KEY = os.getenv("SECRET_KEY", "your_secret_key")
-
-# OAuth2 scheme
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
-
-# Password hashing context
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-# Serializer for generating and validating tokens
-serializer = URLSafeTimedSerializer(SECRET_KEY)
-
-# Utility function to hash passwords
-def hash_password(password: str) -> str:
-    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-
-# Utility function to verify passwords
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
-
-# Utility function to generate verification token
-def generate_verification_token(email: str) -> str:
-    return serializer.dumps(email, salt="email-confirmation-salt")
-
-# Utility function to confirm verification token
-def confirm_verification_token(token: str, expiration=3600) -> str:
+# Initialize Supabase client
+def get_supabase_client():
     try:
-        email = serializer.loads(token, salt="email-confirmation-salt", max_age=expiration)
-    except Exception:
-        return None
-    return email
-
-# Utility function to send confirmation email
-def send_confirmation_email(email: str, token: str):
-    confirmation_url = f"{FRONTEND_URL}/verify-email?token={token}"
-    message = Mail(
-        from_email='mike@watsonconsultingandadvisory.com',  # Replace with your verified sender email
-        to_emails=email,
-        subject='Email Verification',
-        html_content=f'<p>Click the link below to verify your email:</p><p><a href="{confirmation_url}">Verify Email</a></p>'
-    )
-    try:
-        sg = SendGridAPIClient(os.getenv('SENDGRID_API_KEY'))
-        response = sg.send(message)
-        print(response.status_code)
-        print(response.body)
-        print(response.headers)
+        # Use the values directly instead of environment variables
+        supabase_url = "https://nkknwkentrbbyzgqgpfd.supabase.co"
+        supabase_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ra253a2VudHJiYnl6Z3FncGZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzcyMzA4MzYsImV4cCI6MjA1MjgwNjgzNn0.OyizXugP02ciUdXTOWxfTrp1HwsMgBM7FyeJ8le0_mM"
+        return create_client(supabase_url, supabase_key)
     except Exception as e:
-        print(str(e))  # Correctly print the error message
+        logger.error(f"Failed to initialize Supabase client: {str(e)}")
+        raise
 
-# Utility function to send password reset email
-def send_password_reset_email(email: str, token: str):
-    reset_url = f"{FRONTEND_URL}/password-reset-confirm?token={token}"
-    message = Mail(
-        from_email='mike@watsonconsultingandadvisory.com',  # Replace with your verified sender email
-        to_emails=email,
-        subject='Password Reset Request',
-        html_content=f'<p>Click the link below to reset your password:</p><p><a href="{reset_url}">Reset Password</a></p>'
-    )
-    try:
-        sg = SendGridAPIClient(os.getenv('SENDGRID_API_KEY'))
-        response = sg.send(message)
-        print(response.status_code)
-        print(response.body)
-        print(response.headers)
-    except Exception as e:
-        print(str(e))  # Correctly print the error message
-
-# Example usage
-if __name__ == "__main__":
-    send_confirmation_email('to@example.com', 'your_token')
-
-# Database Connection
-def get_db_connection():
-    try:
-        conn = psycopg2.connect(**DATABASE_CONFIG)
-        return conn
-    except Exception as e:
-        logger.error(f"Database connection error: {e}")
-        raise HTTPException(status_code=500, detail="Database connection failed")
+supabase = get_supabase_client()
 
 # Middleware to log requests
 @app.middleware("http")
@@ -160,40 +117,65 @@ async def global_exception_handler(request: Request, exc: Exception):
         content={"error": "Internal server error", "details": str(exc)},
     )
 
-@app.get("/api/health", tags=["Utilities"], summary="Health Check", description="Check the health of the API.")
+@api_router.get("/health", tags=["Utilities"], summary="Health Check", description="Check the health of the API.")
 def health_check():
     return {"status": "ok"}
 
 # Geocode ZIP Code
-@app.get("/api/geocode_zip/", tags=["Utilities"])
+@api_router.get("/geocode_zip/", tags=["Utilities"])
 def get_lat_lng(zip_code: str):
     try:
+        # Use Azure Maps Search API with specific parameters for ZIP codes
         url = "https://atlas.microsoft.com/search/address/json"
         params = {
             "api-version": "1.0",
             "subscription-key": AZURE_MAPS_API_KEY,
             "query": zip_code,
+            "countrySet": "US",  # Limit to US results
+            "limit": 1,  # We only need one result
+            "typeahead": False,  # Complete results only
+            "language": "en-US"
         }
+        
+        logger.info(f"Geocoding ZIP code: {zip_code}")
         response = requests.get(url, params=params)
         response.raise_for_status()
         data = response.json()
+        
+        # Log the full response for debugging
+        logger.info(f"Azure Maps response: {data}")
 
-        us_results = [
-            result for result in data.get("results", [])
-            if result["address"].get("countryCode") == "US"
-        ]
-        if not us_results:
-            raise ValueError(f"No US results for ZIP code {zip_code}")
+        if not data.get("results"):
+            raise ValueError(f"No results found for ZIP code {zip_code}")
 
-        lat = us_results[0]["position"]["lat"]
-        lng = us_results[0]["position"]["lon"]
-        logger.info(f"Geocoded ZIP code {zip_code} to lat={lat}, lng={lng}")
+        result = data["results"][0]
+        
+        # Verify we got a ZIP code result
+        address = result.get("address", {})
+        if address.get("countryCode") != "US":
+            raise ValueError(f"Result not in US: {address}")
+
+        position = result.get("position", {})
+        lat = position.get("lat")
+        lng = position.get("lon")
+
+        if not lat or not lng:
+            raise ValueError(f"Invalid coordinates in response: {position}")
+
+        logger.info(f"Successfully geocoded {zip_code} to lat={lat}, lng={lng}")
         return lat, lng
-    except Exception as e:
-        logger.error(f"Error geocoding ZIP code {zip_code}: {e}")
-        raise HTTPException(status_code=400, detail=f"Failed to geocode ZIP code {zip_code}")
 
-@app.get("/api/geocode_zip/", tags=["Utilities"])
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Azure Maps API request failed: {e}")
+        raise HTTPException(status_code=500, detail="Failed to contact geocoding service")
+    except ValueError as e:
+        logger.error(f"Geocoding validation error: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"Unexpected geocoding error: {e}")
+        raise HTTPException(status_code=500, detail="Internal geocoding error")
+
+@api_router.get("/geocode_zip/", tags=["Utilities"])
 def geocode_zip(zip_code: str):
     try:
         lat, lng = get_lat_lng(zip_code)
@@ -202,81 +184,118 @@ def geocode_zip(zip_code: str):
         logger.error(f"Error in geocode_zip: {e}")
         raise HTTPException(status_code=400, detail="Failed to geocode ZIP code")
 
-@app.get("/api/find_clubs/", tags=["Clubs"], summary="Find Clubs", description="Find golf clubs based on various criteria.")
-def find_clubs(
+@api_router.get("/find_clubs/", tags=["Clubs"], summary="Find Clubs", description="Find golf clubs based on various criteria.")
+async def find_clubs(
     zip_code: str,
     radius: int = 10,
-    price_tier: str = None,
-    difficulty: str = None,
-    technologies: str = None,
-    limit: int = 5,  # Limit the number of results to 5
+    limit: int = 5,
     offset: int = 0,
+    price_tier: str | None = None,
+    difficulty: str | None = None,
+    technologies: str | None = None
 ):
     try:
-        logger.info(f"Received request with parameters: zip_code={zip_code}, radius={radius}, price_tier={price_tier}, difficulty={difficulty}, technologies={technologies}, limit={limit}, offset={offset}")
+        # Get coordinates from ZIP code
         lat, lng = get_lat_lng(zip_code)
-        query = """
-        WITH zip_centroid AS (
-            SELECT ST_SetSRID(ST_MakePoint(%s, %s), 4326)::geography AS geog
-        )
-        SELECT 
-            g.global_id AS club_id,
-            g.club_name,
-            g.city,
-            g.state,
-            g.zip_code,
-            g.price_tier,
-            g.difficulty,
-            ST_Distance(g.geom::geography, z.geog) / 1609.34 AS distance_miles,
-            array_agg(t.technology_name) FILTER (WHERE t.technology_name IS NOT NULL) AS technologies
-        FROM 
-            golfclub g
-        LEFT JOIN golfclub_technology gt ON g.global_id = gt.global_id
-        LEFT JOIN technologyintegration t ON gt.technology_id = t.technology_id,
-            zip_centroid z
-        WHERE 
-            ST_DWithin(g.geom::geography, z.geog, %s * 1609.34)
-        """
-        filters = []
-        params = [lng, lat, radius]
+        logger.info(f"Geocoded coordinates: lat={lat}, lng={lng}")
 
+        # Base query with filters
+        base_query = """
+        SELECT DISTINCT
+            gc.global_id,
+            gc.club_name,
+            gc.address,
+            gc.city,
+            gc.state,
+            gc.zip_code,
+            gc.price_tier,
+            gc.difficulty,
+            ST_Distance(
+                gc.geom::geography,
+                ST_SetSRID(ST_MakePoint(%s, %s), 4326)::geography
+            ) / 1609.34 as distance_miles,
+            array_agg(ti.technology_name) FILTER (WHERE ti.technology_name IS NOT NULL) as available_technologies
+        FROM golfclub gc
+        LEFT JOIN golfclub_technology gct ON gc.global_id = gct.global_id
+        LEFT JOIN technologyintegration ti ON gct.technology_id = ti.technology_id
+        WHERE ST_DWithin(
+            gc.geom::geography,
+            ST_SetSRID(ST_MakePoint(%s, %s), 4326)::geography,
+            %s * 1609.34
+        )
+        """
+        
+        # Start with base parameters
+        params = [lng, lat, lng, lat, radius]
+        conditions = []
+
+        # Add filters if specified
         if price_tier:
-            filters.append("g.price_tier = %s")
+            logger.info(f"Filtering by price_tier: {price_tier}")
+            conditions.append("gc.price_tier = %s")
             params.append(price_tier)
+        
         if difficulty:
-            filters.append("g.difficulty = %s")
+            logger.info(f"Filtering by difficulty: {difficulty}")
+            conditions.append("gc.difficulty = %s")
             params.append(difficulty)
+
+        # Add technology filter if specified
         if technologies:
-            filters.append("""
+            tech_list = technologies.split(',')
+            logger.info(f"Filtering by technologies: {tech_list}")
+            conditions.append("""
                 EXISTS (
-                    SELECT 1 FROM golfclub_technology gt
-                    JOIN technologyintegration t ON gt.technology_id = t.technology_id
-                    WHERE gt.global_id = g.global_id
-                    AND t.technology_name = ANY(%s)
+                    SELECT 1
+                    FROM golfclub_technology gct2
+                    JOIN technologyintegration ti2 ON gct2.technology_id = ti2.technology_id
+                    WHERE gct2.global_id = gc.global_id
+                    AND ti2.technology_name = ANY(%s)
                 )
             """)
-            params.append(technologies.split(","))
+            params.append(tech_list)
 
-        if filters:
-            query += " AND " + " AND ".join(filters)
+        # Add conditions to base query
+        if conditions:
+            base_query += " AND " + " AND ".join(conditions)
 
-        query += """
-        GROUP BY g.global_id, z.geog
-        ORDER BY ST_Distance(g.geom::geography, z.geog)
-        LIMIT %s OFFSET %s
-        """
+        # Add GROUP BY clause before ORDER BY
+        base_query += " GROUP BY gc.global_id, gc.club_name, gc.address, gc.city, gc.state, gc.zip_code, gc.price_tier, gc.difficulty, gc.geom"
+        base_query += " ORDER BY distance_miles LIMIT %s OFFSET %s"
         params.extend([limit, offset])
 
+        # Log the final query and parameters for debugging
         logger.info(f"Executing query with params: {params}")
+
+        # Get total count first
+        count_query = f"""
+        SELECT COUNT(*) 
+        FROM ({base_query.replace('ORDER BY distance_miles LIMIT %s OFFSET %s', '')}) AS filtered_clubs
+        """
+        count_params = params[:-2]  # Remove limit and offset
+
         with get_db_connection() as conn:
             with conn.cursor(cursor_factory=RealDictCursor) as cursor:
-                cursor.execute(query, params)
+                # Get total count
+                cursor.execute(count_query, count_params)
+                total_count = cursor.fetchone()['count']
+                
+                # Get paginated results
+                cursor.execute(base_query, params)
                 results = cursor.fetchall()
+                
+                logger.info(f"Found {total_count} total clubs, returning {len(results)} results")
+                
+                return {
+                    "results": results,
+                    "total": total_count,
+                    "page": offset // limit + 1,
+                    "total_pages": (total_count + limit - 1) // limit
+                }
 
-        return {"results": results, "total": len(results)}
     except Exception as e:
-        logger.error(f"Error in find_clubs: {e}")
-        raise HTTPException(status_code=400, detail=f"Failed to fetch clubs: {e}")
+        logger.error(f"Error in find_clubs: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"Failed to fetch clubs: {str(e)}")
 
 class UpdateGolfCourseRequest(BaseModel):
     club_id: str
@@ -288,7 +307,7 @@ class UpdateGolfCourseRequest(BaseModel):
     lat: float
     lng: float
 
-@app.put("/api/golf-courses/{course_id}", tags=["Courses"], summary="Update Golf Course", description="Update a golf course in the database.", operation_id="update_golf_course")
+@api_router.put("/golf-courses/{course_id}", tags=["Courses"], summary="Update Golf Course", description="Update a golf course in the database.", operation_id="update_golf_course")
 def update_golf_course(course_id: str, course: UpdateGolfCourseRequest):
     """
     Update a golf course in the database.
@@ -312,7 +331,7 @@ def update_golf_course(course_id: str, course: UpdateGolfCourseRequest):
         logger.error(f"Error in update_golf_course: {e}")
         raise HTTPException(status_code=400, detail=f"Failed to update golf course: {e}")
 
-@app.delete("/api/golf-courses/{course_id}", tags=["Courses"], summary="Delete Golf Course", description="Delete a golf course from the database.")
+@api_router.delete("/golf-courses/{course_id}", tags=["Courses"], summary="Delete Golf Course", description="Delete a golf course from the database.")
 def delete_golf_course(course_id: str):
     """
     Delete a golf course from the database.
@@ -371,366 +390,279 @@ class UpdateGolferProfileResponse(BaseModel):
     club_id: str | None  # Allow club_id to be None
     preferred_tees: str | None  # Allow preferred_tees to be None
 
-# Endpoint for user registration
-@app.post("/api/register", tags=["Auth"], summary="Register User", description="Register a new user and send a verification email.")
-async def register_user(user: GolferProfileRequest):
+@api_router.get("/get-golfer-profile", tags=["Golfers"], response_model=GolferProfileResponse)
+async def get_golfer_profile(request: Request):
     try:
-        # Check if email already exists
-        query_check_email = "SELECT golfer_id FROM golfer_profile WHERE email = %s"
-        with get_db_connection() as conn:
-            with conn.cursor() as cursor:
-                cursor.execute(query_check_email, (user.email,))
-                existing_user = cursor.fetchone()
-                if existing_user:
-                    raise HTTPException(
-                        status_code=400,
-                        detail="Email already exists. Please click on the following link to log in: <a href='/login'>Log In</a>"
-                    )
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            raise HTTPException(status_code=401, detail="Missing authentication token")
+        
+        token = auth_header.split(' ')[1]
+        
+        try:
+            user = supabase.auth.get_user(token)
+            user_email = user.user.email
+            user_id = user.user.id
+            logger.info(f"Supabase user: email={user_email}, id={user_id}")
+        except Exception as e:
+            logger.error(f"Failed to verify token: {e}")
+            raise HTTPException(status_code=401, detail="Invalid token")
 
-        # Hash the password
-        hashed_password = hash_password(user.password)
-
-        # Generate verification token
-        verification_token = generate_verification_token(user.email)
-
-        # Insert user into the database
-        query_insert_user = """
-        INSERT INTO golfer_profile (email, password_hash, verification_token)
-        VALUES (%s, %s, %s)
-        RETURNING golfer_id
+        # Get user preferences from profiles table
+        profile_query = """
+        SELECT 
+            id as golfer_id,
+            email,
+            first_name,
+            last_name,
+            handicap_index,
+            preferred_price_range,
+            preferred_difficulty,
+            skill_level,
+            play_frequency,
+            p.club_id,
+            gc.club_name,
+            preferred_tees,
+            true as is_verified
+        FROM profiles p
+        LEFT JOIN golfclub gc ON p.club_id = gc.global_id
+        WHERE id = %s
         """
-        with get_db_connection() as conn:
-            with conn.cursor() as cursor:
-                cursor.execute(query_insert_user, (user.email, hashed_password, verification_token))
-                user_id = cursor.fetchone()[0]  # Use integer index to access the first element of the tuple
-                conn.commit()
-
-        # Send verification email
-        send_confirmation_email(user.email, verification_token)
-
-        return {"message": "User registered successfully. Please check your email to verify your account."}
-    except Exception as e:
-        logger.error(f"Error in register_user: {e}")
-        raise HTTPException(status_code=400, detail=f"Failed to register user: {e}")
-
-# Endpoint for email verification
-@app.get("/api/verify-email", tags=["Auth"], summary="Verify Email", description="Verify the user's email address.")
-async def verify_email(token: str):
-    try:
-        email = confirm_verification_token(token)
-        if not email:
-            raise HTTPException(status_code=400, detail="Invalid or expired token")
-
-        # Update user to set is_verified to True
-        query_update_user = "UPDATE golfer_profile SET is_verified = TRUE WHERE email = %s"
-        with get_db_connection() as conn:
-            with conn.cursor() as cursor:
-                cursor.execute(query_update_user, (email,))
-                conn.commit()
-
-        return {"message": "Email verified successfully"}
-    except Exception as e:
-        logger.error(f"Error in verify_email: {e}")
-        raise HTTPException(status_code=400, detail=f"Failed to verify email: {e}")
-
-# Endpoint for user login
-class LoginRequest(BaseModel):
-    username: str
-    password: str
-
-@app.post("/api/login", tags=["Auth"], summary="Login User", description="Authenticate a user and return a JWT token.")
-async def login_user(request: LoginRequest):
-    try:
-        query_get_user = "SELECT * FROM golfer_profile WHERE email = %s"
+        
         with get_db_connection() as conn:
             with conn.cursor(cursor_factory=RealDictCursor) as cursor:
-                cursor.execute(query_get_user, (request.username,))
-                user = cursor.fetchone()
-                if not user or not verify_password(request.password, user["password_hash"]):
-                    raise HTTPException(status_code=400, detail="Invalid credentials")
-                if not user["is_verified"]:
-                    raise HTTPException(status_code=400, detail="Email not verified")
-                access_token = create_access_token(data={"sub": user["email"]})
-                return {"access_token": access_token, "token_type": "bearer"}
-    except Exception as e:
-        logger.error(f"Error in login_user: {e}")
-        raise HTTPException(status_code=500, detail="Internal server error")
-
-# Endpoint for getting user profile
-@app.get("/api/get-golfer-profile", tags=["Golfers"], response_model=GolferProfileResponse, summary="Get Golfer Profile", description="Retrieve the profile of the authenticated golfer or check if an email exists.")
-async def get_golfer_profile(golfer_id: str = None, email: str = None, token: str = Depends(oauth2_scheme)):
-    """
-    Retrieve the profile of the authenticated golfer or check if an email exists.
-    """
-    try:
-        if (golfer_id):
-            query = """
-            SELECT gp.golfer_id, gp.email, gp.first_name, gp.last_name, gp.handicap_index, gp.preferred_price_range, gp.preferred_difficulty, gp.skill_level, gp.play_frequency, gp.club_id, gc.club_name, gp.preferred_tees, gp.is_verified
-            FROM golfer_profile gp
-            LEFT JOIN golfclub gc ON gp.club_id = gc.global_id
-            WHERE gp.golfer_id = %s
-            """
-            params = (golfer_id,)
-        elif email:
-            query = """
-            SELECT gp.golfer_id, gp.email, gp.first_name, gp.last_name, gp.handicap_index, gp.preferred_price_range, gp.preferred_difficulty, gp.skill_level, gp.play_frequency, gp.club_id, gc.club_name, gp.preferred_tees, gp.is_verified
-            FROM golfer_profile gp
-            LEFT JOIN golfclub gc ON gp.club_id = gc.global_id
-            WHERE gp.email = %s
-            """
-            params = (email,)
-        else:
-            payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
-            email = payload["sub"]
-            query = """
-            SELECT gp.golfer_id, gp.email, gp.first_name, gp.last_name, gp.handicap_index, gp.preferred_price_range, gp.preferred_difficulty, gp.skill_level, gp.play_frequency, gp.club_id, gc.club_name, gp.preferred_tees, gp.is_verified
-            FROM golfer_profile gp
-            LEFT JOIN golfclub gc ON gp.club_id = gc.global_id
-            WHERE gp.email = %s
-            """
-            params = (email,)
-
-        with get_db_connection() as conn:
-            with conn.cursor(cursor_factory=RealDictCursor) as cursor:
-                cursor.execute(query, params)
+                cursor.execute(profile_query, (user_id,))
                 profile = cursor.fetchone()
+                logger.info(f"Profile data: {profile}")
+
                 if not profile:
-                    raise HTTPException(status_code=404, detail="Profile not found")
-                # Ensure nullable fields are not None
-                profile["first_name"] = profile["first_name"] or ""
-                profile["last_name"] = profile["last_name"] or ""
-                profile["handicap_index"] = profile["handicap_index"] or 0.0
-                profile["preferred_price_range"] = profile["preferred_price_range"] or ""
-                profile["preferred_difficulty"] = profile["preferred_difficulty"] or ""
-                profile["skill_level"] = profile["skill_level"] or ""
-                profile["play_frequency"] = profile["play_frequency"] or ""
-                profile["club_id"] = profile["club_id"] or ""
-                profile["club_name"] = profile["club_name"] or ""
-                profile["preferred_tees"] = profile["preferred_tees"] or ""
+                    # Profile should already exist in Supabase
+                    profile = {
+                        "golfer_id": user_id,
+                        "email": user_email,
+                        "first_name": None,
+                        "last_name": None,
+                        "handicap_index": None,
+                        "preferred_price_range": None,
+                        "preferred_difficulty": None,
+                        "skill_level": None,
+                        "play_frequency": None,
+                        "club_id": None,
+                        "club_name": None,
+                        "preferred_tees": None,
+                        "is_verified": True
+                    }
+
                 return profile
-    except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=401, detail="Token has expired")
-    except jwt.InvalidTokenError:
-        raise HTTPException(status_code=401, detail="Invalid token")
+                
     except Exception as e:
         logger.error(f"Error in get_golfer_profile: {e}")
-        raise HTTPException(status_code=500, detail="Internal server error")
+        raise HTTPException(status_code=500, detail=str(e))
 
-# Verify JWT Token
-def verify_token(token: str = Depends(oauth2_scheme)):
+@api_router.put("/update-golfer-profile", tags=["Golfers"])
+async def update_golfer_profile(request: Request, profile_update: UpdateGolferProfileRequest):
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
-        return payload
-    except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=401, detail="Token has expired")
-    except jwt.InvalidTokenError:
-        raise HTTPException(status_code=401, detail="Invalid token")
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            raise HTTPException(status_code=401, detail="Missing authentication token")
+        
+        token = auth_header.split(' ')[1]
+        user = supabase.auth.get_user(token)
+        user_id = user.user.id
 
-# Endpoint for updating golfer profile
-@app.put("/api/update-golfer-profile", tags=["Golfers"], response_model=UpdateGolferProfileResponse, summary="Update Golfer Profile", description="Update the profile of the authenticated golfer.")
-async def update_golfer_profile(profile: UpdateGolferProfileRequest, token: str = Depends(verify_token)):
-    """
-    Update the profile of the authenticated golfer.
-    """
-    try:
-        email = token["sub"]
-        profile_dict = profile.dict()
-        profile_dict["email"] = email
-        query = """
-        UPDATE golfer_profile
-        SET first_name = %(first_name)s, last_name = %(last_name)s, handicap_index = %(handicap_index)s, 
-            preferred_price_range = %(preferred_price_range)s, preferred_difficulty = %(preferred_difficulty)s, 
-            skill_level = %(skill_level)s, play_frequency = %(play_frequency)s, club_id = %(club_id)s, preferred_tees = %(preferred_tees)s
-        WHERE email = %(email)s
-        RETURNING golfer_id, email, first_name, last_name, handicap_index, preferred_price_range, preferred_difficulty, skill_level, play_frequency, club_id, preferred_tees, is_verified
+        update_query = """
+        UPDATE profiles
+        SET 
+            first_name = %s,
+            last_name = %s,
+            handicap_index = %s,
+            preferred_price_range = %s,
+            preferred_difficulty = %s,
+            skill_level = %s,
+            play_frequency = %s,
+            club_id = %s,
+            preferred_tees = %s
+        WHERE id = %s
+        RETURNING 
+            id as golfer_id,
+            email,
+            first_name,
+            last_name,
+            handicap_index,
+            preferred_price_range,
+            preferred_difficulty,
+            skill_level,
+            play_frequency,
+            club_id,
+            preferred_tees
         """
+        
         with get_db_connection() as conn:
             with conn.cursor(cursor_factory=RealDictCursor) as cursor:
-                cursor.execute(query, profile_dict)
-                updated_profile = cursor.fetchone()
+                cursor.execute(update_query, (
+                    profile_update.first_name,
+                    profile_update.last_name,
+                    profile_update.handicap_index,
+                    profile_update.preferred_price_range,
+                    profile_update.preferred_difficulty,
+                    profile_update.skill_level,
+                    profile_update.play_frequency,
+                    profile_update.club_id,
+                    profile_update.preferred_tees,
+                    user_id
+                ))
                 conn.commit()
-        return updated_profile
+                updated_profile = cursor.fetchone()
+                updated_profile['is_verified'] = True
+                return updated_profile
+
     except Exception as e:
         logger.error(f"Error in update_golfer_profile: {e}")
-        raise HTTPException(status_code=500, detail="Internal server error")
+        raise HTTPException(status_code=500, detail=str(e))
 
-# Add endpoints for golf clubs, tees, reviews, and saved courses (expand here based on your schema updates)
-
-# Generate JWT Token
-def create_access_token(data: dict, expires_delta: timedelta = timedelta(minutes=30)):
-    to_encode = data.copy()
-    expire = datetime.utcnow() + expires_delta
-    to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm="HS256")
-    return encoded_jwt
-
-# User Authentication
-@app.post("/api/token", tags=["Auth"])
-async def login(form_data: OAuth2PasswordRequestForm = Depends()):
+# Database connection function
+def get_db_connection():
     try:
-        with get_db_connection() as conn:
-            with conn.cursor(cursor_factory=RealDictCursor) as cursor:
-                cursor.execute("SELECT * FROM golfer_profile WHERE email = %s", (form_data.username,))
-                user = cursor.fetchone()
-                if not user or not verify_password(form_data.password, user["password_hash"]):
-                    raise HTTPException(status_code=400, detail="Invalid credentials")
-                access_token = create_access_token(data={"sub": user["email"]})
-                return {"access_token": access_token, "token_type": "bearer"}
+        # Add debug logging
+        logger.info(f"Connecting to database at {DATABASE_CONFIG['host']}:{DATABASE_CONFIG['port']}")
+        logger.info(f"Using user: {DATABASE_CONFIG['user']}")
+        conn = psycopg2.connect(**DATABASE_CONFIG)
+        return conn
     except Exception as e:
-        logger.error(f"Error in login: {e}")
-        raise HTTPException(status_code=500, detail="Internal server error")
+        logger.error(f"Error connecting to database: {e}")
+        raise
 
-# Endpoint for password reset request
-class PasswordResetRequest(BaseModel):
-    email: str
+# Verify database connection on startup
+try:
+    with get_db_connection() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute('SELECT 1')
+    logger.info("Database connection successful")
+except Exception as e:
+    logger.error(f"Failed to connect to database: {e}")
+    raise
 
-@app.post("/api/password-reset-request", tags=["Auth"], summary="Request Password Reset", description="Request a password reset email.")
-async def password_reset_request(request: PasswordResetRequest):
-    try:
-        query_get_user = "SELECT * FROM golfer_profile WHERE email = %s"
-        with get_db_connection() as conn:
-            with conn.cursor(cursor_factory=RealDictCursor) as cursor:
-                cursor.execute(query_get_user, (request.email,))
-                user = cursor.fetchone()
-                if not user:
-                    raise HTTPException(status_code=400, detail="Email not found")
-
-                # Generate password reset token
-                reset_token = generate_verification_token(request.email)
-
-                # Send password reset email
-                send_password_reset_email(request.email, reset_token)
-
-        return {"message": "Password reset email sent"}
-    except Exception as e:
-        logger.error(f"Error in password_reset_request: {e}")
-        raise HTTPException(status_code=500, detail="Internal server error")
-
-class PasswordResetConfirmRequest(BaseModel):
-    token: str
-    password: str
-
-@app.post("/api/password-reset-confirm", tags=["Auth"], summary="Confirm Password Reset", description="Confirm password reset with token.")
-async def password_reset_confirm(request: PasswordResetConfirmRequest):
-    try:
-        email = confirm_verification_token(request.token)
-        if not email:
-            raise HTTPException(status_code=400, detail="Invalid or expired token")
-
-        # Hash the new password
-        hashed_password = hash_password(request.password)
-
-        # Update user password
-        query_update_password = "UPDATE golfer_profile SET password_hash = %s WHERE email = %s"
-        with get_db_connection() as conn:
-            with conn.cursor() as cursor:
-                cursor.execute(query_update_password, (hashed_password, email))
-                conn.commit()
-
-        return {"message": "Password reset successfully"}
-    except Exception as e:
-        logger.error(f"Error in password_reset_confirm: {e}")
-        raise HTTPException(status_code=500, detail="Internal server error")
-
-class GolfClubSearchResponse(BaseModel):
-    club_id: str
-    club_name: str
-
-@app.get("/api/get_recommendations/", tags=["Recommendations"], summary="Get Recommendations", description="Get golf course recommendations based on user preferences.")
+@api_router.get("/get_recommendations/", tags=["Recommendations"])
 async def get_recommendations(
     zip_code: str,
     radius: int = 10,
-    limit: int = 3,  # Limit the number of results to 3
+    limit: int = 5,
     offset: int = 0,
-    token: str = Depends(oauth2_scheme)
+    request: Request = None
 ):
     try:
-        logger.info(f"Received request with parameters: zip_code={zip_code}, radius={radius}, limit={limit}, offset={offset}")
-        lat, lng = get_lat_lng(zip_code)
+        # Get user profile for preferences
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            raise HTTPException(status_code=401, detail="Missing authentication token")
+        
+        token = auth_header.split(' ')[1]
+        user = supabase.auth.get_user(token)
+        user_id = user.user.id
 
-        # Get golfer profile from token
-        payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
-        email = payload["sub"]
-        golfer_profile = await get_golfer_profile(email=email, token=token)
-
-        query = """
-        WITH zip_centroid AS (
-            SELECT ST_SetSRID(ST_MakePoint(%s, %s), 4326)::geography AS geog
-        )
+        # Get user preferences from profiles table
+        profile_query = """
         SELECT 
-            g.global_id AS club_id,
-            g.club_name,
-            g.city,
-            g.state,
-            g.zip_code,
-            g.price_tier,
-            g.difficulty,
-            ST_Distance(g.geom::geography, z.geog) / 1609.34 AS distance_miles
-        FROM 
-            golfclub g,
-            zip_centroid z
-        WHERE 
-            ST_DWithin(g.geom::geography, z.geog, %s * 1609.34)
+            preferred_price_range,
+            preferred_difficulty
+        FROM profiles
+        WHERE id = %s
         """
-        filters = []
-        params = [lng, lat, radius]
 
-        if golfer_profile['preferred_price_range']:
-            filters.append("g.price_tier = %s")
-            params.append(golfer_profile['preferred_price_range'])
-        if golfer_profile['preferred_difficulty']:
-            filters.append("g.difficulty = %s")
-            params.append(golfer_profile['preferred_difficulty'])
+        # Get coordinates from ZIP code
+        lat, lng = get_lat_lng(zip_code)
+        logger.info(f"Geocoded coordinates for recommendations: lat={lat}, lng={lng}")
 
-        if filters:
-            query += " AND " + " AND ".join(filters)
-
-        query += """
-        GROUP BY g.global_id, z.geog
-        ORDER BY ST_Distance(g.geom::geography, z.geog)
-        LIMIT %s OFFSET %s
+        # Query to get ALL nearby clubs first
+        clubs_query = """
+        SELECT 
+            gc.global_id,
+            gc.club_name,
+            gc.address,
+            gc.city,
+            gc.state,
+            gc.zip_code,
+            gc.price_tier,
+            gc.difficulty,
+            ST_Distance(
+                gc.geom::geography,
+                ST_SetSRID(ST_MakePoint(%s, %s), 4326)::geography
+            ) / 1609.34 as distance_miles,
+            array_agg(ti.technology_name) FILTER (WHERE ti.technology_name IS NOT NULL) as available_technologies
+        FROM golfclub gc
+        LEFT JOIN golfclub_technology gct ON gc.global_id = gct.global_id
+        LEFT JOIN technologyintegration ti ON gct.technology_id = ti.technology_id
+        WHERE ST_DWithin(
+            gc.geom::geography,
+            ST_SetSRID(ST_MakePoint(%s, %s), 4326)::geography,
+            %s * 1609.34
+        )
+        GROUP BY gc.global_id, gc.club_name, gc.address, gc.city, gc.state, gc.zip_code, gc.price_tier, gc.difficulty, gc.geom
         """
-        params.extend([limit, offset])
 
-        logger.info(f"Executing query with params: {params}")
         with get_db_connection() as conn:
             with conn.cursor(cursor_factory=RealDictCursor) as cursor:
-                cursor.execute(query, params)
-                results = cursor.fetchall()
+                # Get user preferences
+                cursor.execute(profile_query, (user_id,))
+                profile = cursor.fetchone()
+                if not profile:
+                    raise HTTPException(status_code=400, detail="User profile not found")
 
-        # Calculate recommendation scores
-        for result in results:
-            logger.info(f"Calculating recommendation score for result: {result}")
-            try:
-                result['recommendation_score'] = calculate_recommendation_score(
-                    result['distance_miles'],
-                    result['difficulty'],
-                    result['price_tier'],
-                    golfer_profile['preferred_difficulty'],
-                    golfer_profile['preferred_price_range']
-                )
-            except Exception as e:
-                logger.error(f"Error calculating recommendation score for result {result}: {e}")
-                result['recommendation_score'] = 0  # Assign a default score
+                # Get all nearby clubs
+                cursor.execute(clubs_query, (lng, lat, lng, lat, radius))
+                clubs = cursor.fetchall()
+                
+                logger.info(f"Found {len(clubs)} clubs before scoring")
 
-        # Sort results by recommendation score
-        results.sort(key=lambda x: x['recommendation_score'], reverse=True)
+                # Calculate recommendation scores for all clubs
+                scored_clubs = []
+                for club in clubs:
+                    # Create a copy of the club data to preserve all fields
+                    club_data = dict(club)  # This preserves all fields including available_technologies
+                    
+                    # Add debug logging
+                    logger.info(f"Club preferences - difficulty: {club_data['difficulty']}, price_tier: {club_data['price_tier']}")
+                    logger.info(f"User preferences - difficulty: {profile['preferred_difficulty']}, price: {profile['preferred_price_range']}")
+                    logger.info(f"Club technologies: {club_data.get('available_technologies', [])}")
+                    
+                    # Calculate score
+                    score = calculate_recommendation_score(
+                        distance_miles=club_data['distance_miles'],
+                        difficulty=club_data['difficulty'],
+                        price_tier=club_data['price_tier'],
+                        preferred_difficulty=profile['preferred_difficulty'],
+                        preferred_price_range=profile['preferred_price_range']
+                    )
+                    
+                    # Add score to the club data
+                    club_data['recommendation_score'] = score
+                    scored_clubs.append(club_data)
 
-        return {"results": results, "total": len(results)}
+                # Sort by recommendation score (highest first)
+                scored_clubs.sort(key=lambda x: x['recommendation_score'], reverse=True)
+
+                # Apply pagination after sorting
+                start_idx = offset
+                end_idx = offset + limit
+                paginated_clubs = scored_clubs[start_idx:end_idx]
+
+                # Log the first result for debugging
+                if paginated_clubs:
+                    logger.info(f"First result: {paginated_clubs[0]}")
+
+                return {
+                    "results": paginated_clubs,
+                    "total": len(scored_clubs),
+                    "page": offset // limit + 1,
+                    "total_pages": (len(scored_clubs) + limit - 1) // limit
+                }
+
     except Exception as e:
-        logger.error(f"Error in get_recommendations: {e}")
-        raise HTTPException(status_code=400, detail=f"Failed to fetch recommendations: {e}")
-    except Exception as e:
-        logger.error(f"Error in get_recommendations: {e}")
-        raise HTTPException(status_code=400, detail=f"Failed to fetch recommendations: {e}")
+        logger.error(f"Error in get_recommendations: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"Failed to get recommendations: {str(e)}")
 
-@app.get("/hello")
-def read_root():
-    return {"message": "Hello World"}
-
-@app.get("/")
-def read_root():
-    return {"Hello": "World"}
+# At the end of the file, include the router with the /api prefix
+app.include_router(api_router, prefix="/api")
 
 if __name__ == "__main__":
     import uvicorn
