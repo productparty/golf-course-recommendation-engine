@@ -55,13 +55,17 @@ app = FastAPI(
 # Create API router without prefix
 api_router = APIRouter()
 
-# CORS Middleware
+# Update CORS middleware configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        os.getenv("ALLOWED_ORIGINS", "https://golf-club-ui.vercel.app"),
+        "http://localhost:5173",  # Local development
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"]
 )
 
 # Add debug logging before creating DATABASE_CONFIG
@@ -111,6 +115,22 @@ async def log_requests(request: Request, call_next):
     response = await call_next(request)
     logger.info(f"Response: {response.status_code}")
     return response
+
+# Add better error handling for timeouts
+@app.middleware("http")
+async def timeout_middleware(request: Request, call_next):
+    try:
+        response = await call_next(request)
+        return response
+    except Exception as e:
+        logger.error(f"Request failed: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={
+                "error": "Internal server error",
+                "detail": str(e)
+            }
+        )
 
 # Exception Handler
 @app.exception_handler(Exception)
