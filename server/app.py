@@ -16,6 +16,7 @@ from utils.recommendation_engine import calculate_recommendation_score
 from datetime import datetime
 import json
 import socket
+import asyncio
 
 # Set up basic logging
 logging.basicConfig(level=logging.DEBUG)
@@ -699,30 +700,33 @@ app.include_router(api_router, prefix="/api")
 
 @app.get("/")
 async def root():
-    """Root endpoint for health checks"""
+    """Enhanced health check endpoint"""
     try:
-        # Test database connection
+        # Quick DB check
         with get_db_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute('SELECT 1')
         
-        # Test Supabase connection
-        supabase_status = "ok" if supabase else "not configured"
-        
-        return {
-            "status": "ok",
-            "message": "Server is running",
-            "database": "connected",
-            "supabase": supabase_status,
-            "environment": os.environ.get("RAILWAY_ENVIRONMENT_NAME", "unknown")
-        }
+        return JSONResponse(
+            status_code=200,
+            content={
+                "status": "healthy",
+                "timestamp": datetime.now().isoformat(),
+                "hostname": socket.gethostname(),
+                "port": os.getenv("PORT", "8000"),
+                "database": "connected"
+            }
+        )
     except Exception as e:
         logger.error(f"Health check failed: {str(e)}")
-        return {
-            "status": "error",
-            "message": str(e),
-            "timestamp": datetime.now().isoformat()
-        }
+        return JSONResponse(
+            status_code=500,
+            content={
+                "status": "unhealthy",
+                "error": str(e),
+                "timestamp": datetime.now().isoformat()
+            }
+        )
 
 @app.get("/test")
 async def test():
@@ -735,19 +739,26 @@ async def test():
 
 @app.on_event("startup")
 async def startup_event():
+    """Log startup information and verify connections"""
     logger.info("=== Application Starting ===")
     logger.info(f"Python version: {sys.version}")
-    logger.info(f"Host name: {socket.gethostname()}")
+    logger.info(f"Host: {socket.gethostname()}")
+    logger.info(f"Port: {os.getenv('PORT', '8000')}")
+    
+    # Test database connection
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute('SELECT 1')
+                logger.info("Database connection successful")
+    except Exception as e:
+        logger.error(f"Database connection failed: {str(e)}")
+    
+    # Log all non-sensitive environment variables
     logger.info("Environment variables:")
     for key, value in os.environ.items():
         if not any(secret in key.lower() for secret in ['password', 'key', 'secret']):
             logger.info(f"{key}: {value}")
-    
-    try:
-        port = int(os.environ.get("PORT", 8000))
-        logger.info(f"Port configured: {port}")
-    except ValueError as e:
-        logger.error(f"Port configuration error: {e}")
 
 @app.get("/api/debug")
 def debug_info():
