@@ -11,7 +11,6 @@ import {
   SelectChangeEvent 
 } from '@mui/material';
 import { useAuth } from '../../context/AuthContext';
-import { API_BASE_URL } from '../../utils/api';
 import PageLayout from '../../components/PageLayout';
 import { config } from '../../config';
 
@@ -94,7 +93,7 @@ const GolferProfile: React.FC = () => {
         throw new Error('Not authenticated');
       }
 
-      const response = await fetch(`${API_BASE_URL}/update-golfer-profile`, {
+      const response = await fetch(`${config.API_URL}/api/update-golfer-profile`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
