@@ -4,21 +4,30 @@ console.log('Environment Variables:', {
   ALL_ENV: import.meta.env
 });
 
-// Add logging to help debug
+// Add debug logging
 const API_URL = import.meta.env.VITE_API_URL;
 console.log('Raw API URL from env:', API_URL);
+console.log('All env variables:', import.meta.env); // Debug all env vars
 
 // Ensure API_URL has https:// prefix and no trailing slash
 const formatApiUrl = (url: string | undefined) => {
-  if (!url) return 'http://localhost:8000';
+  if (!url) {
+    console.warn('API_URL is undefined in environment variables');
+    return process.env.NODE_ENV === 'production' 
+      ? 'https://golf-course-recommendation-engin-production.up.railway.app'
+      : 'http://localhost:8000';
+  }
   if (!url.startsWith('http')) {
     url = `https://${url}`;
   }
   return url.endsWith('/') ? url.slice(0, -1) : url;
 };
 
+const apiUrl = formatApiUrl(API_URL);
+console.log('Formatted API URL:', apiUrl); // Debug formatted URL
+
 export const config = {
-  API_URL: formatApiUrl(API_URL),
+  API_URL: apiUrl,
   SUPABASE_URL: import.meta.env.VITE_SUPABASE_URL,
   SUPABASE_ANON_KEY: import.meta.env.VITE_SUPABASE_ANON_KEY,
   APP_URL: import.meta.env.VITE_APP_URL

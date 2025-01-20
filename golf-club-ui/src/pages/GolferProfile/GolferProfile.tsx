@@ -55,27 +55,36 @@ const GolferProfile: React.FC = () => {
     const fetchProfile = async () => {
       try {
         if (!session?.access_token) return;
+        
+        // Debug logging
+        console.log('Config API URL:', config.API_URL);
+        const apiUrl = `${config.API_URL}/api/get-golfer-profile`;
+        console.log('Fetching from:', apiUrl);
 
-        const response = await fetch(`${config.API_URL}/api/get-golfer-profile`, {
+        const response = await fetch(apiUrl, {
           headers: {
-            'Authorization': `Bearer ${session.access_token}`
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json'
           }
         });
 
         if (!response.ok) {
-          throw new Error('Failed to fetch profile');
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
 
         const data = await response.json();
         setProfile(data);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load profile');
-      } finally {
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Error fetching profile:', error);
+        setError(error instanceof Error ? error.message : 'Failed to fetch profile');
         setIsLoading(false);
       }
     };
 
-    fetchProfile();
+    if (session) {
+      fetchProfile();
+    }
   }, [session]);
 
   const handleSubmit = async (event: React.FormEvent) => {
