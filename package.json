@@ -2,31 +2,15 @@
   "name": "golf-course-recommendation-engine",
   "version": "1.0.0",
   "private": true,
+  "scripts": {
+    "build": "cd golf-club-ui && npm install && npm run build"
+  },
   "dependencies": {
     "@sendgrid/mail": "^8.1.4",
     "@types/lodash": "^4.17.14",
-    "bcryptjs": "^2.4.3",
-    "cors": "^2.8.5",
-    "dotenv": "^10.0.0",
     "lodash": "^4.17.21",
     "lodash.debounce": "^4.0.8",
-    "pg": "^8.13.1",
-    "pg-hstore": "^2.3.4",
-    "psycopg2": "^2.9.3",
-    "sequelize": "^6.37.5",
-    "swagger-jsdoc": "^6.2.8",
-    "swagger-ui-express": "^5.0.1",
-    "vercel": "^39.2.6",
-    "vite": "^4.0.0"
-  },
-  "scripts": {
-    "start:backend": "cd server && python app.py",
-    "start:frontend": "cd golf-club-ui && vite",
-    "start:all": "concurrently \"npm run start:backend\" \"npm run start:frontend\"",
-    "build:frontend": "npm run build --prefix golf-club-ui",
-    "build": "cd golf-club-ui && npm install && npm run build",
-    "postinstall": "cd golf-club-ui && npm install && npm run build",
-    "start": "concurrently \"npm run start:backend\" \"npm run start:frontend\""
+    "vercel": "^39.2.6"
   },
   "devDependencies": {
     "@types/lodash.debounce": "^4.0.9",

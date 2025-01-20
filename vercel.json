@@ -4,5 +4,6 @@
   "outputDirectory": "golf-club-ui/dist",
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
-  ]
+  ],
+  "ignoreCommand": "git diff --quiet HEAD^ HEAD ./golf-club-ui/"
 }
