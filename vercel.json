@@ -4,10 +4,15 @@
     {
       "src": "golf-club-ui/package.json",
       "use": "@vercel/static-build",
-      "config": { "distDir": "dist" }
+      "config": { 
+        "distDir": "golf-club-ui/dist",
+        "buildCommand": "cd golf-club-ui && npm install && npm run build"
+      }
     }
   ],
-  "rewrites": [
-    { "source": "/(.*)", "destination": "/golf-club-ui/dist/index.html" }
+  "routes": [
+    { "src": "/(.*)", "dest": "/golf-club-ui/dist/$1" },
+    { "handle": "filesystem" },
+    { "src": "/.*", "dest": "/golf-club-ui/dist/index.html" }
   ]
 }
