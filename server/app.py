@@ -15,8 +15,9 @@ from supabase import create_client
 from utils.recommendation_engine import calculate_recommendation_score
 from datetime import datetime
 import json
+import socket
 
-# Set up logging first
+# Set up basic logging
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
@@ -91,11 +92,15 @@ def get_supabase_client():
     try:
         supabase_url = os.getenv("SUPABASE_URL")
         supabase_key = os.getenv("SUPABASE_KEY")
+        if not supabase_url or not supabase_key:
+            logger.warning("Supabase credentials not found, running in limited mode")
+            return None
         return create_client(supabase_url, supabase_key)
     except Exception as e:
         logger.error(f"Failed to initialize Supabase client: {str(e)}")
-        raise
+        return None
 
+# Initialize supabase client
 supabase = get_supabase_client()
 
 # Middleware to log requests
@@ -692,14 +697,69 @@ async def get_recommendations(
 # At the end of the file, include the router with the /api prefix
 app.include_router(api_router, prefix="/api")
 
+@app.get("/")
+async def root():
+    return {"status": "ok", "message": "Server is running"}
+
 @app.get("/api/test")
 async def test():
-    return {"status": "ok", "port": os.environ.get("PORT", "8000")}
+    return {
+        "status": "ok",
+        "port": os.environ.get("PORT", "8000"),
+        "env": dict(os.environ)
+    }
+
+@app.on_event("startup")
+async def startup_event():
+    logger.info("=== Application Starting ===")
+    logger.info(f"Python version: {sys.version}")
+    logger.info(f"Host name: {socket.gethostname()}")
+    logger.info("Environment variables:")
+    for key, value in os.environ.items():
+        if not any(secret in key.lower() for secret in ['password', 'key', 'secret']):
+            logger.info(f"{key}: {value}")
+    
+    try:
+        port = int(os.environ.get("PORT", 8000))
+        logger.info(f"Port configured: {port}")
+    except ValueError as e:
+        logger.error(f"Port configuration error: {e}")
+
+@app.get("/api/debug")
+def debug_info():
+    """Endpoint to check server configuration"""
+    try:
+        # Get CORS middleware in a safer way
+        cors_origins = ["*"]  # Default value
+        for middleware in app.user_middleware:
+            if isinstance(middleware, CORSMiddleware):
+                cors_origins = middleware.options.get("allow_origins", ["*"])
+                break
+
+        return {
+            "timestamp": datetime.now().isoformat(),
+            "hostname": socket.gethostname(),
+            "python_version": sys.version,
+            "port": os.environ.get("PORT", "8000"),
+            "env_mode": os.environ.get("ENV", "unknown"),
+            "database_configured": all(key in os.environ for key in ["DB_HOST", "DB_PORT", "DB_NAME"]),
+            "cors_origins": cors_origins,
+            "environment_vars": {
+                k: v for k, v in os.environ.items() 
+                if not any(secret in k.lower() for secret in ['password', 'key', 'secret'])
+            }
+        }
+    except Exception as e:
+        logger.error(f"Debug endpoint error: {str(e)}")
+        return {
+            "error": str(e),
+            "status": "error",
+            "timestamp": datetime.now().isoformat()
+        }
 
 if __name__ == "__main__":
     import uvicorn
     
-    # Get port from environment or use default
     try:
         port = int(os.environ.get("PORT", 8000))
         logger.info(f"Starting server on port {port}")
