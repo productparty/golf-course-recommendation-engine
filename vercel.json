@@ -1,14 +1,7 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "golf-club-ui/package.json",
-      "use": "@vercel/static-build",
-      "config": { 
-        "distDir": "golf-club-ui/dist"
-      }
-    }
-  ],
+  "buildCommand": "cd golf-club-ui && npm install && npm run build",
+  "outputDirectory": "golf-club-ui/dist",
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ]

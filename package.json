@@ -1,6 +1,7 @@
 {
   "name": "golf-course-recommendation-engine",
   "version": "1.0.0",
+  "private": true,
   "dependencies": {
     "@sendgrid/mail": "^8.1.4",
     "@types/lodash": "^4.17.14",
@@ -23,7 +24,7 @@
     "start:frontend": "cd golf-club-ui && vite",
     "start:all": "concurrently \"npm run start:backend\" \"npm run start:frontend\"",
     "build:frontend": "npm run build --prefix golf-club-ui",
-    "build": "cd golf-club-ui && vite build --config vite.config.ts",
+    "build": "cd golf-club-ui && npm install && npm run build",
     "postinstall": "cd golf-club-ui && npm install && npm run build",
     "start": "concurrently \"npm run start:backend\" \"npm run start:frontend\""
   },
