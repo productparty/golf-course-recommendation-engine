@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Container, Typography, TextField, Button, MenuItem, Select, InputLabel, FormControl, Box, SelectChangeEvent } from '@mui/material';
 import './RecommendClub.css';
 import { useAuth } from '../../context/AuthContext';
-import { API_BASE_URL } from '../../utils/api';
+import { config } from '../../config';
 import PageLayout from '../../components/PageLayout';
 
 interface GolfClub {
@@ -45,7 +45,7 @@ const RecommendClub: React.FC = () => {
       const offset = (pageNumber - 1) * 5;
       
       const response = await fetch(
-        `${API_BASE_URL}/get_recommendations/?` +
+        `${config.API_URL}/api/get_recommendations/?` +
         new URLSearchParams({
           zip_code: zipCode,
           radius: radius.toString(),

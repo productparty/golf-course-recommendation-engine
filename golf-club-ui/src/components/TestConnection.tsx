@@ -1,20 +1,17 @@
-import { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { config } from '../config';
 
 export const TestConnection = () => {
-  const [status, setStatus] = useState<string>('Loading...');
-  const [error, setError] = useState<string | null>(null);
+  const [status, setStatus] = useState<string>('Testing connection...');
 
   useEffect(() => {
     const testConnection = async () => {
       try {
-        console.log('Testing API:', config.API_URL);
-        const response = await fetch(`${config.API_URL}/api/test-connection`);
+        const response = await fetch(`${config.API_URL}/api/test`);
         const data = await response.json();
-        setStatus(JSON.stringify(data, null, 2));
-      } catch (err) {
-        setError(String(err));
-        console.error('Connection error:', err);
+        setStatus(`API Connected: ${data.message}`);
+      } catch (error) {
+        setStatus(`API Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
       }
     };
 
@@ -22,11 +19,8 @@ export const TestConnection = () => {
   }, []);
 
   return (
-    <div>
-      <h3>API Connection Test</h3>
-      <pre>Status: {status}</pre>
-      {error && <pre style={{color: 'red'}}>Error: {error}</pre>}
-      <pre>API URL: {config.API_URL}</pre>
+    <div style={{ position: 'fixed', bottom: 10, right: 10, padding: 10, background: '#f0f0f0', borderRadius: 5 }}>
+      {status}
     </div>
   );
 }; 

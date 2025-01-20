@@ -55,10 +55,12 @@ const GolferProfile: React.FC = () => {
       try {
         if (!session?.access_token) return;
         
-        // Debug logging
-        console.log('Config API URL:', config.API_URL);
+        if (!config.API_URL) {
+          throw new Error('API URL is not configured');
+        }
+
         const apiUrl = `${config.API_URL}/api/get-golfer-profile`;
-        console.log('Fetching from:', apiUrl);
+        console.log('Making request to:', apiUrl); // Debug log
 
         const response = await fetch(apiUrl, {
           headers: {
@@ -72,6 +74,7 @@ const GolferProfile: React.FC = () => {
         }
 
         const data = await response.json();
+        console.log('Profile data:', data); // Debug log
         setProfile(data);
         setIsLoading(false);
       } catch (error) {

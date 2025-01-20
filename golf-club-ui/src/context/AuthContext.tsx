@@ -2,7 +2,8 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { createClient, Session } from '@supabase/supabase-js'
 import { config } from '../config';
 
-const supabase = createClient(
+// Create a single supabase instance
+export const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL,
   import.meta.env.VITE_SUPABASE_ANON_KEY,
   {
@@ -10,7 +11,7 @@ const supabase = createClient(
       autoRefreshToken: true,
       persistSession: true,
       detectSessionInUrl: true,
-      flowType: 'pkce'
+      storage: window.localStorage // Explicitly use localStorage
     }
   }
 )
@@ -30,27 +31,46 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    console.log('Current API URL:', config.API_URL); // Debug log
-    
-    // Get initial session
+    // Get initial session from localStorage
+    const savedSession = localStorage.getItem('supabase.auth.token');
+    if (savedSession) {
+      try {
+        const parsed = JSON.parse(savedSession);
+        setSession(parsed.currentSession);
+      } catch (e) {
+        console.error('Failed to parse saved session:', e);
+      }
+    }
+
+    // Get session from Supabase
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session)
-      setLoading(false)
-    })
+      setSession(session);
+      setLoading(false);
+    });
 
     // Listen for auth changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session)
-      setLoading(false)
-    })
+      setSession(session);
+      setLoading(false);
+      // Save session to localStorage
+      if (session) {
+        localStorage.setItem('supabase.auth.token', JSON.stringify({
+          currentSession: session
+        }));
+      } else {
+        localStorage.removeItem('supabase.auth.token');
+      }
+    });
 
-    return () => subscription.unsubscribe()
+    return () => subscription.unsubscribe();
   }, [])
 
   const signOut = async () => {
     await supabase.auth.signOut();
+    localStorage.removeItem('supabase.auth.token');
+    setSession(null);
   };
 
   const signInWithEmail = async (email: string) => {
