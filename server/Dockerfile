@@ -9,7 +9,6 @@ RUN pip install -r requirements.txt
 # Copy the rest of the application
 COPY . .
 
-ENV PORT=8000
 ENV PYTHONUNBUFFERED=1
 
-CMD ["python", "app.py"]
+# Let Railway handle the CMD
