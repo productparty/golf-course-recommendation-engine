@@ -17,7 +17,7 @@ from datetime import datetime
 import json
 
 # Set up logging first
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 # Get the directory containing app.py
@@ -56,10 +56,7 @@ api_router = APIRouter()
 # CORS Middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",  # Your frontend development server
-        "https://golf-course-recommendation-engine-mike-watsons-projects.vercel.app"  # Your production frontend
-    ],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -695,20 +692,18 @@ async def get_recommendations(
 # At the end of the file, include the router with the /api prefix
 app.include_router(api_router, prefix="/api")
 
+@app.get("/api/test")
+async def test():
+    return {"status": "ok", "port": os.environ.get("PORT", "8000")}
+
 if __name__ == "__main__":
     import uvicorn
-    import os
     
     # Get port from environment or use default
     try:
         port = int(os.environ.get("PORT", 8000))
-    except ValueError:
-        port = 8000
-    
-    # Start the server
-    uvicorn.run(
-        app,  # Use the app instance directly
-        host="0.0.0.0",
-        port=port,
-        log_level="info"
-    )
+        logger.info(f"Starting server on port {port}")
+        uvicorn.run(app, host="0.0.0.0", port=port, log_level="debug")
+    except Exception as e:
+        logger.error(f"Failed to start server: {e}")
+        raise
