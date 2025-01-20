@@ -4,11 +4,15 @@ console.log('Environment Variables:', {
   ALL_ENV: import.meta.env
 });
 
+// Add logging to help debug
 const API_URL = import.meta.env.VITE_API_URL;
 console.log('API URL:', API_URL); // Add this for debugging
 
 export const config = {
-  API_URL: API_URL || 'http://localhost:8000',
+  // Add https:// prefix if not present
+  API_URL: API_URL ? 
+    (API_URL.startsWith('http') ? API_URL : `https://${API_URL}`) : 
+    'http://localhost:8000',
   SUPABASE_URL: import.meta.env.VITE_SUPABASE_URL,
   SUPABASE_ANON_KEY: import.meta.env.VITE_SUPABASE_ANON_KEY,
   APP_URL: import.meta.env.VITE_APP_URL

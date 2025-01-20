@@ -2,12 +2,14 @@
   "$schema": "https://railway.app/railway.schema.json",
   "build": {
     "builder": "DOCKERFILE",
-    "dockerfilePath": "server/Dockerfile"
+    "dockerfilePath": "server/Dockerfile",
+    "watchPatterns": ["server/**/*"]
   },
   "deploy": {
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 3,
     "healthcheckPath": "/",
-    "healthcheckTimeout": 10
+    "healthcheckTimeout": 10,
+    "startCommand": "uvicorn app:app --host 0.0.0.0 --port $PORT --log-level debug"
   }
 } 

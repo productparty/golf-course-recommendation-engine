@@ -1,17 +1,17 @@
 FROM python:3.10-slim
 
-WORKDIR /app
+WORKDIR /app/server
 
 # Install build dependencies
 RUN apt-get update && \
     apt-get install -y gcc python3-dev libpq-dev
 
-# Copy and install requirements
-COPY requirements.txt .
-RUN pip install --verbose --no-cache-dir -r requirements.txt
+# Copy requirements first for better caching
+COPY server/requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
-COPY . .
+# Copy only the server code
+COPY server/ .
 
 # Set environment variables
 ENV PORT=8000
@@ -22,4 +22,4 @@ RUN echo "Python version:" && python --version && \
     echo "Installed packages:" && pip list
 
 # Use explicit start command
-CMD ["python", "-c", "import os; from app import app; import uvicorn; port = int(os.environ.get('PORT', 8000)); print(f'Starting server on port {port}'); uvicorn.run(app, host='0.0.0.0', port=port, log_level='debug')"]
+CMD ["python", "-m", "uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000", "--log-level", "debug"]

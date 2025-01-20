@@ -724,12 +724,13 @@ async def root():
             "timestamp": datetime.now().isoformat()
         }
 
-@app.get("/api/test")
+@app.get("/test")
 async def test():
+    """Simple test endpoint"""
     return {
         "status": "ok",
-        "port": os.environ.get("PORT", "8000"),
-        "env": dict(os.environ)
+        "message": "API is running",
+        "timestamp": datetime.now().isoformat()
     }
 
 @app.on_event("startup")
