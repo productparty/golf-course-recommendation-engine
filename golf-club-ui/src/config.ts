@@ -5,9 +5,7 @@ console.log('Environment Variables:', {
 });
 
 const API_URL = import.meta.env.VITE_API_URL;
-if (!API_URL) {
-  console.error('VITE_API_URL is not defined in environment');
-}
+console.log('API URL:', API_URL); // Add this for debugging
 
 export const config = {
   API_URL: API_URL || 'http://localhost:8000',
