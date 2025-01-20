@@ -5,5 +5,13 @@
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ],
-  "ignoreCommand": "git diff --quiet HEAD^ HEAD ./golf-club-ui/"
+  "ignoreCommand": "git diff --quiet HEAD^ HEAD ./golf-club-ui/",
+  "env": {
+    "VITE_API_URL": "https://golf-course-recommendation-engin-production.up.railway.app"
+  },
+  "build": {
+    "env": {
+      "VITE_API_URL": "https://golf-course-recommendation-engin-production.up.railway.app"
+    }
+  }
 }

@@ -7,12 +7,12 @@ console.log('Environment Variables:', {
 // Get API URL from environment
 const VITE_API_URL = import.meta.env.VITE_API_URL;
 
-// Ensure API_URL has https:// prefix and no trailing slash
-const formatApiUrl = (url: string | undefined) => {
-  if (!url) {
-    throw new Error('VITE_API_URL must be set in environment variables');
-  }
+if (!VITE_API_URL) {
+  throw new Error('VITE_API_URL must be set in environment variables');
+}
 
+// Ensure API_URL has https:// prefix and no trailing slash
+const formatApiUrl = (url: string) => {
   if (!url.startsWith('http')) {
     url = `https://${url}`;
   }
@@ -27,10 +27,7 @@ export const config = {
   APP_URL: import.meta.env.VITE_APP_URL
 };
 
-// Single debug log in development
+// Only log in development
 if (import.meta.env.DEV) {
-  console.log('Config initialized:', {
-    API_URL: config.API_URL,
-    MODE: import.meta.env.MODE
-  });
+  console.log('Config:', config);
 }
