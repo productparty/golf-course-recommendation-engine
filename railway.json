@@ -1,6 +1,5 @@
 {
   "$schema": "https://railway.app/railway.schema.json",
-  "version": 2,
   "build": {
     "builder": "DOCKERFILE",
     "dockerfilePath": "server/Dockerfile"
@@ -12,9 +11,5 @@
     "numReplicas": 1,
     "healthcheckPath": "/api/health",
     "healthcheckTimeout": 10
-  },
-  "buildCommand": "cd server && pip install -r requirements.txt",
-  "env": {
-    "PORT": "8000"
   }
 } 
