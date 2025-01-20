@@ -13,6 +13,8 @@ import psycopg2
 import requests
 from supabase import create_client
 from utils.recommendation_engine import calculate_recommendation_score
+from datetime import datetime
+import json
 
 # Set up logging first
 logging.basicConfig(level=logging.INFO)
@@ -127,6 +129,14 @@ async def health_check():
     except Exception as e:
         logger.error(f"Health check failed: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/test-connection", tags=["Health"])
+async def test_connection():
+    return {
+        "status": "ok",
+        "environment": os.environ.get("RAILWAY_ENVIRONMENT_NAME", "unknown"),
+        "timestamp": datetime.now().isoformat()
+    }
 
 # Geocode ZIP Code
 @api_router.get("/geocode_zip/", tags=["Utilities"])
@@ -530,13 +540,27 @@ async def update_golfer_profile(request: Request, profile_update: UpdateGolferPr
 # Database connection function
 def get_db_connection():
     try:
-        # Add debug logging
-        logger.info(f"Connecting to database at {DATABASE_CONFIG['host']}:{DATABASE_CONFIG['port']}")
-        logger.info(f"Using user: {DATABASE_CONFIG['user']}")
+        logger.info(f"""
+        Connecting to database:
+        - Host: {DATABASE_CONFIG['host']}
+        - Port: {DATABASE_CONFIG['port']}
+        - User: {DATABASE_CONFIG['user']}
+        - Database: {DATABASE_CONFIG['dbname']}
+        """)
+        
+        start_time = datetime.now()
         conn = psycopg2.connect(**DATABASE_CONFIG)
+        
+        connect_time = (datetime.now() - start_time).total_seconds()
+        logger.info(f"Database connection successful (took {connect_time}s)")
+        
         return conn
     except Exception as e:
-        logger.error(f"Error connecting to database: {e}")
+        logger.error(f"""
+        Database connection failed:
+        Error: {str(e)}
+        Config: {json.dumps({k:v for k,v in DATABASE_CONFIG.items() if k != 'password'}, indent=2)}
+        """)
         raise
 
 # Verify database connection on startup
