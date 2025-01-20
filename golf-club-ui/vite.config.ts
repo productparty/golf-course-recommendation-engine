@@ -3,7 +3,11 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
-  const apiUrl = env.VITE_API_URL || 'http://localhost:8000';
+  
+  console.log('Environment Variables:', {
+    VITE_API_URL: env.VITE_API_URL,
+    MODE: mode
+  });
 
   return {
     base: '/',
@@ -15,17 +19,20 @@ export default defineConfig(({ mode }) => {
     server: {
       proxy: {
         '/api': {
-          target: apiUrl,
+          target: env.VITE_API_URL || 'http://localhost:8000',
           changeOrigin: true,
           secure: false,
         },
       },
     },
     define: {
-      'import.meta.env.VITE_API_URL': JSON.stringify(apiUrl),
-      'import.meta.env.VITE_SUPABASE_URL': JSON.stringify(env.VITE_SUPABASE_URL),
-      'import.meta.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(env.VITE_SUPABASE_ANON_KEY),
-      'import.meta.env.VITE_APP_URL': JSON.stringify(env.VITE_APP_URL)
+      'import.meta.env': JSON.stringify({
+        VITE_API_URL: env.VITE_API_URL,
+        VITE_SUPABASE_URL: env.VITE_SUPABASE_URL,
+        VITE_SUPABASE_ANON_KEY: env.VITE_SUPABASE_ANON_KEY,
+        VITE_APP_URL: env.VITE_APP_URL,
+        MODE: mode
+      })
     }
   };
 });
