@@ -16,7 +16,10 @@ export const config = {
   APP_URL: import.meta.env.VITE_APP_URL
 };
 
-console.log('Final Config:', config);
+// Debug output
+console.log('Environment:', import.meta.env.MODE);
+console.log('API URL from env:', import.meta.env.VITE_API_URL);
+console.log('Final API URL:', config.API_URL);
 
 // Add this for debugging
 console.log('Config:', {
