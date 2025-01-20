@@ -19,33 +19,24 @@ ENV PORT=8000
 ENV ALLOWED_ORIGINS="https://golf-club-ui.vercel.app"
 ENV MAX_WORKERS=4
 
-# Add startup script
+# Create a wrapper script that properly handles the PORT variable
 RUN echo '#!/bin/bash\n\
-echo "Waiting for port $PORT to be available..."\n\
-timeout=30\n\
-until nc -z localhost $PORT || [ $timeout -le 0 ]; do\n\
-  echo "Port $PORT is not available, waiting..."\n\
-  sleep 1\n\
-  timeout=$((timeout-1))\n\
-done\n\
-\n\
+PORT="${PORT:-8000}"\n\
+echo "Starting server on port: $PORT"\n\
 exec uvicorn app:app \
-  --host 0.0.0.0 \
-  --port $PORT \
-  --workers $MAX_WORKERS \
-  --log-level debug \
-  --timeout-keep-alive 75 \
-  --proxy-headers \
-  --forwarded-allow-ips="*"' > /app/start.sh && \
-  chmod +x /app/start.sh
+    --host 0.0.0.0 \
+    --port "$PORT" \
+    --workers 4 \
+    --log-level debug' > /app/start.sh && \
+    chmod +x /app/start.sh
 
 # Print debug info
 RUN echo "Python version:" && python --version && \
     echo "Installed packages:" && pip list
 
-# Health check
+# Health check using the PORT environment variable
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:${PORT}/health || exit 1
 
-# Start command
-CMD ["/app/start.sh"]
+# Use the wrapper script
+CMD ["/bin/bash", "/app/start.sh"]
