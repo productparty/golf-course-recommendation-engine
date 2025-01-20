@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { createClient, Session } from '@supabase/supabase-js'
+import { config } from '../config';
 
 const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL,
@@ -29,6 +30,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    console.log('Current API URL:', config.API_URL); // Debug log
+    
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)

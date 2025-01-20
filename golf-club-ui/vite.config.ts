@@ -14,7 +14,8 @@ export default defineConfig(({ mode }) => {
     plugins: [react()],
     build: {
       outDir: 'dist',
-      emptyOutDir: true
+      emptyOutDir: true,
+      sourcemap: true
     },
     server: {
       proxy: {
@@ -32,7 +33,8 @@ export default defineConfig(({ mode }) => {
         VITE_SUPABASE_ANON_KEY: env.VITE_SUPABASE_ANON_KEY,
         VITE_APP_URL: env.VITE_APP_URL,
         MODE: mode
-      })
+      }),
+      'process.env': {}
     }
   };
 });

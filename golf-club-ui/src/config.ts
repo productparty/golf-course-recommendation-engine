@@ -7,26 +7,23 @@ console.log('Environment Variables:', {
 // Add debug logging
 const API_URL = import.meta.env.VITE_API_URL;
 console.log('Raw API URL from env:', API_URL);
-console.log('All env variables:', import.meta.env); // Debug all env vars
+
+if (!API_URL) {
+  throw new Error(
+    'VITE_API_URL is not set. Please set it in your Vercel environment variables or .env file'
+  );
+}
 
 // Ensure API_URL has https:// prefix and no trailing slash
-const formatApiUrl = (url: string | undefined) => {
-  if (!url) {
-    console.warn('API_URL is undefined in environment variables');
-    return 'https://golf-course-recommendation-engin-production.up.railway.app';
-  }
+const formatApiUrl = (url: string) => {
   if (!url.startsWith('http')) {
     url = `https://${url}`;
   }
   return url.endsWith('/') ? url.slice(0, -1) : url;
 };
 
-
-const apiUrl = formatApiUrl(API_URL);
-console.log('Formatted API URL:', apiUrl); // Debug formatted URL
-
 export const config = {
-  API_URL: apiUrl,
+  API_URL: formatApiUrl(API_URL),
   SUPABASE_URL: import.meta.env.VITE_SUPABASE_URL,
   SUPABASE_ANON_KEY: import.meta.env.VITE_SUPABASE_ANON_KEY,
   APP_URL: import.meta.env.VITE_APP_URL
@@ -49,3 +46,9 @@ console.log('API URL:', import.meta.env.VITE_API_URL);
 console.log('APP URL:', import.meta.env.VITE_APP_URL);
 
 // When deployed, VITE_API_URL will be something like: https://your-app.railway.app
+
+// Log the final config for debugging
+console.log('Final config:', {
+  API_URL: config.API_URL,
+  SUPABASE_URL: config.SUPABASE_URL,
+});
