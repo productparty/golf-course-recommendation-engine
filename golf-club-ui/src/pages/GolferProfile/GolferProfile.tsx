@@ -17,7 +17,7 @@ import { useAuth } from '../../context/AuthContext';
 import PageLayout from '../../components/PageLayout';
 import { config } from '../../config';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '../../context/AuthContext';
+import { supabase } from '../../lib/supabase';
 
 interface GolferProfile {
   golfer_id: string;
@@ -62,9 +62,10 @@ const GolferProfile: React.FC = () => {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        if (!session?.access_token) {
-          console.log('No session available');
-          setError('Please log in to view your profile');
+        const { data: { session: currentSession } } = await supabase.auth.getSession();
+        
+        if (!currentSession?.access_token) {
+          setError('No valid session');
           setIsLoading(false);
           return;
         }
@@ -74,44 +75,24 @@ const GolferProfile: React.FC = () => {
 
         const response = await fetch(apiUrl, {
           method: 'GET',
-          credentials: 'include',
           headers: {
-            'Authorization': `Bearer ${session.access_token}`,
-            'Content-Type': 'application/json',
-            'Origin': import.meta.env.VITE_APP_URL || 'https://golf-club-ui-lac.vercel.app'
+            'Authorization': `Bearer ${currentSession.access_token}`,
+            'Content-Type': 'application/json'
           }
         });
 
-        if (response.status === 401) {
-          if (refreshAttempts >= 2) {
-            console.log('Too many refresh attempts, logging out');
-            setError('Session expired - please log in again');
+        if (!response.ok) {
+          if (response.status === 401) {
+            console.log('Session expired, signing out');
             await signOut();
             navigate('/login');
             return;
           }
-
-          // Try to refresh the session
-          const { data: { session: newSession }, error: refreshError } = 
-            await supabase.auth.refreshSession();
-          
-          if (refreshError || !newSession) {
-            throw new Error('Failed to refresh session');
-          }
-
-          console.log('Session refreshed successfully');
-          setRefreshAttempts(prev => prev + 1);
-          return; // Will retry with new session
+          throw new Error(`Server error: ${response.status}`);
         }
 
         const data = await response.json();
-        if (!response.ok) {
-          throw new Error(data.detail || `Server error: ${response.status}`);
-        }
-
         setProfile(data);
-        setError('');
-        setRefreshAttempts(0);
         setIsLoading(false);
       } catch (error) {
         console.error('Error fetching profile:', error);
@@ -125,7 +106,7 @@ const GolferProfile: React.FC = () => {
     } else {
       setIsLoading(false);
     }
-  }, [session, signOut, navigate, refreshAttempts]);
+  }, [session, signOut, navigate]);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();

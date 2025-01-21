@@ -1,27 +1,12 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { createClient, Session, AuthError } from '@supabase/supabase-js'
 import { config } from '../config';
-
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+import { supabase } from '../lib/supabase';
 
 console.log('Initializing Supabase with:', { 
-  url: supabaseUrl, 
-  hasKey: !!supabaseAnonKey 
+  url: supabase.url, 
+  hasKey: !!supabase.auth.signInWithPassword
 });
-
-// Create a single supabase instance with the correct keys
-export const supabase = createClient(
-  supabaseUrl,
-  supabaseAnonKey,
-  {
-    auth: {
-      autoRefreshToken: true,
-      persistSession: true,
-      detectSessionInUrl: true
-    }
-  }
-)
 
 interface AuthContextType {
   session: Session | null;
@@ -44,23 +29,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check for access token in URL hash (magic link flow)
-    const hashParams = new URLSearchParams(window.location.hash.substring(1));
-    const accessToken = hashParams.get('access_token');
-    
-    if (accessToken) {
-      console.log('Found access token in URL (magic link)');
-      const refreshToken = hashParams.get('refresh_token');
-      
-      supabase.auth.setSession({
-        access_token: accessToken,
-        refresh_token: refreshToken || '',
-      });
-      
-      // Clear the hash from URL
-      window.history.replaceState({}, document.title, window.location.pathname);
-    }
-
     // Get initial session
     supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
       console.log('Initial session check:', initialSession ? 'Found' : 'None');
@@ -72,9 +40,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
-      console.log('Auth state changed:', event);
+      console.log('Auth state changed:', event, currentSession?.user?.email);
       setSession(currentSession);
-      setLoading(false);
     });
 
     return () => subscription.unsubscribe();
