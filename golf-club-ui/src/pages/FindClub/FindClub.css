@@ -134,3 +134,43 @@
   background-color: #0056b3 !important;
   color: white !important;
 }
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .content {
+    flex-direction: column;
+  }
+
+  .filters {
+    margin-right: 0;
+    margin-bottom: 20px;
+    width: auto;
+  }
+
+  .results {
+    width: auto;
+  }
+
+  /* Adjust club details layout */
+  .results > div {
+    flex-direction: column;
+  }
+
+  .results > div > div:last-child {
+    align-items: flex-start;
+    margin-top: 10px;
+    min-width: 0;
+  }
+
+  /* Adjust pagination */
+  .pagination {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 5px;
+  }
+
+  .pagination button {
+    font-size: 12px;
+    padding: 8px 12px;
+  }
+}
