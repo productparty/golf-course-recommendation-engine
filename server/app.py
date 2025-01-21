@@ -11,12 +11,13 @@ from pydantic import BaseModel
 from psycopg2.extras import RealDictCursor
 import psycopg2
 import requests
-from supabase import create_client
+from supabase import create_client, Client
 from utils.recommendation_engine import calculate_recommendation_score
 from datetime import datetime
 import json
 import socket
 import asyncio
+from loguru import logger
 
 # Set up basic logging
 logging.basicConfig(level=logging.DEBUG)
@@ -103,40 +104,27 @@ AZURE_MAPS_API_KEY = os.getenv("AZURE_MAPS_API_KEY")
 
 # Update to use service key specifically
 SUPABASE_URL = os.getenv("SUPABASE_URL", "https://nkknwkentrbbyzgqgpfd.supabase.co")
-SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY")  # Use the service key for backend
+SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY")  # Use the service role key for backend
 
 logger.info(f"Supabase URL: {SUPABASE_URL}")
-logger.info("Supabase service key configured: {}".format("Yes" if SUPABASE_SERVICE_KEY else "No"))
+logger.info("Supabase service role key configured: {}".format("Yes" if SUPABASE_SERVICE_ROLE_KEY else "No"))
 
-def get_supabase_client():
-    try:
-        if not SUPABASE_URL or not SUPABASE_SERVICE_KEY:
-            logger.error("Missing Supabase credentials")
-            logger.error(f"URL present: {bool(SUPABASE_URL)}")
-            logger.error(f"Service key present: {bool(SUPABASE_SERVICE_KEY)}")
-            raise ValueError("Supabase credentials not configured")
-            
-        client = create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)
-        # Verify the client has admin privileges
-        try:
-            client.auth.admin.list_users()
-            logger.info("Supabase client verified with admin privileges")
-        except Exception as e:
-            logger.error(f"Service key verification failed: {str(e)}")
-            raise
-            
-        return client
-    except Exception as e:
-        logger.error(f"Failed to initialize Supabase client: {str(e)}")
-        raise
+# Initialize Supabase client with better error handling
+supabase_url = SUPABASE_URL
+supabase_key = SUPABASE_SERVICE_ROLE_KEY
 
-# Initialize supabase client
+logger.info(f"Initializing Supabase with URL: {supabase_url}")
+if not supabase_url or not supabase_key:
+    error_msg = "Missing Supabase environment variables"
+    logger.error(error_msg)
+    raise ValueError(error_msg)
+
 try:
-    supabase = get_supabase_client()
-    logger.info("Supabase client created successfully with service role")
+    supabase: Client = create_client(supabase_url, supabase_key)
+    logger.info("Supabase client initialized successfully")
 except Exception as e:
-    logger.error(f"Failed to create Supabase client: {str(e)}")
-    supabase = None
+    logger.error(f"Failed to initialize Supabase client: {str(e)}")
+    raise
 
 # Middleware to log requests
 @app.middleware("http")
@@ -464,18 +452,21 @@ class UpdateGolferProfileResponse(BaseModel):
 async def get_golfer_profile(request: Request):
     try:
         auth_header = request.headers.get('Authorization')
-        logger.info("Auth attempt with headers:")
-        logger.info(dict(request.headers))
+        logger.info("Auth attempt with headers")
+        logger.debug(f"Headers: {dict(request.headers)}")
         
         if not auth_header or not auth_header.startswith('Bearer '):
             logger.error("Missing or invalid auth header")
             raise HTTPException(status_code=401, detail="Missing token")
         
         token = auth_header.split(' ')[1]
-        logger.info(f"Token received: {token[:10]}...")  # Log first 10 chars
+        logger.info(f"Token received: {token[:10]}...")
         
         try:
-            # Add debug endpoint to verify token
+            # Add debug logging for Supabase client
+            logger.debug(f"Supabase client exists: {bool(supabase)}")
+            logger.debug(f"Supabase auth exists: {bool(supabase.auth)}")
+            
             user = supabase.auth.get_user(token)
             user_id = user.user.id
             logger.info(f"Successfully authenticated user: {user_id}")
@@ -502,13 +493,13 @@ async def get_golfer_profile(request: Request):
                     
         except Exception as e:
             logger.error(f"Token validation failed: {str(e)}")
-            # Return more detailed error for debugging
             raise HTTPException(
                 status_code=401, 
                 detail={
                     "error": str(e),
                     "token_prefix": token[:10] if token else None,
-                    "headers": dict(request.headers)
+                    "headers": dict(request.headers),
+                    "supabase_initialized": bool(supabase)
                 }
             )
             
@@ -888,7 +879,7 @@ async def verify_auth_setup():
                 "status": "error",
                 "message": "Supabase client not initialized",
                 "url_configured": bool(SUPABASE_URL),
-                "service_key_configured": bool(SUPABASE_SERVICE_KEY)
+                "service_key_configured": bool(SUPABASE_SERVICE_ROLE_KEY)
             }
             
         # Try to list users to verify admin access

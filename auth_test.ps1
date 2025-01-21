@@ -1,4 +1,4 @@
-# auth_test.ps1
+# auth_flow_test.ps1
 
 # Configuration
 $config = @{
@@ -6,109 +6,73 @@ $config = @{
     apiUrl = "https://golf-course-recommendation-engin-production.up.railway.app"
 }
 
-Write-Host "Starting API test..."
-
-# First, verify environment
-Write-Host "`n1. Checking environment..."
-Write-Host "Supabase URL: $($config.supabaseUrl)"
-Write-Host "API URL: $($config.apiUrl)"
-
-# Get the anon key from .env file if it exists
+# Get anon key from .env
 $envPath = "server/.env"
 if (Test-Path $envPath) {
     Get-Content $envPath | ForEach-Object {
         if ($_ -match "SUPABASE_ANON_KEY=(.*)") {
             $config.anonKey = $matches[1]
-            Write-Host "Found anon key in .env file"
         }
     }
 }
 
-if (-not $config.anonKey) {
-    $config.anonKey = Read-Host "Enter your Supabase anon key"
-}
+Write-Host "Starting auth flow test..."
 
-# Test API connection with error handling
-Write-Host "`n2. Testing API connection..."
+# Step 1: Create a test user or use existing one
+Write-Host "`n1. Testing user authentication..."
+$email = Read-Host "Enter test user email"
+$password = Read-Host "Enter test user password" -AsSecureString
+$BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($password)
+$passwordText = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
+
 try {
-    $apiTest = Invoke-WebRequest `
-        -Uri "$($config.apiUrl)/api/debug/cors" `
-        -Method Get `
-        -UseBasicParsing
-
-    Write-Host "API Status: $($apiTest.StatusCode)"
-    Write-Host "API Response:"
-    Write-Host $apiTest.Content
-} catch {
-    Write-Host "API connection failed:"
-    Write-Host "Error: $($_.Exception.Message)"
-    
-    # Try ping test
-    Write-Host "`nTrying to ping API..."
-    $pingTest = Test-NetConnection -ComputerName "golf-course-recommendation-engin-production.up.railway.app" -Port 443
-    Write-Host "Ping test result: $($pingTest.TcpTestSucceeded)"
-}
-
-# Test Supabase connection
-Write-Host "`n3. Testing Supabase connection..."
-try {
-    $headers = @{
+    # Sign in with email/password
+    $loginHeaders = @{
         "apikey" = $config.anonKey
         "Content-Type" = "application/json"
     }
 
-    Write-Host "Testing with headers:"
-    $headers | ConvertTo-Json
+    $loginBody = @{
+        email = $email
+        password = $passwordText
+    } | ConvertTo-Json
 
-    $supabaseTest = Invoke-WebRequest `
-        -Uri "$($config.supabaseUrl)/auth/v1/health" `
-        -Method Get `
-        -Headers $headers `
-        -UseBasicParsing
+    Write-Host "`nAttempting login..."
+    $authResponse = Invoke-RestMethod `
+        -Uri "$($config.supabaseUrl)/auth/v1/token?grant_type=password" `
+        -Method Post `
+        -Headers $loginHeaders `
+        -Body $loginBody
 
-    Write-Host "Supabase Status: $($supabaseTest.StatusCode)"
-    Write-Host "Supabase Response:"
-    Write-Host $supabaseTest.Content
+    $token = $authResponse.access_token
+    Write-Host "Login successful! Token: $($token.Substring(0, 10))..."
 
-    # If we got here, try the magic link
-    Write-Host "`n4. Would you like to send a magic link? (y/n)"
-    $sendLink = Read-Host
-
-    if ($sendLink -eq 'y') {
-        $email = Read-Host "Enter your email address"
-        
-        Write-Host "Sending magic link to $email..."
-        $loginBody = @{
-            email = $email
-            options = @{
-                emailRedirectTo = "https://golf-club-ui-lac.vercel.app/login"
-            }
-        } | ConvertTo-Json
-
-        $authResponse = Invoke-WebRequest `
-            -Uri "$($config.supabaseUrl)/auth/v1/otp" `
-            -Method Post `
-            -Headers $headers `
-            -Body $loginBody `
-            -UseBasicParsing
-
-        Write-Host "Magic link sent! Check your email."
+    # Test profile endpoint
+    Write-Host "`n2. Testing golfer profile endpoint..."
+    $profileHeaders = @{
+        "Authorization" = "Bearer $token"
+        "Content-Type" = "application/json"
     }
+
+    $profileResponse = Invoke-RestMethod `
+        -Uri "$($config.apiUrl)/api/get-golfer-profile" `
+        -Method Get `
+        -Headers $profileHeaders
+
+    Write-Host "Profile response:"
+    $profileResponse | ConvertTo-Json
 
 } catch {
-    Write-Host "Supabase connection failed:"
-    Write-Host "Error: $($_.Exception.Message)"
-    if ($_.Exception.Response) {
-        Write-Host "Status Code: $($_.Exception.Response.StatusCode.value__)"
-        Write-Host "Status Description: $($_.Exception.Response.StatusDescription)"
-        
-        $reader = [System.IO.StreamReader]::new($_.Exception.Response.GetResponseStream())
-        $reader.BaseStream.Position = 0
-        $reader.DiscardBufferedData()
-        $responseBody = $reader.ReadToEnd()
-        Write-Host "Response body: $responseBody"
-        $reader.Dispose()
-    }
+    Write-Host "`nError occurred:"
+    Write-Host "StatusCode:" $_.Exception.Response.StatusCode.value__
+    Write-Host "StatusDescription:" $_.Exception.Response.StatusDescription
+    
+    $rawResponse = $_.Exception.Response.GetResponseStream()
+    $reader = New-Object System.IO.StreamReader($rawResponse)
+    $rawResponse.Position = 0
+    $responseBody = $reader.ReadToEnd()
+    Write-Host "Response body:" $responseBody
 }
 
-Write-Host "`nTest complete!"
+# Clean up
+[System.Runtime.InteropServices.Marshal]::ZeroFreeBSTR($BSTR)
