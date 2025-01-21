@@ -86,26 +86,36 @@ const RecommendClub: React.FC = () => {
     <PageLayout title="Recommended Golf Clubs">
       <div className="content">
         <aside className="filters">
-          <Typography variant="h4" component="h1" gutterBottom>
-            Recommend Club
-          </Typography>
           <Typography variant="body1" gutterBottom>
             Get personalized golf club recommendations based on your profile preferences
           </Typography>
-          <Box sx={{ mt: 2 }}>
+          <Box sx={{ 
+            mt: 2,
+            width: '100%',  // Make box full width
+            '& .MuiTextField-root': { width: '100%' }, // Make TextField full width
+            '& .MuiFormControl-root': { width: '100%' } // Make FormControl full width
+          }}>
             <TextField
-              fullWidth
               label="ZIP Code"
               value={zipCode}
               onChange={(e) => setZipCode(e.target.value)}
               margin="normal"
               inputProps={{ maxLength: 5 }}
+              sx={{ 
+                backgroundColor: 'white',
+                '& .MuiOutlinedInput-root': {
+                  '& fieldset': {
+                    borderColor: 'rgba(0, 0, 0, 0.23)',
+                  },
+                },
+              }}
             />
-            <FormControl fullWidth margin="normal">
+            <FormControl margin="normal">
               <InputLabel>Radius (miles)</InputLabel>
               <Select
                 value={radius}
                 onChange={(e) => setRadius(Number(e.target.value))}
+                sx={{ backgroundColor: 'white' }}
               >
                 {[1, 5, 10, 25, 50, 100].map((r) => (
                   <MenuItem key={r} value={r}>{r}</MenuItem>
@@ -116,7 +126,7 @@ const RecommendClub: React.FC = () => {
               onClick={() => fetchRecommendations(1)}
               variant="contained"
               color="primary"
-              sx={{ mt: 2 }}
+              sx={{ mt: 2, width: '100%' }}
               disabled={isLoading}
             >
               {isLoading ? 'Loading...' : 'Get Recommendations'}

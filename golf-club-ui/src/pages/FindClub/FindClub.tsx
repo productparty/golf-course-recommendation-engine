@@ -39,9 +39,11 @@ const FindClub: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [clubError, setClubError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const fetchClubs = async () => {
     try {
+      setIsLoading(true);
       const url = new URL(`${config.API_URL}/api/find_clubs/`);
       url.searchParams.append('zip_code', zipCode);
       url.searchParams.append('radius', radius.toString());
@@ -71,6 +73,8 @@ const FindClub: React.FC = () => {
       console.error('Error in fetchClubs:', error);
       setClubError(error instanceof Error ? error.message : 'Failed to fetch clubs');
       setResults([]);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -85,6 +89,10 @@ const FindClub: React.FC = () => {
     setFindTechnologies(selectedOptions);
   };
 
+  const handleSearch = async () => {
+    await fetchClubs();
+  };
+
   useEffect(() => {
     // Placeholder for any additional effects
   }, []);
@@ -93,75 +101,50 @@ const FindClub: React.FC = () => {
     <PageLayout title="Find Golf Clubs">
       <div className="content">
         <aside className="filters">
-          <Typography variant="h4" component="h1" gutterBottom>
-            Find Club
-          </Typography>
           <Typography variant="body1" gutterBottom>
-            Search for golf clubs in your area
+            Find golf clubs near you
           </Typography>
-          <Box sx={{ mt: 2 }}>
+          <Box sx={{ 
+            mt: 2,
+            width: '100%',
+            '& .MuiTextField-root': { width: '100%' },
+            '& .MuiFormControl-root': { width: '100%' }
+          }}>
             <TextField
-              fullWidth
               label="ZIP Code"
               value={zipCode}
               onChange={(e) => setZipCode(e.target.value)}
               margin="normal"
               inputProps={{ maxLength: 5 }}
+              sx={{ 
+                backgroundColor: 'white',
+                '& .MuiOutlinedInput-root': {
+                  '& fieldset': {
+                    borderColor: 'rgba(0, 0, 0, 0.23)',
+                  },
+                },
+              }}
             />
-            <FormControl fullWidth margin="normal">
+            <FormControl margin="normal">
               <InputLabel>Radius (miles)</InputLabel>
               <Select
                 value={radius}
                 onChange={(e) => setRadius(Number(e.target.value))}
+                sx={{ backgroundColor: 'white' }}
               >
                 {[1, 5, 10, 25, 50, 100].map((r) => (
                   <MenuItem key={r} value={r}>{r}</MenuItem>
                 ))}
               </Select>
             </FormControl>
-            <FormControl fullWidth margin="normal">
-              <InputLabel>Price Range</InputLabel>
-              <Select
-                value={priceRange}
-                onChange={(e) => setPriceRange(e.target.value as '' | '$' | '$$' | '$$$')}
-              >
-                <MenuItem value="">All</MenuItem>
-                <MenuItem value="$">$</MenuItem>
-                <MenuItem value="$$">$$</MenuItem>
-                <MenuItem value="$$$">$$$</MenuItem>
-              </Select>
-            </FormControl>
-            <FormControl fullWidth margin="normal">
-              <InputLabel>Difficulty</InputLabel>
-              <Select
-                value={difficulty}
-                onChange={(e) => setDifficulty(e.target.value as '' | 'Easy' | 'Medium' | 'Hard')}
-              >
-                <MenuItem value="">All</MenuItem>
-                <MenuItem value="Easy">Easy</MenuItem>
-                <MenuItem value="Medium">Medium</MenuItem>
-                <MenuItem value="Hard">Hard</MenuItem>
-              </Select>
-            </FormControl>
-            <FormControl fullWidth margin="normal">
-              <InputLabel>Technologies</InputLabel>
-              <Select
-                multiple
-                value={findTechnologies}
-                onChange={handleTechnologiesChange}
-              >
-                {technologyOptions.map((tech) => (
-                  <MenuItem key={tech} value={tech}>{tech}</MenuItem>
-                ))}
-              </Select>
-            </FormControl>
             <Button 
-              onClick={fetchClubs} 
-              variant="contained" 
-              color="primary" 
-              sx={{ mt: 2 }}
+              onClick={handleSearch}
+              variant="contained"
+              color="primary"
+              sx={{ mt: 2, width: '100%' }}
+              disabled={isLoading}
             >
-              Find Clubs
+              {isLoading ? 'Searching...' : 'Find Clubs'}
             </Button>
           </Box>
           {clubError && (
