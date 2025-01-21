@@ -50,13 +50,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     
     if (accessToken) {
       console.log('Found access token in URL (magic link)');
-      const expiresIn = parseInt(hashParams.get('expires_in') || '3600');
       const refreshToken = hashParams.get('refresh_token');
       
       supabase.auth.setSession({
         access_token: accessToken,
         refresh_token: refreshToken || '',
-        expires_in: expiresIn,
       });
       
       // Clear the hash from URL
