@@ -11,7 +11,7 @@ from pydantic import BaseModel
 from psycopg2.extras import RealDictCursor
 import psycopg2
 import requests
-from supabase import create_client, Client
+from supabase import create_client
 from utils.recommendation_engine import calculate_recommendation_score
 from datetime import datetime
 import json
@@ -19,7 +19,6 @@ import socket
 import asyncio
 from typing import Optional
 from contextlib import contextmanager
-import jwt
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -81,7 +80,6 @@ if not supabase_url or not supabase_key:
     raise ValueError("Missing required environment variables")
 
 try:
-    # Simple initialization for older version
     supabase = create_client(supabase_url, supabase_key)
     logger.info("Supabase client initialized successfully")
 except Exception as e:
@@ -167,7 +165,7 @@ def get_lat_lng(zip_code: str):
         response = requests.get(url, params=params)
         response.raise_for_status()
         data = response.json()
-        
+
         # Log the full response for debugging
         logger.info(f"Azure Maps response: {data}")
 
@@ -424,28 +422,28 @@ async def get_golfer_profile(request: Request):
             raise HTTPException(status_code=401, detail="Missing token")
         
         token = auth_header.split(' ')[1]
+        logger.info(f"Received token starting with: {token[:10]}")
         
         try:
-            # Get user data from token
+            # Get user data and log the full response for debugging
             response = supabase.auth.get_user(token)
-            # Log the actual response structure
-            logger.info(f"Supabase response type: {type(response)}")
-            logger.info(f"Supabase response dir: {dir(response)}")
+            logger.info(f"Response type: {type(response)}")
+            logger.info(f"Response attributes: {dir(response)}")
             
-            # Try different ways to access user data
-            if hasattr(response, 'model_dump'):
-                user_data = response.model_dump()
-                logger.info(f"Model dump: {user_data}")
+            # Try to access user data in different ways
+            if hasattr(response, 'user'):
+                user = response.user
+                logger.info(f"User attributes: {dir(user)}")
+            else:
+                user = response
+                logger.info(f"Direct response attributes: {dir(response)}")
             
-            # Extract user ID from JWT instead of response
-            decoded = jwt.decode(token, options={"verify_signature": False})
-            user_id = decoded['sub']
-            
+            # Return what we found
             return {
-                "id": user_id,
-                "email": decoded['email'],
-                "metadata": decoded.get('user_metadata', {}),
-                "raw_response": str(response)  # For debugging
+                "response_type": str(type(response)),
+                "user_type": str(type(user)) if 'user' in locals() else None,
+                "available_attrs": dir(response),
+                "raw_response": str(response)
             }
             
         except Exception as e:
@@ -454,8 +452,7 @@ async def get_golfer_profile(request: Request):
                 status_code=401,
                 detail={
                     "error": str(e),
-                    "token_prefix": token[:10],
-                    "decoded_token": decoded if 'decoded' in locals() else None
+                    "token_prefix": token[:10]
                 }
             )
             
@@ -857,7 +854,7 @@ async def debug_token(request: Request):
             return {
                 "status": "error",
                 "detail": str(e),
-                "token": token[:10] + "..." # Show first 10 chars of token
+                "token": token[:10] + "..."
             }
             
     except Exception as e:
