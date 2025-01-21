@@ -464,32 +464,28 @@ class UpdateGolferProfileResponse(BaseModel):
 async def get_golfer_profile(request: Request):
     try:
         auth_header = request.headers.get('Authorization')
-        logger.info(f"Auth header present: {bool(auth_header)}")
+        logger.info("Auth attempt")
         
         if not auth_header or not auth_header.startswith('Bearer '):
-            logger.error("Missing or invalid auth header")
-            raise HTTPException(status_code=401, detail="Missing authentication token")
+            raise HTTPException(status_code=401, detail="Missing token")
         
         token = auth_header.split(' ')[1]
-        logger.info("Token received")
         
         try:
-            # Verify the JWT token using Supabase
+            # Use Supabase admin client for verification
             user = supabase.auth.get_user(token)
             user_id = user.user.id
-            logger.info(f"User authenticated: {user_id}")
+            logger.info(f"Authenticated user: {user_id}")
             
             # Get or create profile
             with get_db_connection() as conn:
                 with conn.cursor(cursor_factory=RealDictCursor) as cursor:
                     cursor.execute("""
-                        SELECT * FROM profiles 
-                        WHERE id = %s
+                        SELECT * FROM profiles WHERE id = %s
                     """, (user_id,))
                     profile = cursor.fetchone()
                     
                     if not profile:
-                        # Create default profile
                         cursor.execute("""
                             INSERT INTO profiles (id, email)
                             VALUES (%s, %s)
@@ -501,14 +497,14 @@ async def get_golfer_profile(request: Request):
                     return profile
                     
         except Exception as e:
-            logger.error(f"Auth error: {str(e)}")
-            raise HTTPException(status_code=401, detail=str(e))
+            logger.error(f"Token validation failed: {str(e)}")
+            raise HTTPException(status_code=401, detail="Invalid token")
             
-    except HTTPException as he:
-        raise he
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.error(f"Unexpected error: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Profile error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Server error")
 
 @api_router.put("/update-golfer-profile", tags=["Golfers"])
 async def update_golfer_profile(request: Request, profile_update: UpdateGolferProfileRequest):
