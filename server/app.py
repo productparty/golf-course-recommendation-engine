@@ -460,7 +460,7 @@ class UpdateGolferProfileResponse(BaseModel):
     club_id: str | None  # Allow club_id to be None
     preferred_tees: str | None  # Allow preferred_tees to be None
 
-@api_router.get("/get-golfer-profile", tags=["Golfers"], response_model=GolferProfileResponse)
+@api_router.get("/get-golfer-profile", tags=["Golfers"])
 async def get_golfer_profile(request: Request):
     try:
         auth_header = request.headers.get('Authorization')
@@ -471,11 +471,16 @@ async def get_golfer_profile(request: Request):
             raise HTTPException(status_code=401, detail="Missing authentication token")
         
         token = auth_header.split(' ')[1]
-        logger.info("Token received")
         
         try:
-            # Verify the JWT token using Supabase
+            if not supabase:
+                logger.error("Supabase client not initialized")
+                raise HTTPException(status_code=500, detail="Authentication service unavailable")
+            
             user = supabase.auth.get_user(token)
+            if not user or not user.user:
+                raise HTTPException(status_code=401, detail="Invalid token")
+                
             user_id = user.user.id
             logger.info(f"User authenticated: {user_id}")
             
@@ -502,7 +507,7 @@ async def get_golfer_profile(request: Request):
                     
         except Exception as e:
             logger.error(f"Auth error: {str(e)}")
-            raise HTTPException(status_code=401, detail=str(e))
+            raise HTTPException(status_code=401, detail="Invalid token")
             
     except HTTPException as he:
         raise he

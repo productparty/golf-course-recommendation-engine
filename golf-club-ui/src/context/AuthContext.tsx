@@ -26,28 +26,46 @@ export const AuthContext = createContext<{
 })
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [session, setSession] = useState<Session | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('Initial session:', session);
-      setSession(session);
-      setLoading(false);
-    });
+    let mounted = true;
 
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      console.log('Auth state changed:', session);
-      setSession(session);
-      setLoading(false);
-    });
+    const setupAuth = async () => {
+      try {
+        // Get initial session
+        const { data: { session: initialSession } } = await supabase.auth.getSession();
+        if (mounted) {
+          console.log('Initial session:', initialSession ? 'present' : 'none');
+          setSession(initialSession);
+        }
 
-    return () => subscription.unsubscribe();
-  }, [])
+        // Set up auth state change listener
+        const {
+          data: { subscription },
+        } = supabase.auth.onAuthStateChange(async (_event, currentSession) => {
+          console.log('Auth state changed:', _event);
+          if (mounted) {
+            setSession(currentSession);
+          }
+        });
+
+        return () => {
+          mounted = false;
+          subscription.unsubscribe();
+        };
+      } catch (error) {
+        console.error('Auth setup error:', error);
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    setupAuth();
+  }, []);
 
   const signOut = async () => {
     try {
@@ -71,7 +89,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     <AuthContext.Provider value={{ session, loading, signOut }}>
       {!loading && children}
     </AuthContext.Provider>
-  )
+  );
 }
 
 export const useAuth = () => {

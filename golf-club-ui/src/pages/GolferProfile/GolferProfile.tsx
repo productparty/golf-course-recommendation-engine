@@ -57,66 +57,52 @@ const GolferProfile: React.FC = () => {
   const [success, setSuccess] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [refreshAttempts, setRefreshAttempts] = useState(0);
 
   useEffect(() => {
     const fetchProfile = async () => {
       try {
         if (!session?.access_token) {
-          console.log('No session available');
-          setError('Please log in to view your profile');
+          setError('No authentication token available');
           setIsLoading(false);
           return;
         }
 
         const apiUrl = `${config.API_URL}/api/get-golfer-profile`;
         console.log('Making request to:', apiUrl);
-        console.log('With token:', session.access_token);
 
         const response = await fetch(apiUrl, {
           method: 'GET',
           credentials: 'include',
           headers: {
             'Authorization': `Bearer ${session.access_token}`,
-            'Content-Type': 'application/json',
-            'Origin': import.meta.env.VITE_APP_URL
+            'Content-Type': 'application/json'
           }
         });
 
         if (response.status === 401) {
-          console.log('Unauthorized - refreshing session');
-          const { data: { session: newSession }, error: refreshError } = await supabase.auth.refreshSession();
-          
-          if (refreshError || !newSession) {
-            console.log('Session refresh failed');
+          if (refreshAttempts >= 2) {
+            console.log('Too many refresh attempts, logging out');
             setError('Session expired - please log in again');
             await signOut();
             navigate('/login');
             return;
           }
-          
-          // Retry with new token
-          const retryResponse = await fetch(apiUrl, {
-            method: 'GET',
-            headers: {
-              'Authorization': `Bearer ${newSession.access_token}`,
-              'Content-Type': 'application/json'
-            }
-          });
-          
-          if (!retryResponse.ok) {
-            throw new Error('Failed to fetch profile after token refresh');
-          }
-          
-          const data = await retryResponse.json();
-          setProfile(data);
-        } else if (!response.ok) {
-          const errorData = await response.json().catch(() => null);
-          throw new Error(errorData?.detail || `Server error: ${response.status}`);
-        } else {
-          const data = await response.json();
-          setProfile(data);
+
+          console.log('Unauthorized - attempting refresh');
+          setRefreshAttempts(prev => prev + 1);
+          return;
         }
 
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => null);
+          throw new Error(errorData?.detail || `Server error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        setProfile(data);
+        setError('');
+        setRefreshAttempts(0);
         setIsLoading(false);
       } catch (error) {
         console.error('Error fetching profile:', error);
@@ -130,7 +116,7 @@ const GolferProfile: React.FC = () => {
     } else {
       setIsLoading(false);
     }
-  }, [session, signOut, navigate]);
+  }, [session, signOut, navigate, refreshAttempts]);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
