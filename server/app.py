@@ -57,8 +57,9 @@ api_router = APIRouter()
 
 # Update CORS middleware configuration
 ALLOWED_ORIGINS = [
-    os.getenv("FRONTEND_URL", "https://golf-club-ui.vercel.app"),
+    "https://golf-club-ui-lac.vercel.app",  # New Vercel URL
     "http://localhost:5173",  # Local development
+    os.getenv("FRONTEND_URL", "https://golf-club-ui-lac.vercel.app"),
 ]
 
 app.add_middleware(
@@ -67,6 +68,8 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],
+    max_age=3600,
 )
 
 # Add debug logging before creating DATABASE_CONFIG
@@ -812,6 +815,14 @@ def debug_info():
             "status": "error",
             "timestamp": datetime.now().isoformat()
         }
+
+@app.get("/api/test-cors")
+async def test_cors():
+    return {
+        "message": "CORS is working",
+        "allowed_origins": ALLOWED_ORIGINS,
+        "timestamp": datetime.now().isoformat()
+    }
 
 if __name__ == "__main__":
     import uvicorn
