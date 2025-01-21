@@ -77,7 +77,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: import.meta.env.VITE_APP_URL || 'https://golf-club-ui.vercel.app'
+        emailRedirectTo: import.meta.env.VITE_APP_URL || 'https://golf-club-ui-lac.vercel.app'
       }
     });
   };

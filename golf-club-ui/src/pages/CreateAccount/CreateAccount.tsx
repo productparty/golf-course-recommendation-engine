@@ -57,7 +57,7 @@ const CreateAccount = () => {
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/verify-email`
+          emailRedirectTo: import.meta.env.VITE_APP_URL || 'https://golf-club-ui-lac.vercel.app'
         }
       })
 

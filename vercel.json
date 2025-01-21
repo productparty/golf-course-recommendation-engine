@@ -2,23 +2,22 @@
   "version": 2,
   "buildCommand": "cd golf-club-ui && npm install && npm run build",
   "outputDirectory": "golf-club-ui/dist",
+  "cleanUrls": true,
+  "builds": [
+    {
+      "src": "golf-club-ui/package.json",
+      "use": "@vercel/node",
+      "config": { 
+        "includeFiles": ["golf-club-ui/**"],
+        "zeroConfig": true
+      }
+    }
+  ],
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ],
-  "ignoreCommand": "git diff --quiet HEAD^ HEAD ./golf-club-ui/",
-  "routes": [
-    {
-      "src": "/[^.]+",
-      "dest": "/",
-      "status": 200
-    }
-  ],
   "env": {
+    "VITE_APP_URL": "https://golf-club-ui-lac.vercel.app",
     "VITE_API_URL": "https://golf-course-recommendation-engin-production.up.railway.app"
-  },
-  "build": {
-    "env": {
-      "VITE_API_URL": "https://golf-course-recommendation-engin-production.up.railway.app"
-    }
   }
 }

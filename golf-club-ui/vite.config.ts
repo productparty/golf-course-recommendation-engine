@@ -5,7 +5,18 @@ export default defineConfig(({ mode }) => {
   // Load env file based on mode
   const env = loadEnv(mode, process.cwd(), '');
   
-  console.log('Building with API URL:', env.VITE_API_URL); // Debug log
+  // Validate environment variables
+  const requiredVars = ['VITE_API_URL', 'VITE_APP_URL'];
+  requiredVars.forEach(varName => {
+    if (!env[varName]) {
+      throw new Error(`${varName} must be set for ${mode} mode`);
+    }
+  });
+
+  console.log('Building with URLs:', {
+    API_URL: env.VITE_API_URL,
+    APP_URL: env.VITE_APP_URL
+  });
 
   return {
     plugins: [react()],

@@ -3,11 +3,11 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "vite",
-    "build": "tsc && VITE_API_URL=https://golf-course-recommendation-engin-production.up.railway.app vite build --mode production",
-    "preview": "vite preview",
-    "serve": "vite preview",
-    "start": "npm run dev",
+    "dev": "vite --mode development",
+    "build": "tsc && vite build --mode production",
+    "preview": "vite preview --mode production",
+    "serve": "vite preview --mode production",
+    "start": "vite --mode development",
     "type-check": "tsc --noEmit",
     "test": "vitest",
     "postinstall": "npm run build"

@@ -16,7 +16,7 @@ const PasswordResetRequest: React.FC = () => {
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password/confirm`,
+        redirectTo: import.meta.env.VITE_APP_URL || 'https://golf-club-ui-lac.vercel.app/reset-password'
       });
 
       if (error) throw error;

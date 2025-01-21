@@ -24,12 +24,16 @@ const PasswordResetConfirm: React.FC = () => {
     }
 
     try {
-      const { error } = await supabase.auth.updateUser({ password });
+      const { error } = await supabase.auth.updateUser({
+        password: password
+      });
       
       if (error) throw error;
       
       setSuccess(true);
-      setTimeout(() => navigate('/login'), 2000);
+      setTimeout(() => navigate('/login', { 
+        state: { message: 'Password successfully reset. Please log in with your new password.' }
+      }), 2000);
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Failed to reset password');
     } finally {
