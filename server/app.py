@@ -61,6 +61,8 @@ api_router = APIRouter()
 
 # Configure CORS
 origins = os.getenv("CORS_ORIGINS", "").split(",")
+logger.info(f"Configuring CORS with origins: {origins}")
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -876,6 +878,17 @@ async def debug_token(request: Request):
             "status": "error",
             "detail": str(e)
         }
+
+@app.get("/api/health")
+async def health_check():
+    return {
+        "status": "healthy",
+        "environment": {
+            "SUPABASE_URL": bool(os.getenv("SUPABASE_URL")),
+            "CORS_ORIGINS": origins,
+            "DB_NAME": bool(os.getenv("DB_NAME")),
+        }
+    }
 
 if __name__ == "__main__":
     import uvicorn
