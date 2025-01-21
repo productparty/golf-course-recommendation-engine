@@ -22,7 +22,7 @@ from typing import Optional
 from contextlib import contextmanager
 
 # Set up basic logging
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Get the directory containing app.py
@@ -72,8 +72,8 @@ app.add_middleware(
 )
 
 # Initialize Supabase client
-supabase_url: Optional[str] = os.getenv("SUPABASE_URL")
-supabase_key: Optional[str] = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
+supabase_url = os.getenv("SUPABASE_URL")
+supabase_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
 
 if not supabase_url or not supabase_key:
     logger.error("Missing Supabase environment variables")
@@ -754,45 +754,32 @@ async def test_cors():
         "timestamp": datetime.now().isoformat()
     }
 
-@app.get("/api/debug/auth-test")
+@app.get("/api/test-auth")
 async def test_auth(request: Request):
-    """Debug endpoint for testing auth"""
     try:
         auth_header = request.headers.get('Authorization')
-        logger.info(f"Received auth header: {auth_header}")
+        logger.info("Auth attempt")
         
         if not auth_header or not auth_header.startswith('Bearer '):
-            return {
-                "status": "error",
-                "detail": "No Bearer token",
-                "headers_received": dict(request.headers)
-            }
+            return {"status": "error", "detail": "No Bearer token"}
             
         token = auth_header.split(' ')[1]
+        logger.info(f"Token received: {token[:10]}...")
         
         try:
             user = supabase.auth.get_user(token)
             return {
                 "status": "success",
                 "user_id": user.user.id,
-                "email": user.user.email,
-                "token_valid": True,
-                "timestamp": datetime.now().isoformat()
+                "email": user.user.email
             }
         except Exception as e:
-            return {
-                "status": "error",
-                "detail": str(e),
-                "token_received": token,
-                "timestamp": datetime.now().isoformat()
-            }
+            logger.error(f"Token validation failed: {str(e)}")
+            return {"status": "error", "detail": str(e)}
             
     except Exception as e:
-        return {
-            "status": "error",
-            "detail": str(e),
-            "timestamp": datetime.now().isoformat()
-        }
+        logger.error(f"Auth test error: {str(e)}")
+        return {"status": "error", "detail": str(e)}
 
 @app.get("/api/verify-auth-setup")
 async def verify_auth_setup():
@@ -802,8 +789,8 @@ async def verify_auth_setup():
             return {
                 "status": "error",
                 "message": "Supabase client not initialized",
-                "url_configured": bool(SUPABASE_URL),
-                "service_key_configured": bool(SUPABASE_SERVICE_ROLE_KEY)
+                "url_configured": bool(supabase_url),
+                "service_key_configured": bool(supabase_key)
             }
             
         # Try to list users to verify admin access
@@ -884,9 +871,9 @@ async def health_check():
     return {
         "status": "healthy",
         "environment": {
-            "SUPABASE_URL": bool(os.getenv("SUPABASE_URL")),
+            "SUPABASE_URL": bool(supabase_url),
             "CORS_ORIGINS": origins,
-            "DB_NAME": bool(os.getenv("DB_NAME")),
+            "supabase_initialized": bool(supabase)
         }
     }
 
