@@ -17,11 +17,10 @@ from datetime import datetime
 import json
 import socket
 import asyncio
-from loguru import logger
 from typing import Optional
 from contextlib import contextmanager
 
-# Set up basic logging
+# Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
