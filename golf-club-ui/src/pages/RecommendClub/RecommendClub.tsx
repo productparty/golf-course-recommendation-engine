@@ -89,11 +89,25 @@ const RecommendClub: React.FC = () => {
   };
 
   return (
-    <PageLayout title="Recommended Golf Clubs">
+    <PageLayout title="For You">
       <div className="content">
         <aside className="filters">
-          <Typography variant="body1" gutterBottom>
-            Get personalized golf club recommendations based on your profile preferences
+          <Typography 
+            variant="body1" 
+            gutterBottom
+            sx={{ 
+              fontSize: {
+                xs: '0.9rem',
+                sm: '1rem',
+                md: '1.1rem'
+              },
+              lineHeight: 1.5,
+              mb: 2,
+              wordBreak: 'break-word',
+              overflowWrap: 'break-word'
+            }}
+          >
+            Golf clubs matched to your preferences
           </Typography>
           <Box sx={{ 
             mt: 2,
@@ -146,8 +160,23 @@ const RecommendClub: React.FC = () => {
         </aside>
 
         <section className="results">
-          <Typography variant="h5" component="h2" gutterBottom>
-            Recommendations
+          <Typography 
+            variant="h5" 
+            component="h2" 
+            gutterBottom
+            sx={{ 
+              fontSize: {
+                xs: '1.25rem',  // Smaller on mobile
+                sm: '1.5rem',   // Medium on tablet
+                md: '1.75rem'   // Larger on desktop
+              },
+              wordBreak: 'break-word',
+              overflowWrap: 'break-word',
+              padding: '0 10px',
+              lineHeight: 1.3
+            }}
+          >
+            Matches
           </Typography>
           {recommendations.length > 0 ? (
             <>

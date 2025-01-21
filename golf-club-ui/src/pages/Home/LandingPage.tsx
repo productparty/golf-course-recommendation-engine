@@ -29,14 +29,17 @@ const LandingPage = () => {
       {/* Auth Buttons Section */}
       <Box sx={{ 
         textAlign: 'center', 
-        mb: 6 
+        mb: 6,
+        display: 'flex',
+        gap: 2,
+        justifyContent: 'center',
+        flexWrap: 'wrap'
       }}>
         <Button 
           variant="contained" 
           color="primary" 
           size="large"
           onClick={() => navigate('/create-account')}
-          sx={{ mr: 2 }}
         >
           Create Account
         </Button>

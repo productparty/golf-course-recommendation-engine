@@ -171,7 +171,13 @@ const GolferProfile: React.FC = () => {
       <Box sx={{ maxWidth: 600, mx: 'auto' }}>
         <Typography 
           variant="subtitle1" 
-          sx={{ mb: 3, color: 'text.secondary' }}
+          sx={{ 
+            mb: 3, 
+            color: 'text.secondary',
+            wordBreak: 'break-word',
+            overflowWrap: 'break-word',
+            maxWidth: '100%'
+          }}
         >
           Email: {profile.email}
         </Typography>

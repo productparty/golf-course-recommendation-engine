@@ -12,7 +12,7 @@ const CreateAccountSubmitted: React.FC = () => {
       </Typography>
       <Box sx={{ mt: 2 }}>
         <Typography variant="body1">
-          Please check your email for a verification link from Supabase.
+          Please check your email for a verification link from Find My Club.
           You won't be able to log in until you verify your email address.
         </Typography>
         <Button
