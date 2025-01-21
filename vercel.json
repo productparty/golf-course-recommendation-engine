@@ -2,17 +2,6 @@
   "version": 2,
   "buildCommand": "cd golf-club-ui && npm install && npm run build",
   "outputDirectory": "golf-club-ui/dist",
-  "cleanUrls": true,
-  "builds": [
-    {
-      "src": "golf-club-ui/package.json",
-      "use": "@vercel/node",
-      "config": { 
-        "includeFiles": ["golf-club-ui/**"],
-        "zeroConfig": true
-      }
-    }
-  ],
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ],

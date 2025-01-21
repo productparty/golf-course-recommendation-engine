@@ -3,14 +3,10 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "vite --mode development",
-    "build": "tsc && vite build --mode production",
-    "preview": "vite preview --mode production",
-    "serve": "vite preview --mode production",
-    "start": "vite --mode development",
-    "type-check": "tsc --noEmit",
-    "test": "vitest",
-    "postinstall": "npm run build"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "@emotion/react": "^11.11.1",
