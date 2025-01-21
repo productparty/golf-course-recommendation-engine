@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { createClient, Session } from '@supabase/supabase-js'
+import { createClient, Session, AuthError } from '@supabase/supabase-js'
 import { config } from '../config';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
@@ -27,6 +27,7 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   signOut: () => Promise<void>;
+  signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
   getToken: () => Promise<string | null>;
 }
 
@@ -34,6 +35,7 @@ export const AuthContext = createContext<AuthContextType>({
   session: null,
   loading: true,
   signOut: async () => {},
+  signIn: async () => ({ error: null }),
   getToken: async () => null
 });
 
@@ -42,47 +44,60 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const setupAuth = async () => {
-      try {
-        // Get initial session
-        const { data: { session: initialSession } } = await supabase.auth.getSession();
-        console.log('Initial session:', initialSession ? 'Found' : 'None');
-        setSession(initialSession);
+    // Check for access token in URL hash (magic link flow)
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const accessToken = hashParams.get('access_token');
+    
+    if (accessToken) {
+      console.log('Found access token in URL (magic link)');
+      const expiresIn = parseInt(hashParams.get('expires_in') || '3600');
+      const refreshToken = hashParams.get('refresh_token');
+      
+      supabase.auth.setSession({
+        access_token: accessToken,
+        refresh_token: refreshToken || '',
+        expires_in: expiresIn,
+      });
+      
+      // Clear the hash from URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
 
-        // Listen for auth changes
-        const {
-          data: { subscription },
-        } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
-          console.log('Auth state changed:', event);
-          if (currentSession) {
-            console.log('New session token available');
-          }
-          setSession(currentSession);
-        });
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
+      console.log('Initial session check:', initialSession ? 'Found' : 'None');
+      setSession(initialSession);
+      setLoading(false);
+    });
 
-        return () => subscription.unsubscribe();
-      } catch (error) {
-        console.error('Auth setup error:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
+      console.log('Auth state changed:', event);
+      setSession(currentSession);
+      setLoading(false);
+    });
 
-    setupAuth();
+    return () => subscription.unsubscribe();
   }, []);
 
-  const getToken = async (): Promise<string | null> => {
+  const signIn = async (email: string, password: string) => {
     try {
-      const { data: { session: currentSession } } = await supabase.auth.getSession();
-      if (currentSession?.access_token) {
-        console.log('Token retrieved successfully');
-        return currentSession.access_token;
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (error) throw error;
+      if (data?.session) {
+        setSession(data.session);
       }
-      console.log('No token available');
-      return null;
+
+      return { error: null };
     } catch (error) {
-      console.error('Error getting token:', error);
-      return null;
+      console.error('Error signing in:', error);
+      return { error: error as AuthError };
     }
   };
 
@@ -95,17 +110,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const signInWithEmail = async (email: string) => {
-    return supabase.auth.signInWithOtp({
-      email,
-      options: {
-        emailRedirectTo: import.meta.env.VITE_APP_URL || 'https://golf-club-ui-lac.vercel.app'
-      }
-    });
+  const getToken = async (): Promise<string | null> => {
+    try {
+      const { data: { session: currentSession } } = await supabase.auth.getSession();
+      return currentSession?.access_token || null;
+    } catch (error) {
+      console.error('Error getting token:', error);
+      return null;
+    }
   };
 
   return (
-    <AuthContext.Provider value={{ session, loading, signOut, getToken }}>
+    <AuthContext.Provider value={{ session, loading, signOut, signIn, getToken }}>
       {!loading && children}
     </AuthContext.Provider>
   );

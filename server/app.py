@@ -471,20 +471,15 @@ async def get_golfer_profile(request: Request):
             raise HTTPException(status_code=401, detail="Missing authentication token")
         
         token = auth_header.split(' ')[1]
+        logger.info("Token received")
         
         try:
-            if not supabase:
-                logger.error("Supabase client not initialized")
-                raise HTTPException(status_code=500, detail="Authentication service unavailable")
-            
+            # Verify the JWT token using Supabase
             user = supabase.auth.get_user(token)
-            if not user or not user.user:
-                raise HTTPException(status_code=401, detail="Invalid token")
-                
             user_id = user.user.id
             logger.info(f"User authenticated: {user_id}")
             
-            # Get profile from database
+            # Get or create profile
             with get_db_connection() as conn:
                 with conn.cursor(cursor_factory=RealDictCursor) as cursor:
                     cursor.execute("""
@@ -507,7 +502,7 @@ async def get_golfer_profile(request: Request):
                     
         except Exception as e:
             logger.error(f"Auth error: {str(e)}")
-            raise HTTPException(status_code=401, detail="Invalid token")
+            raise HTTPException(status_code=401, detail=str(e))
             
     except HTTPException as he:
         raise he

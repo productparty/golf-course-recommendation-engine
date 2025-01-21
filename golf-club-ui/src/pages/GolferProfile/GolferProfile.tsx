@@ -62,9 +62,9 @@ const GolferProfile: React.FC = () => {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const token = await getToken();
-        if (!token) {
-          setError('No authentication token available');
+        if (!session?.access_token) {
+          console.log('No session available');
+          setError('Please log in to view your profile');
           setIsLoading(false);
           return;
         }
@@ -76,9 +76,9 @@ const GolferProfile: React.FC = () => {
           method: 'GET',
           credentials: 'include',
           headers: {
-            'Authorization': `Bearer ${token}`,
+            'Authorization': `Bearer ${session.access_token}`,
             'Content-Type': 'application/json',
-            'Origin': import.meta.env.VITE_APP_URL
+            'Origin': import.meta.env.VITE_APP_URL || 'https://golf-club-ui-lac.vercel.app'
           }
         });
 
@@ -91,9 +91,17 @@ const GolferProfile: React.FC = () => {
             return;
           }
 
-          console.log('Unauthorized - attempting refresh');
+          // Try to refresh the session
+          const { data: { session: newSession }, error: refreshError } = 
+            await supabase.auth.refreshSession();
+          
+          if (refreshError || !newSession) {
+            throw new Error('Failed to refresh session');
+          }
+
+          console.log('Session refreshed successfully');
           setRefreshAttempts(prev => prev + 1);
-          return;
+          return; // Will retry with new session
         }
 
         const data = await response.json();
@@ -117,7 +125,7 @@ const GolferProfile: React.FC = () => {
     } else {
       setIsLoading(false);
     }
-  }, [session, signOut, navigate, refreshAttempts, getToken]);
+  }, [session, signOut, navigate, refreshAttempts]);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
