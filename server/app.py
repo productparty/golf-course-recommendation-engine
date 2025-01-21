@@ -18,6 +18,8 @@ import json
 import socket
 import asyncio
 from loguru import logger
+from typing import Optional
+from contextlib import contextmanager
 
 # Set up basic logging
 logging.basicConfig(level=logging.DEBUG)
@@ -47,6 +49,7 @@ logger.info("================================")
 # Define FRONTEND_URL
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
 
+# Initialize FastAPI app first
 app = FastAPI(
     title="Golf Course API",
     version="1.0.0",
@@ -56,68 +59,23 @@ app = FastAPI(
 # Create API router without prefix
 api_router = APIRouter()
 
-# Get allowed origins from environment or use defaults
-ALLOWED_ORIGINS = [
-    "https://golf-club-5gok16o4l-mike-watsons-projects.vercel.app",
-    "https://golf-club-ui-lac.vercel.app",
-    "http://localhost:5173",
-    os.getenv("FRONTEND_URL", ""),
-]
-
-# Filter out empty strings
-ALLOWED_ORIGINS = [origin for origin in ALLOWED_ORIGINS if origin]
-
-# Add CORS middleware before any routes
+# Configure CORS
+origins = os.getenv("CORS_ORIGINS", "").split(",")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=ALLOWED_ORIGINS,
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
-    expose_headers=["*"],
-    max_age=3600,
 )
 
-# Add debug logging before creating DATABASE_CONFIG
-logger.info("Raw environment variables:")
-logger.info(f"DB_HOST: {os.getenv('DB_HOST')}")
-logger.info(f"DB_PORT: {os.getenv('DB_PORT')}")
-logger.info(f"DB_USER: {os.getenv('DB_USER')}")
-logger.info(f"DB_NAME: {os.getenv('DB_NAME')}")
+# Initialize Supabase client
+supabase_url: Optional[str] = os.getenv("SUPABASE_URL")
+supabase_key: Optional[str] = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
 
-# Update DATABASE_CONFIG to use environment variables
-DATABASE_CONFIG = {
-    "dbname": os.getenv("DB_NAME", "postgres"),
-    "user": os.getenv("DB_USER", "postgres.nkknwkentrbbyzgqgpfd"),
-    "password": os.getenv("DB_PASSWORD"),
-    "host": os.getenv("DB_HOST", "aws-0-us-east-2.pooler.supabase.com"),
-    "port": os.getenv("DB_PORT", "6543"),
-    "sslmode": "require"
-}
-
-# Add debug logging
-logger.info("Database config (excluding password):")
-debug_config = {k:v for k,v in DATABASE_CONFIG.items() if k != 'password'}
-logger.info(debug_config)
-
-AZURE_MAPS_API_KEY = os.getenv("AZURE_MAPS_API_KEY")
-
-# Update to use service key specifically
-SUPABASE_URL = os.getenv("SUPABASE_URL", "https://nkknwkentrbbyzgqgpfd.supabase.co")
-SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY")  # Use the service role key for backend
-
-logger.info(f"Supabase URL: {SUPABASE_URL}")
-logger.info("Supabase service role key configured: {}".format("Yes" if SUPABASE_SERVICE_ROLE_KEY else "No"))
-
-# Initialize Supabase client with better error handling
-supabase_url = SUPABASE_URL
-supabase_key = SUPABASE_SERVICE_ROLE_KEY
-
-logger.info(f"Initializing Supabase with URL: {supabase_url}")
 if not supabase_url or not supabase_key:
-    error_msg = "Missing Supabase environment variables"
-    logger.error(error_msg)
-    raise ValueError(error_msg)
+    logger.error("Missing Supabase environment variables")
+    raise ValueError("Missing required environment variables")
 
 try:
     supabase: Client = create_client(supabase_url, supabase_key)
@@ -125,6 +83,20 @@ try:
 except Exception as e:
     logger.error(f"Failed to initialize Supabase client: {str(e)}")
     raise
+
+@contextmanager
+def get_db_connection():
+    conn = psycopg2.connect(
+        dbname=os.getenv("DB_NAME"),
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASSWORD"),
+        host=os.getenv("DB_HOST"),
+        port=os.getenv("DB_PORT")
+    )
+    try:
+        yield conn
+    finally:
+        conn.close()
 
 # Middleware to log requests
 @app.middleware("http")
@@ -161,15 +133,7 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 @api_router.get("/health", tags=["Health"])
 async def health_check():
-    try:
-        # Test database connection
-        with get_db_connection() as conn:
-            with conn.cursor() as cursor:
-                cursor.execute("SELECT 1")
-        return {"status": "healthy", "database": "connected"}
-    except Exception as e:
-        logger.error(f"Health check failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+    return {"status": "healthy", "supabase": bool(supabase)}
 
 @api_router.get("/test-connection", tags=["Health"])
 async def test_connection():
@@ -187,7 +151,7 @@ def get_lat_lng(zip_code: str):
         url = "https://atlas.microsoft.com/search/address/json"
         params = {
             "api-version": "1.0",
-            "subscription-key": AZURE_MAPS_API_KEY,
+            "subscription-key": os.getenv("AZURE_MAPS_API_KEY"),
             "query": zip_code,
             "countrySet": "US",  # Limit to US results
             "limit": 1,  # We only need one result
@@ -453,7 +417,6 @@ async def get_golfer_profile(request: Request):
     try:
         auth_header = request.headers.get('Authorization')
         logger.info("Auth attempt with headers")
-        logger.debug(f"Headers: {dict(request.headers)}")
         
         if not auth_header or not auth_header.startswith('Bearer '):
             logger.error("Missing or invalid auth header")
@@ -463,10 +426,7 @@ async def get_golfer_profile(request: Request):
         logger.info(f"Token received: {token[:10]}...")
         
         try:
-            # Add debug logging for Supabase client
-            logger.debug(f"Supabase client exists: {bool(supabase)}")
-            logger.debug(f"Supabase auth exists: {bool(supabase.auth)}")
-            
+            # Verify token
             user = supabase.auth.get_user(token)
             user_id = user.user.id
             logger.info(f"Successfully authenticated user: {user_id}")
@@ -497,9 +457,7 @@ async def get_golfer_profile(request: Request):
                 status_code=401, 
                 detail={
                     "error": str(e),
-                    "token_prefix": token[:10] if token else None,
-                    "headers": dict(request.headers),
-                    "supabase_initialized": bool(supabase)
+                    "token_prefix": token[:10] if token else None
                 }
             )
             
@@ -569,42 +527,6 @@ async def update_golfer_profile(request: Request, profile_update: UpdateGolferPr
     except Exception as e:
         logger.error(f"Error in update_golfer_profile: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-
-# Database connection function
-def get_db_connection():
-    try:
-        logger.info(f"""
-        Connecting to database:
-        - Host: {DATABASE_CONFIG['host']}
-        - Port: {DATABASE_CONFIG['port']}
-        - User: {DATABASE_CONFIG['user']}
-        - Database: {DATABASE_CONFIG['dbname']}
-        """)
-        
-        start_time = datetime.now()
-        conn = psycopg2.connect(**DATABASE_CONFIG)
-        
-        connect_time = (datetime.now() - start_time).total_seconds()
-        logger.info(f"Database connection successful (took {connect_time}s)")
-        
-        return conn
-    except Exception as e:
-        logger.error(f"""
-        Database connection failed:
-        Error: {str(e)}
-        Config: {json.dumps({k:v for k,v in DATABASE_CONFIG.items() if k != 'password'}, indent=2)}
-        """)
-        raise
-
-# Verify database connection on startup
-try:
-    with get_db_connection() as conn:
-        with conn.cursor() as cursor:
-            cursor.execute('SELECT 1')
-    logger.info("Database connection successful")
-except Exception as e:
-    logger.error(f"Failed to connect to database: {e}")
-    raise
 
 @api_router.get("/get_recommendations/", tags=["Recommendations"])
 async def get_recommendations(
@@ -826,7 +748,7 @@ def debug_info():
 async def test_cors():
     return {
         "message": "CORS is working",
-        "allowed_origins": ALLOWED_ORIGINS,
+        "allowed_origins": origins,
         "timestamp": datetime.now().isoformat()
     }
 
@@ -900,7 +822,7 @@ async def verify_auth_setup():
 @app.get("/api/cors-debug")
 async def cors_debug(request: Request):
     return {
-        "allowed_origins": ALLOWED_ORIGINS,
+        "allowed_origins": origins,
         "request_origin": request.headers.get("origin"),
         "request_headers": dict(request.headers),
         "cors_enabled": True
@@ -913,7 +835,7 @@ async def test_connection(request: Request):
         "status": "ok",
         "origin": origin,
         "cors_enabled": True,
-        "allowed_origins": ALLOWED_ORIGINS,
+        "allowed_origins": origins,
         "timestamp": datetime.now().isoformat()
     }
 
