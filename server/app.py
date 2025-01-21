@@ -477,57 +477,61 @@ async def update_golfer_profile(request: Request, profile_update: UpdateGolferPr
             raise HTTPException(status_code=401, detail="Missing authentication token")
         
         token = auth_header.split(' ')[1]
-        user = supabase.auth.get_user(token)
-        user_id = user.id
-
-        update_query = """
-        UPDATE profiles
-        SET 
-            first_name = %s,
-            last_name = %s,
-            handicap_index = %s,
-            preferred_price_range = %s,
-            preferred_difficulty = %s,
-            skill_level = %s,
-            play_frequency = %s,
-            club_id = %s,
-            preferred_tees = %s
-        WHERE id = %s
-        RETURNING 
-            id as golfer_id,
-            email,
-            first_name,
-            last_name,
-            handicap_index,
-            preferred_price_range,
-            preferred_difficulty,
-            skill_level,
-            play_frequency,
-            club_id,
-            preferred_tees
-        """
         
-        with get_db_connection() as conn:
-            with conn.cursor(cursor_factory=RealDictCursor) as cursor:
-                cursor.execute(update_query, (
-                    profile_update.first_name,
-                    profile_update.last_name,
-                    profile_update.handicap_index,
-                    profile_update.preferred_price_range,
-                    profile_update.preferred_difficulty,
-                    profile_update.skill_level,
-                    profile_update.play_frequency,
-                    profile_update.club_id,
-                    profile_update.preferred_tees,
-                    user_id
-                ))
-                conn.commit()
-                updated_profile = cursor.fetchone()
-                updated_profile['is_verified'] = True
-                return updated_profile
+        try:
+            # Get user from token - fixed user.id access
+            user = supabase.auth.get_user(token)
+            user_id = user.user.id  # Changed from user.id to user.user.id
+        except Exception as e:
+            logger.error(f"Token validation failed: {str(e)}")
+            raise HTTPException(status_code=401, detail="Invalid token")
 
+        # Update profile in database
+        try:
+            with get_db_connection() as conn:
+                with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+                    cursor.execute("""
+                        UPDATE profiles
+                        SET 
+                            first_name = %s,
+                            last_name = %s,
+                            handicap_index = %s,
+                            preferred_price_range = %s,
+                            preferred_difficulty = %s,
+                            skill_level = %s,
+                            play_frequency = %s,
+                            club_id = %s,
+                            preferred_tees = %s
+                        WHERE id = %s
+                        RETURNING *
+                    """, (
+                        profile_update.first_name,
+                        profile_update.last_name,
+                        profile_update.handicap_index,
+                        profile_update.preferred_price_range,
+                        profile_update.preferred_difficulty,
+                        profile_update.skill_level,
+                        profile_update.play_frequency,
+                        profile_update.club_id,
+                        profile_update.preferred_tees,
+                        user_id
+                    ))
+                    
+                    updated_profile = cursor.fetchone()
+                    if not updated_profile:
+                        raise HTTPException(status_code=404, detail="Profile not found")
+                        
+                    conn.commit()
+                    return updated_profile
+
+        except psycopg2.Error as e:
+            logger.error(f"Database error: {str(e)}")
+            raise HTTPException(status_code=500, detail="Database error")
+                    
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.error(f"Error in update_golfer_profile: {e}")
+        logger.error(f"Profile update error: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @api_router.get("/get_recommendations/", tags=["Recommendations"])

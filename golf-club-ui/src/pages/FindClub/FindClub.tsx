@@ -32,7 +32,7 @@ const technologyOptions = [
 const FindClub: React.FC = () => {
   const [zipCode, setZipCode] = useState<string>('');
   const [radius, setRadius] = useState<number>(10);
-  const [priceRange, setPriceRange] = useState<'' | '$' | '$$' | '$$$'>('');
+  const [priceTier, setPriceTier] = useState<'' | '$' | '$$' | '$$$'>('');
   const [difficulty, setDifficulty] = useState<'' | 'Easy' | 'Medium' | 'Hard'>('');
   const [findTechnologies, setFindTechnologies] = useState<string[]>([]);
   const [results, setResults] = useState<GolfClub[]>([]);
@@ -85,8 +85,20 @@ const FindClub: React.FC = () => {
   };
 
   const handleTechnologiesChange = (event: SelectChangeEvent<string[]>) => {
-    const selectedOptions = event.target.value as string[];
-    setFindTechnologies(selectedOptions);
+    const {
+      target: { value },
+    } = event;
+    // On autofill we get a stringified value.
+    const selectedTechs = typeof value === 'string' ? value.split(',') : value;
+    setFindTechnologies(selectedTechs);
+  };
+
+  const handlePriceTierChange = (event: SelectChangeEvent<string>) => {
+    setPriceTier(event.target.value as '' | '$' | '$$' | '$$$');
+  };
+
+  const handleDifficultyChange = (event: SelectChangeEvent<string>) => {
+    setDifficulty(event.target.value as '' | 'Easy' | 'Medium' | 'Hard');
   };
 
   const handleSearch = async () => {
@@ -137,6 +149,50 @@ const FindClub: React.FC = () => {
                 ))}
               </Select>
             </FormControl>
+
+            <FormControl margin="normal">
+              <InputLabel>Price Range</InputLabel>
+              <Select
+                value={priceTier}
+                onChange={handlePriceTierChange}
+                sx={{ backgroundColor: 'white' }}
+              >
+                <MenuItem value="">Any</MenuItem>
+                <MenuItem value="$">$</MenuItem>
+                <MenuItem value="$$">$$</MenuItem>
+                <MenuItem value="$$$">$$$</MenuItem>
+              </Select>
+            </FormControl>
+
+            <FormControl margin="normal">
+              <InputLabel>Difficulty</InputLabel>
+              <Select
+                value={difficulty}
+                onChange={handleDifficultyChange}
+                sx={{ backgroundColor: 'white' }}
+              >
+                <MenuItem value="">Any</MenuItem>
+                <MenuItem value="Easy">Easy</MenuItem>
+                <MenuItem value="Medium">Medium</MenuItem>
+                <MenuItem value="Hard">Hard</MenuItem>
+              </Select>
+            </FormControl>
+
+            <FormControl margin="normal">
+              <InputLabel>Technologies</InputLabel>
+              <Select
+                multiple
+                value={findTechnologies}
+                onChange={handleTechnologiesChange}
+                sx={{ backgroundColor: 'white' }}
+              >
+                <MenuItem value="TrackMan">TrackMan</MenuItem>
+                <MenuItem value="TopTracer">TopTracer</MenuItem>
+                <MenuItem value="FlightScope">FlightScope</MenuItem>
+                <MenuItem value="GCQuad">GCQuad</MenuItem>
+              </Select>
+            </FormControl>
+
             <Button 
               onClick={handleSearch}
               variant="contained"
@@ -197,6 +253,11 @@ const FindClub: React.FC = () => {
                     >
                       {club.city}, {club.state} {club.zip_code} ({club.distance_miles.toFixed(1)} miles)
                     </Typography>
+                    {club.available_technologies && club.available_technologies.length > 0 && (
+                      <Typography variant="body2" color="text.secondary">
+                        Technologies: {club.available_technologies.join(', ')}
+                      </Typography>
+                    )}
                   </Box>
 
                   {/* Right side - Club details */}
@@ -243,51 +304,19 @@ const FindClub: React.FC = () => {
                         Difficulty: {club.difficulty}
                       </Typography>
                     )}
-                    {club.available_technologies && club.available_technologies.length > 0 && (
-                      <Box sx={{ textAlign: 'right' }}>
-                        <Typography 
-                          variant="body2" 
-                          sx={{ 
-                            color: 'text.secondary',
-                            fontStyle: 'italic',
-                            mb: 0.5
-                          }}
-                        >
-                          Available Technologies:
-                        </Typography>
-                        <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'flex-end', gap: 0.5 }}>
-                          {club.available_technologies.map((tech, idx) => (
-                            <Typography
-                              key={idx}
-                              variant="body2"
-                              sx={{
-                                bgcolor: 'info.light',
-                                color: 'white',
-                                px: 1,
-                                py: 0.5,
-                                borderRadius: 1,
-                                fontSize: '0.75rem'
-                              }}
-                            >
-                              {tech}
-                            </Typography>
-                          ))}
-                        </Box>
-                      </Box>
-                    )}
                   </Box>
                 </Box>
               ))}
               <Box sx={{ mt: 2, display: 'flex', gap: 1, justifyContent: 'center', alignItems: 'center' }}>
                 <Button
                   onClick={() => handlePageChange(1)}
-                  disabled={currentPage === 1}
+                  disabled={currentPage === 1 || isLoading}
                 >
                   First
                 </Button>
                 <Button
                   onClick={() => handlePageChange(currentPage - 1)}
-                  disabled={currentPage === 1}
+                  disabled={currentPage === 1 || isLoading}
                 >
                   Previous
                 </Button>
@@ -301,6 +330,7 @@ const FindClub: React.FC = () => {
                         key={pageNum}
                         onClick={() => handlePageChange(pageNum)}
                         variant={pageNum === currentPage ? "contained" : "outlined"}
+                        disabled={isLoading}
                       >
                         {pageNum}
                       </Button>
@@ -311,13 +341,13 @@ const FindClub: React.FC = () => {
                 
                 <Button
                   onClick={() => handlePageChange(currentPage + 1)}
-                  disabled={currentPage === totalPages}
+                  disabled={currentPage === totalPages || isLoading}
                 >
                   Next
                 </Button>
                 <Button
                   onClick={() => handlePageChange(totalPages)}
-                  disabled={currentPage === totalPages}
+                  disabled={currentPage === totalPages || isLoading}
                 >
                   Last
                 </Button>
@@ -327,7 +357,7 @@ const FindClub: React.FC = () => {
               </Box>
             </>
           ) : (
-            <Typography>No clubs found.</Typography>
+            <Typography>No clubs found matching your criteria.</Typography>
           )}
         </section>
       </div>
