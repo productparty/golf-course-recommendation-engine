@@ -89,7 +89,7 @@ const RecommendClub: React.FC = () => {
   };
 
   return (
-    <PageLayout title="For You">
+    <PageLayout title="Recommended Golf Clubs">
       <div className="content">
         <aside className="filters">
           <Typography 
@@ -107,7 +107,7 @@ const RecommendClub: React.FC = () => {
               overflowWrap: 'break-word'
             }}
           >
-            Golf clubs matched to your preferences
+            Golf clubs matched to your Golfer Profile
           </Typography>
           <Box sx={{ 
             mt: 2,
