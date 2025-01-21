@@ -414,7 +414,7 @@ class UpdateGolferProfileResponse(BaseModel):
     club_id: str | None  # Allow club_id to be None
     preferred_tees: str | None  # Allow preferred_tees to be None
 
-@api_router.get("/api/get-golfer-profile")
+@api_router.get("/get-golfer-profile")
 async def get_golfer_profile(request: Request):
     try:
         auth_header = request.headers.get('Authorization')
@@ -422,44 +422,41 @@ async def get_golfer_profile(request: Request):
             raise HTTPException(status_code=401, detail="Missing token")
         
         token = auth_header.split(' ')[1]
-        logger.info(f"Received token starting with: {token[:10]}")
         
-        try:
-            # Get user data and log the full response for debugging
-            response = supabase.auth.get_user(token)
-            logger.info(f"Response type: {type(response)}")
-            logger.info(f"Response attributes: {dir(response)}")
-            
-            # Try to access user data in different ways
-            if hasattr(response, 'user'):
-                user = response.user
-                logger.info(f"User attributes: {dir(user)}")
-            else:
-                user = response
-                logger.info(f"Direct response attributes: {dir(response)}")
-            
-            # Return what we found
-            return {
-                "response_type": str(type(response)),
-                "user_type": str(type(user)) if 'user' in locals() else None,
-                "available_attrs": dir(response),
-                "raw_response": str(response)
-            }
-            
-        except Exception as e:
-            logger.error(f"Profile error: {str(e)}")
-            raise HTTPException(
-                status_code=401,
-                detail={
-                    "error": str(e),
-                    "token_prefix": token[:10]
-                }
-            )
-            
-    except HTTPException:
-        raise
+        # Get user from token
+        user = supabase.auth.get_user(token)
+        user_id = user.user.id  # Note: user.user.id is the correct path
+        
+        # Query the profiles table
+        with get_db_connection() as conn:
+            with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+                cursor.execute("""
+                    SELECT 
+                        id as golfer_id,
+                        email,
+                        first_name,
+                        last_name,
+                        handicap_index,
+                        preferred_price_range,
+                        preferred_difficulty,
+                        skill_level,
+                        play_frequency,
+                        club_id,
+                        preferred_tees,
+                        true as is_verified
+                    FROM profiles 
+                    WHERE id = %s
+                """, (user_id,))
+                
+                profile = cursor.fetchone()
+                
+                if not profile:
+                    raise HTTPException(status_code=404, detail="Profile not found")
+                    
+                return profile
+                
     except Exception as e:
-        logger.error(f"Unexpected error: {str(e)}")
+        logger.error(f"Profile error: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @api_router.put("/update-golfer-profile", tags=["Golfers"])
