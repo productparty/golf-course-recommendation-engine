@@ -41,14 +41,14 @@ const FindClub: React.FC = () => {
   const [clubError, setClubError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const fetchClubs = async () => {
+  const fetchClubs = async (pageNumber: number = 1) => {
     try {
       setIsLoading(true);
       const url = new URL(`${config.API_URL}/api/find_clubs/`);
       url.searchParams.append('zip_code', zipCode);
       url.searchParams.append('radius', radius.toString());
       url.searchParams.append('limit', '5');
-      url.searchParams.append('offset', '0');
+      url.searchParams.append('offset', ((pageNumber - 1) * 5).toString());
 
       console.log('Making request to:', url.toString());
 
@@ -68,7 +68,7 @@ const FindClub: React.FC = () => {
       const data = await response.json();
       setResults(data.results);
       setTotalPages(Math.max(1, data.total_pages || 1));
-      setCurrentPage(data.page || 1);
+      setCurrentPage(pageNumber);
     } catch (error) {
       console.error('Error in fetchClubs:', error);
       setClubError(error instanceof Error ? error.message : 'Failed to fetch clubs');
@@ -81,7 +81,7 @@ const FindClub: React.FC = () => {
   const handlePageChange = (newPage: number) => {
     const validPage = Math.max(1, Math.min(newPage, totalPages));
     setCurrentPage(validPage);
-    fetchClubs();
+    fetchClubs(validPage);
   };
 
   const handleTechnologiesChange = (event: SelectChangeEvent<string[]>) => {

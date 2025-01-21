@@ -69,8 +69,8 @@ const RecommendClub: React.FC = () => {
 
       if (data.results && Array.isArray(data.results)) {
         setRecommendations(data.results);
-        setTotalPages(data.total_pages);
-        setCurrentPage(data.page);
+        setTotalPages(Math.max(1, data.total_pages || 1));
+        setCurrentPage(pageNumber);
       } else {
         setRecommendationError('No recommendations found.');
       }
@@ -80,6 +80,12 @@ const RecommendClub: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handlePageChange = (newPage: number) => {
+    const validPage = Math.max(1, Math.min(newPage, totalPages));
+    setCurrentPage(validPage);
+    fetchRecommendations(validPage);
   };
 
   return (
@@ -242,13 +248,13 @@ const RecommendClub: React.FC = () => {
               ))}
               <Box sx={{ mt: 2, display: 'flex', gap: 1, justifyContent: 'center', alignItems: 'center' }}>
                 <Button
-                  onClick={() => fetchRecommendations(1)}
+                  onClick={() => handlePageChange(1)}
                   disabled={currentPage === 1 || isLoading}
                 >
                   First
                 </Button>
                 <Button
-                  onClick={() => fetchRecommendations(currentPage - 1)}
+                  onClick={() => handlePageChange(currentPage - 1)}
                   disabled={currentPage === 1 || isLoading}
                 >
                   Previous
@@ -261,7 +267,7 @@ const RecommendClub: React.FC = () => {
                     return (
                       <Button
                         key={pageNum}
-                        onClick={() => fetchRecommendations(pageNum)}
+                        onClick={() => handlePageChange(pageNum)}
                         variant={pageNum === currentPage ? "contained" : "outlined"}
                         disabled={isLoading}
                       >
@@ -273,13 +279,13 @@ const RecommendClub: React.FC = () => {
                 })}
                 
                 <Button
-                  onClick={() => fetchRecommendations(currentPage + 1)}
+                  onClick={() => handlePageChange(currentPage + 1)}
                   disabled={currentPage === totalPages || isLoading}
                 >
                   Next
                 </Button>
                 <Button
-                  onClick={() => fetchRecommendations(totalPages)}
+                  onClick={() => handlePageChange(totalPages)}
                   disabled={currentPage === totalPages || isLoading}
                 >
                   Last
