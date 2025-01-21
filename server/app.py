@@ -19,6 +19,7 @@ import socket
 import asyncio
 from typing import Optional
 from contextlib import contextmanager
+import jwt
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -415,59 +416,53 @@ class UpdateGolferProfileResponse(BaseModel):
     club_id: str | None  # Allow club_id to be None
     preferred_tees: str | None  # Allow preferred_tees to be None
 
-@api_router.get("/get-golfer-profile", tags=["Golfers"])
+@api_router.get("/api/get-golfer-profile")
 async def get_golfer_profile(request: Request):
     try:
         auth_header = request.headers.get('Authorization')
-        logger.info("Auth attempt with headers")
-        
         if not auth_header or not auth_header.startswith('Bearer '):
-            logger.error("Missing or invalid auth header")
             raise HTTPException(status_code=401, detail="Missing token")
         
         token = auth_header.split(' ')[1]
-        logger.info(f"Token received: {token[:10]}...")
         
         try:
-            # Verify token
-            user = supabase.auth.get_user(token)
-            user_id = user.id
-            logger.info(f"Successfully authenticated user: {user_id}")
+            # Get user data from token
+            response = supabase.auth.get_user(token)
+            # Log the actual response structure
+            logger.info(f"Supabase response type: {type(response)}")
+            logger.info(f"Supabase response dir: {dir(response)}")
             
-            # Get profile
-            with get_db_connection() as conn:
-                with conn.cursor(cursor_factory=RealDictCursor) as cursor:
-                    cursor.execute("""
-                        SELECT * FROM profiles WHERE id = %s
-                    """, (user_id,))
-                    profile = cursor.fetchone()
-                    
-                    if not profile:
-                        logger.info(f"Creating new profile for user: {user_id}")
-                        cursor.execute("""
-                            INSERT INTO profiles (id, email)
-                            VALUES (%s, %s)
-                            RETURNING *
-                        """, (user_id, user.email))
-                        conn.commit()
-                        profile = cursor.fetchone()
-                    
-                    return profile
-                    
+            # Try different ways to access user data
+            if hasattr(response, 'model_dump'):
+                user_data = response.model_dump()
+                logger.info(f"Model dump: {user_data}")
+            
+            # Extract user ID from JWT instead of response
+            decoded = jwt.decode(token, options={"verify_signature": False})
+            user_id = decoded['sub']
+            
+            return {
+                "id": user_id,
+                "email": decoded['email'],
+                "metadata": decoded.get('user_metadata', {}),
+                "raw_response": str(response)  # For debugging
+            }
+            
         except Exception as e:
-            logger.error(f"Token validation failed: {str(e)}")
+            logger.error(f"Profile error: {str(e)}")
             raise HTTPException(
-                status_code=401, 
+                status_code=401,
                 detail={
                     "error": str(e),
-                    "token_prefix": token[:10] if token else None
+                    "token_prefix": token[:10],
+                    "decoded_token": decoded if 'decoded' in locals() else None
                 }
             )
             
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Profile error: {str(e)}")
+        logger.error(f"Unexpected error: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @api_router.put("/update-golfer-profile", tags=["Golfers"])
@@ -777,6 +772,10 @@ async def test_auth(request: Request):
         except Exception as e:
             logger.error(f"Token validation failed: {str(e)}")
             return {"status": "error", "detail": str(e)}
+            
+    except Exception as e:
+        logger.error(f"Auth test error: {str(e)}")
+        return {"status": "error", "detail": str(e)}
             
     except Exception as e:
         logger.error(f"Auth test error: {str(e)}")

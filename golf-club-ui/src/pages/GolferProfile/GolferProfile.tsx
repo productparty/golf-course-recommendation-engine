@@ -71,7 +71,7 @@ const GolferProfile: React.FC = () => {
         }
 
         const apiUrl = `${config.API_URL}/api/get-golfer-profile`;
-        console.log('Making request with token:', currentSession.access_token.substring(0, 10) + '...');
+        console.log('Making request with token:', currentSession.access_token.substring(0, 10));
 
         const response = await fetch(apiUrl, {
           method: 'GET',
@@ -82,25 +82,9 @@ const GolferProfile: React.FC = () => {
         });
 
         if (!response.ok) {
-          const errorData = await response.json().catch(() => null);
-          console.error('Profile fetch failed:', {
-            status: response.status,
-            error: errorData
-          });
-
-          if (response.status === 401) {
-            // Only sign out if token is actually invalid
-            const { error } = await supabase.auth.getUser(currentSession.access_token);
-            if (error) {
-              console.log('Token invalid, signing out');
-              await signOut();
-              navigate('/login');
-              return;
-            }
-            // Token is valid but server rejected it
-            throw new Error('Server authentication failed');
-          }
-          throw new Error(`Server error: ${response.status}`);
+          const errorData = await response.json();
+          console.error('Profile fetch failed:', errorData);
+          throw new Error(errorData.detail?.error || 'Failed to fetch profile');
         }
 
         const data = await response.json();

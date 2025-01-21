@@ -54,13 +54,35 @@ try {
         "Content-Type" = "application/json"
     }
 
-    $profileResponse = Invoke-RestMethod `
-        -Uri "$($config.apiUrl)/api/get-golfer-profile" `
-        -Method Get `
-        -Headers $profileHeaders
+    try {
+        Write-Host "Making request to: $($config.apiUrl)/api/get-golfer-profile"
+        Write-Host "With token prefix: $($token.Substring(0, 10))..."
+        
+        $profileResponse = Invoke-RestMethod `
+            -Uri "$($config.apiUrl)/api/get-golfer-profile" `
+            -Method Get `
+            -Headers $profileHeaders `
+            -Verbose
 
-    Write-Host "Profile response:"
-    $profileResponse | ConvertTo-Json
+        Write-Host "Profile response:"
+        $profileResponse | ConvertTo-Json -Depth 10
+    } catch {
+        Write-Host "`nError occurred:"
+        Write-Host "StatusCode:" $_.Exception.Response.StatusCode.value__
+        Write-Host "StatusDescription:" $_.Exception.Response.StatusDescription
+        
+        $rawResponse = $_.Exception.Response.GetResponseStream()
+        $reader = New-Object System.IO.StreamReader($rawResponse)
+        $rawResponse.Position = 0
+        $responseBody = $reader.ReadToEnd()
+        Write-Host "Response body:" $responseBody
+        
+        # Add more debug info
+        Write-Host "`nRequest Details:"
+        Write-Host "URL: $($config.apiUrl)/api/get-golfer-profile"
+        Write-Host "Headers:" 
+        $profileHeaders | ConvertTo-Json
+    }
 
 } catch {
     Write-Host "`nError occurred:"
