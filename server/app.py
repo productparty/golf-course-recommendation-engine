@@ -424,37 +424,47 @@ async def get_golfer_profile(request: Request):
         token = auth_header.split(' ')[1]
         
         # Get user from token
-        user = supabase.auth.get_user(token)
-        user_id = user.user.id  # Note: user.user.id is the correct path
+        try:
+            user = supabase.auth.get_user(token)
+            user_id = user.user.id
+        except Exception as e:
+            logger.error(f"Token validation failed: {str(e)}")
+            raise HTTPException(status_code=401, detail="Invalid token")
         
         # Query the profiles table
-        with get_db_connection() as conn:
-            with conn.cursor(cursor_factory=RealDictCursor) as cursor:
-                cursor.execute("""
-                    SELECT 
-                        id as golfer_id,
-                        email,
-                        first_name,
-                        last_name,
-                        handicap_index,
-                        preferred_price_range,
-                        preferred_difficulty,
-                        skill_level,
-                        play_frequency,
-                        club_id,
-                        preferred_tees,
-                        true as is_verified
-                    FROM profiles 
-                    WHERE id = %s
-                """, (user_id,))
-                
-                profile = cursor.fetchone()
-                
-                if not profile:
-                    raise HTTPException(status_code=404, detail="Profile not found")
+        try:
+            with get_db_connection() as conn:
+                with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+                    cursor.execute("""
+                        SELECT 
+                            id as golfer_id,
+                            email,
+                            first_name,
+                            last_name,
+                            handicap_index,
+                            preferred_price_range,
+                            preferred_difficulty,
+                            skill_level,
+                            play_frequency,
+                            club_id,
+                            preferred_tees,
+                            true as is_verified
+                        FROM profiles 
+                        WHERE id = %s
+                    """, (user_id,))
                     
-                return profile
-                
+                    profile = cursor.fetchone()
+                    
+                    if not profile:
+                        raise HTTPException(status_code=404, detail="Profile not found")
+                        
+                    return profile
+        except psycopg2.Error as e:
+            logger.error(f"Database error: {str(e)}")
+            raise HTTPException(status_code=500, detail="Database error")
+                    
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Profile error: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -858,27 +868,6 @@ async def debug_token(request: Request):
         return {
             "status": "error",
             "detail": str(e)
-        }
-
-@app.get("/api/health")
-async def health_check():
-    """Health check endpoint that verifies critical services"""
-    try:
-        return {
-            "status": "healthy",
-            "environment": {
-                "SUPABASE_URL": bool(supabase_url),
-                "CORS_ORIGINS": origins,
-                "DB_HOST": bool(os.getenv("DB_HOST")),
-                "DB_PORT": bool(os.getenv("DB_PORT")),
-                "environment": os.getenv("RAILWAY_ENVIRONMENT_NAME", "development")
-            }
-        }
-    except Exception as e:
-        logger.error(f"Health check failed: {str(e)}")
-        return {
-            "status": "unhealthy",
-            "error": str(e)
         }
 
 if __name__ == "__main__":
