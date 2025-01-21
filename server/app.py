@@ -55,13 +55,18 @@ app = FastAPI(
 # Create API router without prefix
 api_router = APIRouter()
 
-# Update CORS middleware configuration
+# Get allowed origins from environment or use defaults
 ALLOWED_ORIGINS = [
-    "https://golf-club-ui-lac.vercel.app",  # New Vercel URL
-    "http://localhost:5173",  # Local development
-    os.getenv("FRONTEND_URL", "https://golf-club-ui-lac.vercel.app"),
+    "https://golf-club-5gok16o4l-mike-watsons-projects.vercel.app",
+    "https://golf-club-ui-lac.vercel.app",
+    "http://localhost:5173",
+    os.getenv("FRONTEND_URL", ""),
 ]
 
+# Filter out empty strings
+ALLOWED_ORIGINS = [origin for origin in ALLOWED_ORIGINS if origin]
+
+# Add CORS middleware before any routes
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
@@ -866,6 +871,26 @@ async def verify_auth_setup():
             "message": str(e),
             "timestamp": datetime.now().isoformat()
         }
+
+@app.get("/api/cors-debug")
+async def cors_debug(request: Request):
+    return {
+        "allowed_origins": ALLOWED_ORIGINS,
+        "request_origin": request.headers.get("origin"),
+        "request_headers": dict(request.headers),
+        "cors_enabled": True
+    }
+
+@app.get("/api/test-connection")
+async def test_connection(request: Request):
+    origin = request.headers.get("origin", "No origin")
+    return {
+        "status": "ok",
+        "origin": origin,
+        "cors_enabled": True,
+        "allowed_origins": ALLOWED_ORIGINS,
+        "timestamp": datetime.now().isoformat()
+    }
 
 if __name__ == "__main__":
     import uvicorn

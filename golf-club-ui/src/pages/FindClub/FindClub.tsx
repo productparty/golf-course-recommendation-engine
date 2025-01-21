@@ -40,59 +40,33 @@ const FindClub: React.FC = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [clubError, setClubError] = useState<string | null>(null);
 
-  const fetchClubs = async (pageNumber: number) => {
+  const fetchClubs = async () => {
     try {
-      if (!config.API_URL) {
-        throw new Error('API URL is not configured');
-      }
+      const url = new URL(`${config.API_URL}/api/find_clubs/`);
+      url.searchParams.append('zip_code', zipCode);
+      url.searchParams.append('radius', radius.toString());
+      url.searchParams.append('limit', '5');
+      url.searchParams.append('offset', '0');
 
-      if (!zipCode) {
-        setClubError('Please enter a ZIP code');
-        return;
-      }
+      console.log('Making request to:', url.toString());
 
-      setClubError(null);
-      
-      // Ensure pageNumber is valid
-      const page = Math.max(1, pageNumber || 1);
-      const offset = (page - 1) * 5;
-      
-      // Add /api prefix to the endpoint
-      const apiUrl = `${config.API_URL}/api/find_clubs/`;
-      console.log('Making request to:', apiUrl);
-
-      const params = new URLSearchParams({
-        zip_code: zipCode,
-        radius: radius.toString(),
-        limit: '5',
-        offset: offset.toString()  // Now this will always be a valid number
+      const response = await fetch(url.toString(), {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'Origin': import.meta.env.VITE_APP_URL
+        }
       });
 
-      // Add optional filters if selected
-      if (priceRange) params.append('price_tier', priceRange);
-      if (difficulty) params.append('difficulty', difficulty);
-      if (findTechnologies.length > 0) params.append('technologies', findTechnologies.join(','));
-
-      const fullUrl = `${apiUrl}?${params.toString()}`;
-      console.log('Full request URL:', fullUrl);
-
-      const response = await fetch(fullUrl);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
-      console.log('API Response:', data);
-
-      if (data.results && Array.isArray(data.results)) {
-        setResults(data.results);
-        setTotalPages(Math.max(1, data.total_pages || 1));  // Ensure at least 1 page
-        setCurrentPage(data.page || 1);  // Ensure valid current page
-      } else {
-        console.error('Unexpected response format:', data);
-        setClubError('Unexpected response format from server');
-      }
-
+      setResults(data.results);
+      setTotalPages(Math.max(1, data.total_pages || 1));
+      setCurrentPage(data.page || 1);
     } catch (error) {
       console.error('Error in fetchClubs:', error);
       setClubError(error instanceof Error ? error.message : 'Failed to fetch clubs');
@@ -101,10 +75,9 @@ const FindClub: React.FC = () => {
   };
 
   const handlePageChange = (newPage: number) => {
-    // Ensure newPage is within valid range
     const validPage = Math.max(1, Math.min(newPage, totalPages));
     setCurrentPage(validPage);
-    fetchClubs(validPage);
+    fetchClubs();
   };
 
   const handleTechnologiesChange = (event: SelectChangeEvent<string[]>) => {
@@ -183,7 +156,7 @@ const FindClub: React.FC = () => {
               </Select>
             </FormControl>
             <Button 
-              onClick={() => fetchClubs(1)} 
+              onClick={fetchClubs} 
               variant="contained" 
               color="primary" 
               sx={{ mt: 2 }}

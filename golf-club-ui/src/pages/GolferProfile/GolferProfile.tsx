@@ -74,9 +74,11 @@ const GolferProfile: React.FC = () => {
 
         const response = await fetch(apiUrl, {
           method: 'GET',
+          credentials: 'include',
           headers: {
             'Authorization': `Bearer ${session.access_token}`,
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Origin': import.meta.env.VITE_APP_URL
           }
         });
 
