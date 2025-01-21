@@ -96,21 +96,42 @@ logger.info(debug_config)
 
 AZURE_MAPS_API_KEY = os.getenv("AZURE_MAPS_API_KEY")
 
-# Update Supabase initialization
+# Update to use service key specifically
+SUPABASE_URL = os.getenv("SUPABASE_URL", "https://nkknwkentrbbyzgqgpfd.supabase.co")
+SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY")  # Use the service key for backend
+
+logger.info(f"Supabase URL: {SUPABASE_URL}")
+logger.info("Supabase service key configured: {}".format("Yes" if SUPABASE_SERVICE_KEY else "No"))
+
 def get_supabase_client():
     try:
-        supabase_url = os.getenv("SUPABASE_URL")
-        supabase_key = os.getenv("SUPABASE_KEY")
-        if not supabase_url or not supabase_key:
-            logger.warning("Supabase credentials not found, running in limited mode")
-            return None
-        return create_client(supabase_url, supabase_key)
+        if not SUPABASE_URL or not SUPABASE_SERVICE_KEY:
+            logger.error("Missing Supabase credentials")
+            logger.error(f"URL present: {bool(SUPABASE_URL)}")
+            logger.error(f"Service key present: {bool(SUPABASE_SERVICE_KEY)}")
+            raise ValueError("Supabase credentials not configured")
+            
+        client = create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)
+        # Verify the client has admin privileges
+        try:
+            client.auth.admin.list_users()
+            logger.info("Supabase client verified with admin privileges")
+        except Exception as e:
+            logger.error(f"Service key verification failed: {str(e)}")
+            raise
+            
+        return client
     except Exception as e:
         logger.error(f"Failed to initialize Supabase client: {str(e)}")
-        return None
+        raise
 
 # Initialize supabase client
-supabase = get_supabase_client()
+try:
+    supabase = get_supabase_client()
+    logger.info("Supabase client created successfully with service role")
+except Exception as e:
+    logger.error(f"Failed to create Supabase client: {str(e)}")
+    supabase = None
 
 # Middleware to log requests
 @app.middleware("http")
@@ -865,6 +886,47 @@ async def test_cors():
         "allowed_origins": ALLOWED_ORIGINS,
         "timestamp": datetime.now().isoformat()
     }
+
+@app.get("/api/debug-auth")
+async def debug_auth(request: Request):
+    """Debug endpoint for auth configuration"""
+    try:
+        return {
+            "supabase_configured": bool(supabase),
+            "supabase_url_set": bool(os.getenv("SUPABASE_URL")),
+            "supabase_key_set": bool(os.getenv("SUPABASE_SERVICE_KEY")),
+            "auth_header": request.headers.get('Authorization', 'Not present'),
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        return {"error": str(e)}
+
+@app.get("/api/verify-auth-setup")
+async def verify_auth_setup():
+    """Verify Supabase auth is properly configured"""
+    try:
+        if not supabase:
+            return {
+                "status": "error",
+                "message": "Supabase client not initialized",
+                "url_configured": bool(SUPABASE_URL),
+                "service_key_configured": bool(SUPABASE_SERVICE_KEY)
+            }
+            
+        # Try to list users to verify admin access
+        users = supabase.auth.admin.list_users()
+        return {
+            "status": "success",
+            "message": "Supabase auth configured correctly",
+            "admin_access": True,
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
 
 if __name__ == "__main__":
     import uvicorn

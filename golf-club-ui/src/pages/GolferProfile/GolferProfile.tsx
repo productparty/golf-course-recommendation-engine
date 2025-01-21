@@ -8,11 +8,15 @@ import {
   InputLabel, 
   FormControl, 
   Box, 
-  SelectChangeEvent 
+  SelectChangeEvent,
+  Alert,
+  Snackbar,
+  CircularProgress
 } from '@mui/material';
 import { useAuth } from '../../context/AuthContext';
 import PageLayout from '../../components/PageLayout';
 import { config } from '../../config';
+import { useNavigate } from 'react-router-dom';
 
 interface GolferProfile {
   golfer_id: string;
@@ -31,7 +35,8 @@ interface GolferProfile {
 }
 
 const GolferProfile: React.FC = () => {
-  const { session } = useAuth();
+  const { session, signOut } = useAuth();
+  const navigate = useNavigate();
   const [profile, setProfile] = useState<GolferProfile>({
     golfer_id: '',
     email: '',
@@ -48,7 +53,9 @@ const GolferProfile: React.FC = () => {
     is_verified: false
   });
   const [error, setError] = useState<string>('');
+  const [success, setSuccess] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -58,55 +65,55 @@ const GolferProfile: React.FC = () => {
           setIsLoading(false);
           return;
         }
-        
-        if (!config.API_URL) {
-          setError('API URL is not configured');
-          setIsLoading(false);
-          return;
-        }
 
         const apiUrl = `${config.API_URL}/api/get-golfer-profile`;
         console.log('Making request to:', apiUrl);
-        console.log('With token:', session.access_token);
 
         const response = await fetch(apiUrl, {
           method: 'GET',
-          credentials: 'include',
           headers: {
             'Authorization': `Bearer ${session.access_token}`,
-            'Content-Type': 'application/json',
-            'Origin': import.meta.env.VITE_APP_URL
+            'Content-Type': 'application/json'
           }
         });
+
+        if (response.status === 401) {
+          setError('Session expired - please log in again');
+          await signOut();
+          navigate('/login');
+          return;
+        }
 
         if (!response.ok) {
           const errorData = await response.json().catch(() => null);
           throw new Error(
             errorData?.detail || 
-            `HTTP error! status: ${response.status}`
+            `Server error: ${response.status}`
           );
         }
 
         const data = await response.json();
-        console.log('Profile data:', data);
         setProfile(data);
-        setIsLoading(false);
+        setError('');
       } catch (error) {
         console.error('Error fetching profile:', error);
         setError(error instanceof Error ? error.message : 'Failed to fetch profile');
+      } finally {
         setIsLoading(false);
       }
     };
 
     if (session) {
       fetchProfile();
-    } else {
-      setIsLoading(false);
     }
-  }, [session]);
+  }, [session, signOut, navigate]);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+    setIsSubmitting(true);
+    setError('');
+    setSuccess('');
+
     try {
       if (!session?.access_token) {
         throw new Error('Not authenticated');
@@ -121,13 +128,25 @@ const GolferProfile: React.FC = () => {
         body: JSON.stringify(profile)
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to update profile');
+      if (response.status === 401) {
+        setError('Session expired - please log in again');
+        await signOut();
+        navigate('/login');
+        return;
       }
 
-      setError('');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.detail || 'Failed to update profile');
+      }
+
+      setSuccess('Profile updated successfully!');
+      const updatedData = await response.json();
+      setProfile(updatedData);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update profile');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -144,7 +163,9 @@ const GolferProfile: React.FC = () => {
   if (isLoading) {
     return (
       <PageLayout title="Golfer Profile">
-        <Typography>Loading profile...</Typography>
+        <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
+          <CircularProgress />
+        </Box>
       </PageLayout>
     );
   }
@@ -248,15 +269,35 @@ const GolferProfile: React.FC = () => {
             color="primary"
             fullWidth
             sx={{ mt: 3, mb: 2 }}
+            disabled={isSubmitting}
           >
-            Save Profile
+            {isSubmitting ? (
+              <CircularProgress size={24} color="inherit" />
+            ) : (
+              'Save Profile'
+            )}
           </Button>
         </form>
-        {error && (
-          <Typography color="error" sx={{ mt: 2 }}>
+
+        <Snackbar 
+          open={!!error} 
+          autoHideDuration={6000} 
+          onClose={() => setError('')}
+        >
+          <Alert severity="error" onClose={() => setError('')}>
             {error}
-          </Typography>
-        )}
+          </Alert>
+        </Snackbar>
+
+        <Snackbar 
+          open={!!success} 
+          autoHideDuration={3000} 
+          onClose={() => setSuccess('')}
+        >
+          <Alert severity="success" onClose={() => setSuccess('')}>
+            {success}
+          </Alert>
+        </Snackbar>
       </Box>
     </PageLayout>
   );
