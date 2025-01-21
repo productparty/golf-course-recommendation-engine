@@ -458,113 +458,52 @@ class UpdateGolferProfileResponse(BaseModel):
 @api_router.get("/get-golfer-profile", tags=["Golfers"], response_model=GolferProfileResponse)
 async def get_golfer_profile(request: Request):
     try:
-        # Log request headers for debugging
-        logger.info(f"Request headers: {dict(request.headers)}")
-        
         auth_header = request.headers.get('Authorization')
-        logger.info(f"Auth header: {auth_header}")
+        logger.info(f"Auth header present: {bool(auth_header)}")
         
         if not auth_header or not auth_header.startswith('Bearer '):
             logger.error("Missing or invalid auth header")
             raise HTTPException(status_code=401, detail="Missing authentication token")
         
         token = auth_header.split(' ')[1]
-        logger.info("Token extracted successfully")
+        logger.info("Token received")
         
         try:
-            # Add error handling for Supabase client
-            if not supabase:
-                logger.error("Supabase client not initialized")
-                raise HTTPException(status_code=500, detail="Authentication service unavailable")
-                
+            # Verify the JWT token using Supabase
             user = supabase.auth.get_user(token)
-            user_email = user.user.email
             user_id = user.user.id
-            logger.info(f"Supabase user found: email={user_email}, id={user_id}")
+            logger.info(f"User authenticated: {user_id}")
             
-        except Exception as e:
-            logger.error(f"Supabase auth error: {str(e)}")
-            raise HTTPException(status_code=401, detail=f"Invalid token: {str(e)}")
-
-        # Test database connection before query
-        try:
-            conn = get_db_connection()
-            logger.info("Database connection successful")
-        except Exception as e:
-            logger.error(f"Database connection error: {str(e)}")
-            raise HTTPException(status_code=500, detail="Database connection failed")
-
-        profile_query = """
-        SELECT 
-            id as golfer_id,
-            email,
-            first_name,
-            last_name,
-            handicap_index,
-            preferred_price_range,
-            preferred_difficulty,
-            skill_level,
-            play_frequency,
-            p.club_id,
-            gc.club_name,
-            preferred_tees,
-            true as is_verified
-        FROM profiles p
-        LEFT JOIN golfclub gc ON p.club_id = gc.global_id
-        WHERE id = %s
-        """
-        
-        try:
-            with conn:
+            # Get profile from database
+            with get_db_connection() as conn:
                 with conn.cursor(cursor_factory=RealDictCursor) as cursor:
-                    cursor.execute(profile_query, (user_id,))
+                    cursor.execute("""
+                        SELECT * FROM profiles 
+                        WHERE id = %s
+                    """, (user_id,))
                     profile = cursor.fetchone()
-                    logger.info(f"Profile query result: {profile}")
-
+                    
                     if not profile:
-                        logger.info(f"Creating default profile for user {user_id}")
-                        # Create default profile if none exists
-                        profile = {
-                            "golfer_id": user_id,
-                            "email": user_email,
-                            "first_name": None,
-                            "last_name": None,
-                            "handicap_index": None,
-                            "preferred_price_range": None,
-                            "preferred_difficulty": None,
-                            "skill_level": None,
-                            "play_frequency": None,
-                            "club_id": None,
-                            "club_name": None,
-                            "preferred_tees": None,
-                            "is_verified": True
-                        }
-                        
-                        # Insert default profile
-                        insert_query = """
-                        INSERT INTO profiles (
-                            id, email, first_name, last_name, handicap_index,
-                            preferred_price_range, preferred_difficulty, skill_level,
-                            play_frequency, club_id, preferred_tees
-                        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                        """
-                        cursor.execute(insert_query, (
-                            user_id, user_email, None, None, None,
-                            None, None, None, None, None, None
-                        ))
+                        # Create default profile
+                        cursor.execute("""
+                            INSERT INTO profiles (id, email)
+                            VALUES (%s, %s)
+                            RETURNING *
+                        """, (user_id, user.user.email))
                         conn.commit()
-
+                        profile = cursor.fetchone()
+                    
                     return profile
                     
         except Exception as e:
-            logger.error(f"Database query error: {str(e)}")
-            raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
-                
+            logger.error(f"Auth error: {str(e)}")
+            raise HTTPException(status_code=401, detail=str(e))
+            
     except HTTPException as he:
         raise he
     except Exception as e:
-        logger.error(f"Unexpected error in get_golfer_profile: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Server error: {str(e)}")
+        logger.error(f"Unexpected error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @api_router.put("/update-golfer-profile", tags=["Golfers"])
 async def update_golfer_profile(request: Request, profile_update: UpdateGolferProfileRequest):

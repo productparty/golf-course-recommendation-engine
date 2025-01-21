@@ -2,16 +2,15 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { createClient, Session } from '@supabase/supabase-js'
 import { config } from '../config';
 
-// Create a single supabase instance
+// Create a single supabase instance with the correct keys
 export const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY,
+  import.meta.env.VITE_SUPABASE_ANON_KEY, // Use the anon key for client-side
   {
     auth: {
       autoRefreshToken: true,
       persistSession: true,
-      detectSessionInUrl: true,
-      storage: window.localStorage // Explicitly use localStorage
+      detectSessionInUrl: true
     }
   }
 )
@@ -31,19 +30,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Get initial session from localStorage
-    const savedSession = localStorage.getItem('supabase.auth.token');
-    if (savedSession) {
-      try {
-        const parsed = JSON.parse(savedSession);
-        setSession(parsed.currentSession);
-      } catch (e) {
-        console.error('Failed to parse saved session:', e);
-      }
-    }
-
-    // Get session from Supabase
+    // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('Initial session:', session);
       setSession(session);
       setLoading(false);
     });
@@ -52,25 +41,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
+      console.log('Auth state changed:', session);
       setSession(session);
       setLoading(false);
-      // Save session to localStorage
-      if (session) {
-        localStorage.setItem('supabase.auth.token', JSON.stringify({
-          currentSession: session
-        }));
-      } else {
-        localStorage.removeItem('supabase.auth.token');
-      }
     });
 
     return () => subscription.unsubscribe();
   }, [])
 
   const signOut = async () => {
-    await supabase.auth.signOut();
-    localStorage.removeItem('supabase.auth.token');
-    setSession(null);
+    try {
+      await supabase.auth.signOut();
+      setSession(null);
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
   };
 
   const signInWithEmail = async (email: string) => {

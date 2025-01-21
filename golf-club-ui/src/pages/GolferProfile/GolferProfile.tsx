@@ -17,6 +17,7 @@ import { useAuth } from '../../context/AuthContext';
 import PageLayout from '../../components/PageLayout';
 import { config } from '../../config';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '../../context/AuthContext';
 
 interface GolferProfile {
   golfer_id: string;
@@ -61,13 +62,15 @@ const GolferProfile: React.FC = () => {
     const fetchProfile = async () => {
       try {
         if (!session?.access_token) {
-          setError('No authentication token available');
+          console.log('No session available');
+          setError('Please log in to view your profile');
           setIsLoading(false);
           return;
         }
 
         const apiUrl = `${config.API_URL}/api/get-golfer-profile`;
         console.log('Making request to:', apiUrl);
+        console.log('With token:', session.access_token);
 
         const response = await fetch(apiUrl, {
           method: 'GET',
@@ -78,33 +81,52 @@ const GolferProfile: React.FC = () => {
         });
 
         if (response.status === 401) {
-          setError('Session expired - please log in again');
-          await signOut();
-          navigate('/login');
-          return;
-        }
-
-        if (!response.ok) {
+          console.log('Unauthorized - refreshing session');
+          const { data: { session: newSession }, error: refreshError } = await supabase.auth.refreshSession();
+          
+          if (refreshError || !newSession) {
+            console.log('Session refresh failed');
+            setError('Session expired - please log in again');
+            await signOut();
+            navigate('/login');
+            return;
+          }
+          
+          // Retry with new token
+          const retryResponse = await fetch(apiUrl, {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${newSession.access_token}`,
+              'Content-Type': 'application/json'
+            }
+          });
+          
+          if (!retryResponse.ok) {
+            throw new Error('Failed to fetch profile after token refresh');
+          }
+          
+          const data = await retryResponse.json();
+          setProfile(data);
+        } else if (!response.ok) {
           const errorData = await response.json().catch(() => null);
-          throw new Error(
-            errorData?.detail || 
-            `Server error: ${response.status}`
-          );
+          throw new Error(errorData?.detail || `Server error: ${response.status}`);
+        } else {
+          const data = await response.json();
+          setProfile(data);
         }
 
-        const data = await response.json();
-        setProfile(data);
-        setError('');
+        setIsLoading(false);
       } catch (error) {
         console.error('Error fetching profile:', error);
         setError(error instanceof Error ? error.message : 'Failed to fetch profile');
-      } finally {
         setIsLoading(false);
       }
     };
 
     if (session) {
       fetchProfile();
+    } else {
+      setIsLoading(false);
     }
   }, [session, signOut, navigate]);
 
