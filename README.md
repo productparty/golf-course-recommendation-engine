@@ -15,9 +15,10 @@ Find My Club is a platform designed to bridge the gap between golfers and course
 As a passionate golfer and experienced tech professional, I wanted to create a tool that simplifies the process of finding great courses while fostering a vibrant community of golf enthusiasts. Find My Club is a labor of love that combines my expertise in technology with my love for the game.
 
 ## Tech Stack
-- **Frontend:** HTML, CSS (Responsive Design)
-- **Backend:** In progress, planning cloud deployment (AWS/Azure/Google Cloud)
-- **Authentication:** Implemented using SendGrid for secure email-based verification.
+- **Frontend:** React, deployed on Vercel with fully responsive design.
+- **Backend:** Custom APIs built and deployed on Railway.
+- **Database:** Supabase for real-time data and secure storage.
+- **Authentication:** Email-based verification implemented via Supabase's authentication system.
 
 ## How to Use
 1. **Explore Courses:** Use the advanced search or recommendations to find the perfect course.
@@ -31,5 +32,5 @@ Interested in collaborating or learning more? Reach out!
 
 ---
 
-### License
+## License
 This project is open-source. Contributions are welcome!
