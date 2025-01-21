@@ -58,8 +58,9 @@ app = FastAPI(
 # Create API router without prefix
 api_router = APIRouter()
 
-# Configure CORS
-origins = os.getenv("CORS_ORIGINS", "").split(",")
+# Configure CORS - clean up the origins string
+cors_origins_str = os.getenv("CORS_ORIGINS", "https://golf-club-ui-lac.vercel.app,http://localhost:5173")
+origins = [origin.strip() for origin in cors_origins_str.split(",")]
 logger.info(f"Configuring CORS with origins: {origins}")
 
 app.add_middleware(
@@ -79,7 +80,11 @@ if not supabase_url or not supabase_key:
     raise ValueError("Missing required environment variables")
 
 try:
-    supabase: Client = create_client(supabase_url, supabase_key)
+    # Initialize Supabase without proxy argument
+    supabase: Client = create_client(
+        supabase_url,
+        supabase_key
+    )
     logger.info("Supabase client initialized successfully")
 except Exception as e:
     logger.error(f"Failed to initialize Supabase client: {str(e)}")
@@ -867,14 +872,24 @@ async def debug_token(request: Request):
 
 @app.get("/api/health")
 async def health_check():
-    return {
-        "status": "healthy",
-        "environment": {
-            "SUPABASE_URL": bool(supabase_url),
-            "CORS_ORIGINS": origins,
-            "supabase_initialized": bool(supabase)
+    """Health check endpoint that verifies critical services"""
+    try:
+        return {
+            "status": "healthy",
+            "environment": {
+                "SUPABASE_URL": bool(supabase_url),
+                "CORS_ORIGINS": origins,
+                "DB_HOST": bool(os.getenv("DB_HOST")),
+                "DB_PORT": bool(os.getenv("DB_PORT")),
+                "environment": os.getenv("RAILWAY_ENVIRONMENT_NAME", "development")
+            }
         }
-    }
+    except Exception as e:
+        logger.error(f"Health check failed: {str(e)}")
+        return {
+            "status": "unhealthy",
+            "error": str(e)
+        }
 
 if __name__ == "__main__":
     import uvicorn
