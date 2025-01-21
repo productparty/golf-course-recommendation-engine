@@ -545,105 +545,113 @@ async def get_recommendations(
             raise HTTPException(status_code=401, detail="Missing authentication token")
         
         token = auth_header.split(' ')[1]
-        user = supabase.auth.get_user(token)
-        user_id = user.id
+        
+        try:
+            # Get user from token - fixed user.id access
+            user = supabase.auth.get_user(token)
+            user_id = user.user.id  # Changed from user.id to user.user.id
+        except Exception as e:
+            logger.error(f"Token validation failed: {str(e)}")
+            raise HTTPException(status_code=401, detail="Invalid token")
 
         # Get user preferences from profiles table
-        profile_query = """
-        SELECT 
-            preferred_price_range,
-            preferred_difficulty
-        FROM profiles
-        WHERE id = %s
-        """
+        try:
+            with get_db_connection() as conn:
+                with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+                    # Get user preferences
+                    cursor.execute("""
+                        SELECT 
+                            preferred_price_range,
+                            preferred_difficulty
+                        FROM profiles
+                        WHERE id = %s
+                    """, (user_id,))
+                    profile = cursor.fetchone()
+                    if not profile:
+                        raise HTTPException(status_code=404, detail="User profile not found")
 
-        # Get coordinates from ZIP code
-        lat, lng = get_lat_lng(zip_code)
-        logger.info(f"Geocoded coordinates for recommendations: lat={lat}, lng={lng}")
+                    # Get coordinates from ZIP code
+                    lat, lng = get_lat_lng(zip_code)
+                    logger.info(f"Geocoded coordinates for recommendations: lat={lat}, lng={lng}")
 
-        # Query to get ALL nearby clubs first
-        clubs_query = """
-        SELECT 
-            gc.global_id,
-            gc.club_name,
-            gc.address,
-            gc.city,
-            gc.state,
-            gc.zip_code,
-            gc.price_tier,
-            gc.difficulty,
-            ST_Distance(
-                gc.geom::geography,
-                ST_SetSRID(ST_MakePoint(%s, %s), 4326)::geography
-            ) / 1609.34 as distance_miles,
-            array_agg(ti.technology_name) FILTER (WHERE ti.technology_name IS NOT NULL) as available_technologies
-        FROM golfclub gc
-        LEFT JOIN golfclub_technology gct ON gc.global_id = gct.global_id
-        LEFT JOIN technologyintegration ti ON gct.technology_id = ti.technology_id
-        WHERE ST_DWithin(
-            gc.geom::geography,
-            ST_SetSRID(ST_MakePoint(%s, %s), 4326)::geography,
-            %s * 1609.34
-        )
-        GROUP BY gc.global_id, gc.club_name, gc.address, gc.city, gc.state, gc.zip_code, gc.price_tier, gc.difficulty, gc.geom
-        """
-
-        with get_db_connection() as conn:
-            with conn.cursor(cursor_factory=RealDictCursor) as cursor:
-                # Get user preferences
-                cursor.execute(profile_query, (user_id,))
-                profile = cursor.fetchone()
-                if not profile:
-                    raise HTTPException(status_code=400, detail="User profile not found")
-
-                # Get all nearby clubs
-                cursor.execute(clubs_query, (lng, lat, lng, lat, radius))
-                clubs = cursor.fetchall()
-                
-                logger.info(f"Found {len(clubs)} clubs before scoring")
-
-                # Calculate recommendation scores for all clubs
-                scored_clubs = []
-                for club in clubs:
-                    # Create a copy of the club data to preserve all fields
-                    club_data = dict(club)  # This preserves all fields including available_technologies
-                    
-                    # Add debug logging
-                    logger.info(f"Club preferences - difficulty: {club_data['difficulty']}, price_tier: {club_data['price_tier']}")
-                    logger.info(f"User preferences - difficulty: {profile['preferred_difficulty']}, price: {profile['preferred_price_range']}")
-                    logger.info(f"Club technologies: {club_data.get('available_technologies', [])}")
-                    
-                    # Calculate score
-                    score = calculate_recommendation_score(
-                        distance_miles=club_data['distance_miles'],
-                        difficulty=club_data['difficulty'],
-                        price_tier=club_data['price_tier'],
-                        preferred_difficulty=profile['preferred_difficulty'],
-                        preferred_price_range=profile['preferred_price_range']
+                    # Query to get ALL nearby clubs first
+                    clubs_query = """
+                    SELECT 
+                        gc.global_id,
+                        gc.club_name,
+                        gc.address,
+                        gc.city,
+                        gc.state,
+                        gc.zip_code,
+                        gc.price_tier,
+                        gc.difficulty,
+                        ST_Distance(
+                            gc.geom::geography,
+                            ST_SetSRID(ST_MakePoint(%s, %s), 4326)::geography
+                        ) / 1609.34 as distance_miles,
+                        array_agg(ti.technology_name) FILTER (WHERE ti.technology_name IS NOT NULL) as available_technologies
+                    FROM golfclub gc
+                    LEFT JOIN golfclub_technology gct ON gc.global_id = gct.global_id
+                    LEFT JOIN technologyintegration ti ON gct.technology_id = ti.technology_id
+                    WHERE ST_DWithin(
+                        gc.geom::geography,
+                        ST_SetSRID(ST_MakePoint(%s, %s), 4326)::geography,
+                        %s * 1609.34
                     )
+                    GROUP BY gc.global_id, gc.club_name, gc.address, gc.city, gc.state, gc.zip_code, gc.price_tier, gc.difficulty, gc.geom
+                    """
+
+                    # Get all nearby clubs
+                    cursor.execute(clubs_query, (lng, lat, lng, lat, radius))
+                    clubs = cursor.fetchall()
                     
-                    # Add score to the club data
-                    club_data['recommendation_score'] = score
-                    scored_clubs.append(club_data)
+                    logger.info(f"Found {len(clubs)} clubs before scoring")
 
-                # Sort by recommendation score (highest first)
-                scored_clubs.sort(key=lambda x: x['recommendation_score'], reverse=True)
+                    # Calculate recommendation scores for all clubs
+                    scored_clubs = []
+                    for club in clubs:
+                        # Create a copy of the club data to preserve all fields
+                        club_data = dict(club)  # This preserves all fields including available_technologies
+                        
+                        # Add debug logging
+                        logger.info(f"Club preferences - difficulty: {club_data['difficulty']}, price_tier: {club_data['price_tier']}")
+                        logger.info(f"User preferences - difficulty: {profile['preferred_difficulty']}, price: {profile['preferred_price_range']}")
+                        logger.info(f"Club technologies: {club_data.get('available_technologies', [])}")
+                        
+                        # Calculate score
+                        score = calculate_recommendation_score(
+                            distance_miles=club_data['distance_miles'],
+                            difficulty=club_data['difficulty'],
+                            price_tier=club_data['price_tier'],
+                            preferred_difficulty=profile['preferred_difficulty'],
+                            preferred_price_range=profile['preferred_price_range']
+                        )
+                        
+                        # Add score to the club data
+                        club_data['recommendation_score'] = score
+                        scored_clubs.append(club_data)
 
-                # Apply pagination after sorting
-                start_idx = offset
-                end_idx = offset + limit
-                paginated_clubs = scored_clubs[start_idx:end_idx]
+                    # Sort by recommendation score (highest first)
+                    scored_clubs.sort(key=lambda x: x['recommendation_score'], reverse=True)
 
-                # Log the first result for debugging
-                if paginated_clubs:
-                    logger.info(f"First result: {paginated_clubs[0]}")
+                    # Apply pagination after sorting
+                    start_idx = offset
+                    end_idx = offset + limit
+                    paginated_clubs = scored_clubs[start_idx:end_idx]
 
-                return {
-                    "results": paginated_clubs,
-                    "total": len(scored_clubs),
-                    "page": offset // limit + 1,
-                    "total_pages": (len(scored_clubs) + limit - 1) // limit
-                }
+                    # Log the first result for debugging
+                    if paginated_clubs:
+                        logger.info(f"First result: {paginated_clubs[0]}")
+
+                    return {
+                        "results": paginated_clubs,
+                        "total": len(scored_clubs),
+                        "page": offset // limit + 1,
+                        "total_pages": (len(scored_clubs) + limit - 1) // limit
+                    }
+        except Exception as e:
+            logger.error(f"Error in get_recommendations: {str(e)}")
+            raise HTTPException(status_code=400, detail=f"Failed to get recommendations: {str(e)}")
 
     except Exception as e:
         logger.error(f"Error in get_recommendations: {str(e)}")
