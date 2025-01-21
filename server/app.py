@@ -80,11 +80,8 @@ if not supabase_url or not supabase_key:
     raise ValueError("Missing required environment variables")
 
 try:
-    # Initialize Supabase without proxy argument
-    supabase: Client = create_client(
-        supabase_url,
-        supabase_key
-    )
+    # Simple initialization for older version
+    supabase = create_client(supabase_url, supabase_key)
     logger.info("Supabase client initialized successfully")
 except Exception as e:
     logger.error(f"Failed to initialize Supabase client: {str(e)}")
@@ -434,7 +431,7 @@ async def get_golfer_profile(request: Request):
         try:
             # Verify token
             user = supabase.auth.get_user(token)
-            user_id = user.user.id
+            user_id = user.id
             logger.info(f"Successfully authenticated user: {user_id}")
             
             # Get profile
@@ -451,7 +448,7 @@ async def get_golfer_profile(request: Request):
                             INSERT INTO profiles (id, email)
                             VALUES (%s, %s)
                             RETURNING *
-                        """, (user_id, user.user.email))
+                        """, (user_id, user.email))
                         conn.commit()
                         profile = cursor.fetchone()
                     
@@ -482,7 +479,7 @@ async def update_golfer_profile(request: Request, profile_update: UpdateGolferPr
         
         token = auth_header.split(' ')[1]
         user = supabase.auth.get_user(token)
-        user_id = user.user.id
+        user_id = user.id
 
         update_query = """
         UPDATE profiles
@@ -550,7 +547,7 @@ async def get_recommendations(
         
         token = auth_header.split(' ')[1]
         user = supabase.auth.get_user(token)
-        user_id = user.user.id
+        user_id = user.id
 
         # Get user preferences from profiles table
         profile_query = """
@@ -774,8 +771,8 @@ async def test_auth(request: Request):
             user = supabase.auth.get_user(token)
             return {
                 "status": "success",
-                "user_id": user.user.id,
-                "email": user.user.email
+                "user_id": user.id,
+                "email": user.email
             }
         except Exception as e:
             logger.error(f"Token validation failed: {str(e)}")
@@ -851,8 +848,8 @@ async def debug_token(request: Request):
             return {
                 "status": "success",
                 "user": {
-                    "id": user.user.id,
-                    "email": user.user.email
+                    "id": user.id,
+                    "email": user.email
                 },
                 "token_valid": True,
                 "timestamp": datetime.now().isoformat()
