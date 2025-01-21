@@ -36,7 +36,7 @@ interface GolferProfile {
 }
 
 const GolferProfile: React.FC = () => {
-  const { session, signOut } = useAuth();
+  const { session, signOut, getToken } = useAuth();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<GolferProfile>({
     golfer_id: '',
@@ -62,7 +62,8 @@ const GolferProfile: React.FC = () => {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        if (!session?.access_token) {
+        const token = await getToken();
+        if (!token) {
           setError('No authentication token available');
           setIsLoading(false);
           return;
@@ -75,8 +76,9 @@ const GolferProfile: React.FC = () => {
           method: 'GET',
           credentials: 'include',
           headers: {
-            'Authorization': `Bearer ${session.access_token}`,
-            'Content-Type': 'application/json'
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+            'Origin': import.meta.env.VITE_APP_URL
           }
         });
 
@@ -94,12 +96,11 @@ const GolferProfile: React.FC = () => {
           return;
         }
 
+        const data = await response.json();
         if (!response.ok) {
-          const errorData = await response.json().catch(() => null);
-          throw new Error(errorData?.detail || `Server error: ${response.status}`);
+          throw new Error(data.detail || `Server error: ${response.status}`);
         }
 
-        const data = await response.json();
         setProfile(data);
         setError('');
         setRefreshAttempts(0);
@@ -116,7 +117,7 @@ const GolferProfile: React.FC = () => {
     } else {
       setIsLoading(false);
     }
-  }, [session, signOut, navigate, refreshAttempts]);
+  }, [session, signOut, navigate, refreshAttempts, getToken]);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();

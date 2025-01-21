@@ -2,10 +2,18 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { createClient, Session } from '@supabase/supabase-js'
 import { config } from '../config';
 
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+console.log('Initializing Supabase with:', { 
+  url: supabaseUrl, 
+  hasKey: !!supabaseAnonKey 
+});
+
 // Create a single supabase instance with the correct keys
 export const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY, // Use the anon key for client-side
+  supabaseUrl,
+  supabaseAnonKey,
   {
     auth: {
       autoRefreshToken: true,
@@ -15,57 +23,68 @@ export const supabase = createClient(
   }
 )
 
-export const AuthContext = createContext<{
+interface AuthContextType {
   session: Session | null;
   loading: boolean;
   signOut: () => Promise<void>;
-}>({
+  getToken: () => Promise<string | null>;
+}
+
+export const AuthContext = createContext<AuthContextType>({
   session: null,
   loading: true,
-  signOut: async () => {}
-})
+  signOut: async () => {},
+  getToken: async () => null
+});
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let mounted = true;
-
     const setupAuth = async () => {
       try {
         // Get initial session
         const { data: { session: initialSession } } = await supabase.auth.getSession();
-        if (mounted) {
-          console.log('Initial session:', initialSession ? 'present' : 'none');
-          setSession(initialSession);
-        }
+        console.log('Initial session:', initialSession ? 'Found' : 'None');
+        setSession(initialSession);
 
-        // Set up auth state change listener
+        // Listen for auth changes
         const {
           data: { subscription },
-        } = supabase.auth.onAuthStateChange(async (_event, currentSession) => {
-          console.log('Auth state changed:', _event);
-          if (mounted) {
-            setSession(currentSession);
+        } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
+          console.log('Auth state changed:', event);
+          if (currentSession) {
+            console.log('New session token available');
           }
+          setSession(currentSession);
         });
 
-        return () => {
-          mounted = false;
-          subscription.unsubscribe();
-        };
+        return () => subscription.unsubscribe();
       } catch (error) {
         console.error('Auth setup error:', error);
       } finally {
-        if (mounted) {
-          setLoading(false);
-        }
+        setLoading(false);
       }
     };
 
     setupAuth();
   }, []);
+
+  const getToken = async (): Promise<string | null> => {
+    try {
+      const { data: { session: currentSession } } = await supabase.auth.getSession();
+      if (currentSession?.access_token) {
+        console.log('Token retrieved successfully');
+        return currentSession.access_token;
+      }
+      console.log('No token available');
+      return null;
+    } catch (error) {
+      console.error('Error getting token:', error);
+      return null;
+    }
+  };
 
   const signOut = async () => {
     try {
@@ -86,7 +105,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ session, loading, signOut }}>
+    <AuthContext.Provider value={{ session, loading, signOut, getToken }}>
       {!loading && children}
     </AuthContext.Provider>
   );

@@ -836,19 +836,45 @@ async def test_cors():
         "timestamp": datetime.now().isoformat()
     }
 
-@app.get("/api/debug-auth")
-async def debug_auth(request: Request):
-    """Debug endpoint for auth configuration"""
+@app.get("/api/debug/auth-test")
+async def test_auth(request: Request):
+    """Debug endpoint for testing auth"""
     try:
+        auth_header = request.headers.get('Authorization')
+        logger.info(f"Received auth header: {auth_header}")
+        
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return {
+                "status": "error",
+                "detail": "No Bearer token",
+                "headers_received": dict(request.headers)
+            }
+            
+        token = auth_header.split(' ')[1]
+        
+        try:
+            user = supabase.auth.get_user(token)
+            return {
+                "status": "success",
+                "user_id": user.user.id,
+                "email": user.user.email,
+                "token_valid": True,
+                "timestamp": datetime.now().isoformat()
+            }
+        except Exception as e:
+            return {
+                "status": "error",
+                "detail": str(e),
+                "token_received": token,
+                "timestamp": datetime.now().isoformat()
+            }
+            
+    except Exception as e:
         return {
-            "supabase_configured": bool(supabase),
-            "supabase_url_set": bool(os.getenv("SUPABASE_URL")),
-            "supabase_key_set": bool(os.getenv("SUPABASE_SERVICE_KEY")),
-            "auth_header": request.headers.get('Authorization', 'Not present'),
+            "status": "error",
+            "detail": str(e),
             "timestamp": datetime.now().isoformat()
         }
-    except Exception as e:
-        return {"error": str(e)}
 
 @app.get("/api/verify-auth-setup")
 async def verify_auth_setup():
@@ -896,6 +922,44 @@ async def test_connection(request: Request):
         "allowed_origins": ALLOWED_ORIGINS,
         "timestamp": datetime.now().isoformat()
     }
+
+@app.get("/api/debug/token")
+async def debug_token(request: Request):
+    """Debug endpoint for token verification"""
+    try:
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return {
+                "status": "error",
+                "detail": "No Bearer token",
+                "headers": dict(request.headers)
+            }
+            
+        token = auth_header.split(' ')[1]
+        
+        try:
+            user = supabase.auth.get_user(token)
+            return {
+                "status": "success",
+                "user": {
+                    "id": user.user.id,
+                    "email": user.user.email
+                },
+                "token_valid": True,
+                "timestamp": datetime.now().isoformat()
+            }
+        except Exception as e:
+            return {
+                "status": "error",
+                "detail": str(e),
+                "token": token[:10] + "..." # Show first 10 chars of token
+            }
+            
+    except Exception as e:
+        return {
+            "status": "error",
+            "detail": str(e)
+        }
 
 if __name__ == "__main__":
     import uvicorn
