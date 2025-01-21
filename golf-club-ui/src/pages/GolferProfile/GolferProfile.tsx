@@ -53,14 +53,21 @@ const GolferProfile: React.FC = () => {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        if (!session?.access_token) return;
+        if (!session?.access_token) {
+          setError('No authentication token available');
+          setIsLoading(false);
+          return;
+        }
         
         if (!config.API_URL) {
-          throw new Error('API URL is not configured');
+          setError('API URL is not configured');
+          setIsLoading(false);
+          return;
         }
 
         const apiUrl = `${config.API_URL}/api/get-golfer-profile`;
         console.log('Making request to:', apiUrl);
+        console.log('With token:', session.access_token);
 
         const response = await fetch(apiUrl, {
           method: 'GET',
@@ -73,11 +80,15 @@ const GolferProfile: React.FC = () => {
         });
 
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+          const errorData = await response.json().catch(() => null);
+          throw new Error(
+            errorData?.detail || 
+            `HTTP error! status: ${response.status}`
+          );
         }
 
         const data = await response.json();
-        console.log('Profile data:', data); // Debug log
+        console.log('Profile data:', data);
         setProfile(data);
         setIsLoading(false);
       } catch (error) {
@@ -89,6 +100,8 @@ const GolferProfile: React.FC = () => {
 
     if (session) {
       fetchProfile();
+    } else {
+      setIsLoading(false);
     }
   }, [session]);
 

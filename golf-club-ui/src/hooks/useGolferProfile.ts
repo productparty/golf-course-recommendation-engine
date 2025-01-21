@@ -15,38 +15,46 @@ export const useGolferProfile = () => {
 
   useEffect(() => {
     const fetchProfile = async () => {
-      if (!session) return;
+      if (!session) {
+        setError('Not authenticated');
+        return;
+      }
       
       try {
-        console.log('API URL in useGolferProfile:', config.API_URL); // Debug log
+        if (!config.API_URL) {
+          throw new Error('API URL is not configured');
+        }
+
         const apiUrl = `${config.API_URL}/api/get-golfer-profile`;
-        console.log('Fetching profile from:', apiUrl); // Debug log
+        console.log('Fetching profile from:', apiUrl);
 
         const response = await fetch(apiUrl, {
+          credentials: 'include',
           headers: {
             'Authorization': `Bearer ${session.access_token}`,
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Origin': import.meta.env.VITE_APP_URL
           }
         });
 
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+          const errorData = await response.json().catch(() => null);
+          throw new Error(errorData?.detail || `HTTP error! status: ${response.status}`);
         }
 
         const data = await response.json();
         setProfile(data);
+        setError(null);
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Failed to fetch profile';
         console.error('Error fetching profile:', errorMessage);
         setError(errorMessage);
+        setProfile(null);
       }
     };
 
-    if (config.API_URL) { // Only fetch if API_URL is set
+    if (config.API_URL && session) {
       fetchProfile();
-    } else {
-      console.error('API_URL is not configured');
-      setError('API is not properly configured');
     }
   }, [session]);
 
