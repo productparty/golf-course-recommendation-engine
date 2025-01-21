@@ -1,12 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { createClient, Session, AuthError } from '@supabase/supabase-js'
-import { config } from '../config';
+import { Session, AuthError } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
-
-console.log('Initializing Supabase with:', { 
-  url: supabase.url, 
-  hasKey: !!supabase.auth.signInWithPassword
-});
 
 interface AuthContextType {
   session: Session | null;
@@ -29,22 +23,37 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
-      console.log('Initial session check:', initialSession ? 'Found' : 'None');
-      setSession(initialSession);
-      setLoading(false);
-    });
+    let mounted = true;
 
-    // Listen for auth changes
+    const setupAuth = async () => {
+      try {
+        const { data: { session: initialSession } } = await supabase.auth.getSession();
+        if (mounted) {
+          console.log('Initial session check:', initialSession ? 'Found' : 'None');
+          setSession(initialSession);
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error('Auth setup error:', error);
+        if (mounted) setLoading(false);
+      }
+    };
+
+    setupAuth();
+
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
-      console.log('Auth state changed:', event, currentSession?.user?.email);
-      setSession(currentSession);
+    } = supabase.auth.onAuthStateChange((event, currentSession) => {
+      if (mounted) {
+        console.log('Auth state changed:', event, currentSession?.user?.email);
+        setSession(currentSession);
+      }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {
