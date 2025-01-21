@@ -169,7 +169,13 @@ const RecommendClub: React.FC = () => {
                       variant="h6" 
                       sx={{ 
                         fontWeight: 'bold',
-                        mb: 0.5
+                        mb: 0.5,
+                        fontSize: {
+                          xs: '1rem',     // Mobile
+                          sm: '1.1rem',   // Tablet
+                          md: '1.25rem'   // Desktop
+                        },
+                        lineHeight: 1.3
                       }}
                     >
                       {club.club_name}
@@ -177,7 +183,15 @@ const RecommendClub: React.FC = () => {
                     <Typography 
                       variant="body2" 
                       color="text.secondary"
-                      sx={{ mb: 0.5 }}
+                      sx={{ 
+                        mb: 0.5,
+                        fontSize: {
+                          xs: '0.875rem',
+                          sm: '0.9rem',
+                          md: '1rem'
+                        },
+                        lineHeight: 1.4
+                      }}
                     >
                       {club.address}
                     </Typography>
@@ -192,7 +206,12 @@ const RecommendClub: React.FC = () => {
                       variant="body2" 
                       sx={{ 
                         color: 'primary.main',
-                        fontWeight: 'bold'
+                        fontWeight: 'bold',
+                        fontSize: {
+                          xs: '0.9rem',
+                          sm: '1rem',
+                          md: '1.1rem'
+                        }
                       }}
                     >
                       Recommendation Score: {club.recommendation_score.toFixed(1)}%

@@ -113,7 +113,19 @@ const FindClub: React.FC = () => {
     <PageLayout title="Find Golf Clubs">
       <div className="content">
         <aside className="filters">
-          <Typography variant="body1" gutterBottom>
+          <Typography 
+            variant="body1" 
+            gutterBottom
+            sx={{ 
+              fontSize: {
+                xs: '0.9rem',
+                sm: '1rem',
+                md: '1.1rem'
+              },
+              lineHeight: 1.5,
+              mb: 2
+            }}
+          >
             Find golf clubs near you
           </Typography>
           <Box sx={{ 
@@ -234,7 +246,12 @@ const FindClub: React.FC = () => {
                       variant="h6" 
                       sx={{ 
                         fontWeight: 'bold',
-                        mb: 0.5
+                        fontSize: {
+                          xs: '1rem',
+                          sm: '1.1rem',
+                          md: '1.25rem'
+                        },
+                        lineHeight: 1.3
                       }}
                     >
                       {club.club_name}
