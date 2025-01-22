@@ -73,7 +73,7 @@ const SubmitClub = () => {
   };
 
   return (
-    <PageLayout title="Submit Golf Club">
+    <PageLayout title="Submit Club">
       <Container maxWidth="sm">
         <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
           <TextField
