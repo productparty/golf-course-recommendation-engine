@@ -10,7 +10,14 @@ if (!supabaseUrl || !supabaseAnonKey) {
   })
 }
 
+// Create a single instance
 export const supabase = createClient(
-  supabaseUrl || '',
-  supabaseAnonKey || ''
+  import.meta.env.VITE_SUPABASE_URL,
+  import.meta.env.VITE_SUPABASE_ANON_KEY,
+  {
+    auth: {
+      persistSession: true,
+      storageKey: 'golf-club-auth'  // Add unique storage key
+    }
+  }
 ) 

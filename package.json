@@ -12,6 +12,7 @@
     "@mui/material": "^6.4.0",
     "@sendgrid/mail": "^8.1.4",
     "@types/lodash": "^4.17.14",
+    "@vercel/analytics": "^1.4.1",
     "lodash": "^4.17.21",
     "lodash.debounce": "^4.0.8",
     "vercel": "^39.2.6"

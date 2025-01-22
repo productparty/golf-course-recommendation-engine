@@ -89,25 +89,11 @@ const RecommendClub: React.FC = () => {
   };
 
   return (
-    <PageLayout title="Recommended Golf Clubs">
+    <PageLayout title="Recommend Club">
       <div className="content">
         <aside className="filters">
-          <Typography 
-            variant="body1" 
-            gutterBottom
-            sx={{ 
-              fontSize: {
-                xs: '0.9rem',
-                sm: '1rem',
-                md: '1.1rem'
-              },
-              lineHeight: 1.5,
-              mb: 2,
-              wordBreak: 'break-word',
-              overflowWrap: 'break-word'
-            }}
-          >
-            Golf clubs matched to your Golfer Profile
+          <Typography variant="body1" gutterBottom>
+            Enter a zip code, radius, and then get recommendations for golf clubs based on your preferences.
           </Typography>
           <Box sx={{ 
             mt: 2,

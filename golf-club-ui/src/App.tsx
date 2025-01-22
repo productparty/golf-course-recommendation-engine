@@ -21,6 +21,7 @@ import VerifyEmail from './pages/VerifyEmail/VerifyEmail';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { supabase } from './supabaseClient';
 import CreateAccountSuccessful from './pages/CreateAccount/CreateAccountSuccessful';
+import { Analytics } from "@vercel/analytics/react"
 
 const theme = createTheme();
 
@@ -63,6 +64,7 @@ const App: React.FC = () => {
               </div>
             </main>
             <Footer />
+            <Analytics />
           </div>
         </BrowserRouter>
       </AuthProvider>

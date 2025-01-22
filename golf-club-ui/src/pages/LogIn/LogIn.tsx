@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { TextField, Button, Box, Typography, Alert } from '@mui/material';
+import { TextField, Button, Box, Typography, Alert, Link } from '@mui/material';
 import { config } from '../../config';
 import PageLayout from '../../components/PageLayout';
 
@@ -78,6 +78,19 @@ const LogIn: React.FC = () => {
             {loading ? 'Signing in...' : 'Sign In'}
           </Button>
         </form>
+
+        <Box sx={{ mt: 2, textAlign: 'center' }}>
+          <Typography variant="body2" sx={{ mb: 1 }}>
+            <Link href="/password-reset" color="primary">
+              Need to reset your password?
+            </Link>
+          </Typography>
+          <Typography variant="body2">
+            <Link href="/create-account" color="primary">
+              Need to create an account?
+            </Link>
+          </Typography>
+        </Box>
       </Box>
     </PageLayout>
   );

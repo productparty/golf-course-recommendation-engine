@@ -110,23 +110,11 @@ const FindClub: React.FC = () => {
   }, []);
 
   return (
-    <PageLayout title="Find Golf Clubs">
+    <PageLayout title="Find Club">
       <div className="content">
         <aside className="filters">
-          <Typography 
-            variant="body1" 
-            gutterBottom
-            sx={{ 
-              fontSize: {
-                xs: '0.9rem',
-                sm: '1rem',
-                md: '1.1rem'
-              },
-              lineHeight: 1.5,
-              mb: 2
-            }}
-          >
-            Find golf clubs near you
+          <Typography variant="body1" gutterBottom>
+            Enter a zip code, radius, and any additional options you want to filter by below.
           </Typography>
           <Box sx={{ 
             mt: 2,
