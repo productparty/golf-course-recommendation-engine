@@ -693,38 +693,42 @@ class CourseSearchFilters(BaseModel):
 @api_router.post("/search-courses", tags=["Courses"])
 async def search_courses(filters: CourseSearchFilters):
     try:
+        # Base query with only required filters (zip code and radius)
         query = """
-            SELECT c.* 
+            SELECT c.*, 
+                ST_Distance(
+                    c.location::geography,
+                    (SELECT ST_SetSRID(ST_MakePoint(longitude, latitude), 4326)::geography 
+                    FROM zip_codes WHERE zip_code = %s)
+                ) / 1609.34 as distance_miles
             FROM courses c
-            WHERE 1=1
-            AND ST_DWithin(
+            WHERE ST_DWithin(
                 c.location::geography,
                 (SELECT ST_SetSRID(ST_MakePoint(longitude, latitude), 4326)::geography 
-                FROM zip_codes 
-                WHERE zip_code = %s),
-                %s * 1609.34  -- Convert miles to meters
+                FROM zip_codes WHERE zip_code = %s),
+                %s * 1609.34
             )
         """
-        params = [filters.zip_code, filters.radius]
+        params = [filters.zip_code, filters.zip_code, filters.radius]
 
-        # Add filter conditions
-        if filters.preferred_price_range:
+        # Only add optional filters if they have values
+        if filters.preferred_price_range and filters.preferred_price_range != "":
             query += " AND c.price_range = %s"
             params.append(filters.preferred_price_range)
             
-        if filters.number_of_holes:
+        if filters.number_of_holes and filters.number_of_holes != "":
             query += " AND c.number_of_holes = %s"
             params.append(filters.number_of_holes)
             
-        if filters.club_membership:
+        if filters.club_membership and filters.club_membership != "":
             query += " AND c.club_type = %s"
             params.append(filters.club_membership)
             
-        if filters.preferred_difficulty:
+        if filters.preferred_difficulty and filters.preferred_difficulty != "":
             query += " AND c.difficulty = %s"
             params.append(filters.preferred_difficulty)
 
-        # Add amenity filters
+        # Only add TRUE amenity filters
         amenities = [
             'driving_range', 'putting_green', 'chipping_green', 
             'practice_bunker', 'restaurant', 'lodging_on_site',
@@ -733,14 +737,15 @@ async def search_courses(filters: CourseSearchFilters):
         ]
         
         for amenity in amenities:
-            if getattr(filters, amenity):
+            if getattr(filters, amenity, False):  # Default to False if not present
                 query += f" AND c.{amenity} = TRUE"
+
+        query += " ORDER BY distance_miles ASC"
 
         with get_db_connection() as conn:
             with conn.cursor(cursor_factory=RealDictCursor) as cursor:
                 cursor.execute(query, params)
                 courses = cursor.fetchall()
-                
                 return {
                     "courses": courses,
                     "total": len(courses)
@@ -751,7 +756,7 @@ async def search_courses(filters: CourseSearchFilters):
         raise HTTPException(status_code=500, detail=str(e))
 
 @api_router.post("/recommend-courses", tags=["Courses"])
-async def recommend_courses(request: Request):
+async def recommend_courses(request: Request, data: dict):
     try:
         auth_header = request.headers.get('Authorization')
         if not auth_header or not auth_header.startswith('Bearer '):
@@ -761,40 +766,51 @@ async def recommend_courses(request: Request):
         user = supabase.auth.get_user(token)
         user_id = user.user.id
 
-        # Get user preferences
+        # Get user preferences and courses in radius
         with get_db_connection() as conn:
             with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+                # Get user profile
+                cursor.execute("SELECT * FROM profiles WHERE id = %s", (user_id,))
+                profile = cursor.fetchone()
+                
+                if not profile:
+                    raise HTTPException(status_code=404, detail="Profile not found")
+
+                # Get courses within radius
                 cursor.execute("""
-                    SELECT * FROM profiles WHERE id = %s
-                """, (user_id,))
-                user_preferences = cursor.fetchone()
-
-                if not user_preferences:
-                    raise HTTPException(status_code=404, detail="User profile not found")
-
-                # Get all courses
-                cursor.execute("SELECT * FROM courses")
+                    SELECT c.*, 
+                        ST_Distance(
+                            c.location::geography,
+                            (SELECT ST_SetSRID(ST_MakePoint(longitude, latitude), 4326)::geography 
+                            FROM zip_codes WHERE zip_code = %s)
+                        ) / 1609.34 as distance_miles
+                    FROM courses c
+                    WHERE ST_DWithin(
+                        c.location::geography,
+                        (SELECT ST_SetSRID(ST_MakePoint(longitude, latitude), 4326)::geography 
+                        FROM zip_codes WHERE zip_code = %s),
+                        %s * 1609.34
+                    )
+                """, (data['zip_code'], data['zip_code'], data['radius']))
+                
                 courses = cursor.fetchall()
-
-                # Calculate scores for each course
+                
+                # Calculate scores using updated recommendation engine
                 scored_courses = []
                 for course in courses:
-                    score = calculate_recommendation_score(course, user_preferences)
-                    scored_courses.append({
-                        **course,
-                        'score': score
-                    })
+                    score = calculate_recommendation_score(course, profile)
+                    scored_courses.append({**course, 'score': score})
 
-                # Sort by score descending
+                # Sort by score
                 scored_courses.sort(key=lambda x: x['score'], reverse=True)
 
                 return {
-                    "courses": scored_courses[:10],  # Return top 10
+                    "courses": scored_courses,
                     "total": len(scored_courses)
                 }
 
     except Exception as e:
-        logger.error(f"Error recommending courses: {str(e)}")
+        logger.error(f"Error in recommend_courses: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 # At the end of the file, include the router with the /api prefix

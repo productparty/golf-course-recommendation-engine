@@ -20,7 +20,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 
 interface GolferProfile {
-  golfer_id: string;
+  id: string;
   email: string;
   first_name: string | null;
   last_name: string | null;
@@ -29,17 +29,27 @@ interface GolferProfile {
   preferred_difficulty: string | null;
   skill_level: string | null;
   play_frequency: string | null;
-  club_id: string | null;
-  club_name: string | null;
   preferred_tees: string | null;
-  is_verified: boolean;
+  number_of_holes: string | null;
+  club_membership: string | null;
+  driving_range: boolean | null;
+  putting_green: boolean | null;
+  chipping_green: boolean | null;
+  practice_bunker: boolean | null;
+  restaurant: boolean | null;
+  lodging_on_site: boolean | null;
+  motor_cart: boolean | null;
+  pull_cart: boolean | null;
+  golf_clubs_rental: boolean | null;
+  club_fitting: boolean | null;
+  golf_lessons: boolean | null;
 }
 
 const GolferProfile: React.FC = () => {
   const { session, signOut, getToken } = useAuth();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<GolferProfile>({
-    golfer_id: '',
+    id: '',
     email: '',
     first_name: null,
     last_name: null,
@@ -48,10 +58,20 @@ const GolferProfile: React.FC = () => {
     preferred_difficulty: null,
     skill_level: null,
     play_frequency: null,
-    club_id: null,
-    club_name: null,
     preferred_tees: null,
-    is_verified: false
+    number_of_holes: null,
+    club_membership: null,
+    driving_range: null,
+    putting_green: null,
+    chipping_green: null,
+    practice_bunker: null,
+    restaurant: null,
+    lodging_on_site: null,
+    motor_cart: null,
+    pull_cart: null,
+    golf_clubs_rental: null,
+    club_fitting: null,
+    golf_lessons: null
   });
   const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState<string>('');
