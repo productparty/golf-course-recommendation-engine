@@ -184,12 +184,18 @@ const FindClubUpdated: React.FC = () => {
     const value = event.target.value as SortOption;
     setSortBy(value);
     
+    if (!value) {
+      handleSearch();
+      return;
+    }
+    
     const sortedClubs = [...clubs].sort((a, b) => {
       switch (value) {
         case 'distance':
           return a.distance_miles - b.distance_miles;
         case 'price':
-          return (a.price_tier?.length || 0) - (b.price_tier?.length || 0);
+          const priceOrder: Record<string, number> = { '$': 1, '$$': 2, '$$$': 3 };
+          return (priceOrder[a.price_tier] || 0) - (priceOrder[b.price_tier] || 0);
         case 'difficulty':
           const difficultyOrder: Record<string, number> = { 
             'Easy': 1, 
@@ -208,7 +214,7 @@ const FindClubUpdated: React.FC = () => {
   };
 
   return (
-    <PageLayout title="Find Golf Clubs">
+    <PageLayout title="Find Club">
       <div className="content">
         <aside className="filters">
           <Typography variant="h6" gutterBottom>Filters</Typography>
@@ -353,22 +359,30 @@ const FindClubUpdated: React.FC = () => {
               />
             ))}
 
-            <Button
-              variant="contained"
-              onClick={handleSearch}
-              disabled={isLoading}
-              fullWidth
-              sx={{ mt: 2 }}
-            >
-              {isLoading ? (
-                <>
-                  <CircularProgress size={24} sx={{ mr: 1 }} />
-                  Searching...
-                </>
-              ) : (
-                'Search Clubs'
-              )}
-            </Button>
+            <Box sx={{ 
+              mt: 'auto',
+              pt: 2,
+              pb: 3
+            }}>
+              <Button
+                variant="contained"
+                onClick={handleSearch}
+                disabled={isLoading}
+                fullWidth
+                sx={{ 
+                  height: 36,
+                }}
+              >
+                {isLoading ? (
+                  <>
+                    <CircularProgress size={24} sx={{ mr: 1 }} />
+                    Searching...
+                  </>
+                ) : (
+                  'Search Clubs'
+                )}
+              </Button>
+            </Box>
           </Box>
         </aside>
 
