@@ -86,12 +86,33 @@ const GolferProfileUpdated: React.FC = () => {
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('user_id', session?.user.id)
+        .eq('id', session?.user.id)
         .single();
 
       if (error) {
-        console.error('Error fetching profile:', error);
-        setError('Failed to load profile');
+        if (error.code === 'PGRST116') {
+          const { data: newProfile, error: insertError } = await supabase
+            .from('profiles')
+            .insert([
+              { 
+                id: session?.user.id,
+                email: session?.user.email,
+              }
+            ])
+            .select()
+            .single();
+
+          if (insertError) throw insertError;
+          if (newProfile) {
+            setProfile(prev => ({
+              ...prev,
+              ...newProfile,
+              email: session?.user.email || prev.email,
+            }));
+          }
+        } else {
+          throw error;
+        }
       } else if (data) {
         setProfile(prev => ({
           ...prev,
@@ -100,7 +121,7 @@ const GolferProfileUpdated: React.FC = () => {
         }));
       }
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error fetching profile:', error);
       setError('Failed to load profile');
     } finally {
       setIsLoading(false);
@@ -113,7 +134,7 @@ const GolferProfileUpdated: React.FC = () => {
       const { error } = await supabase
         .from('profiles')
         .upsert({
-          user_id: session?.user.id,
+          id: session?.user.id,
           email: session?.user.email,
           first_name: profile.first_name,
           last_name: profile.last_name,
