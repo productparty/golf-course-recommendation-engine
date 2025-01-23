@@ -431,46 +431,36 @@ class UpdateGolferProfileResponse(BaseModel):
 
 @api_router.get("/profiles/current", tags=["Profiles"])
 async def get_current_profile(request: Request):
+    """Get current user profile"""
+    logger.info("Accessing /profiles/current endpoint")
+    logger.info(f"Request headers: {dict(request.headers)}")
+    
     try:
-        # Get auth token
         auth_header = request.headers.get('Authorization')
         if not auth_header or not auth_header.startswith('Bearer '):
+            logger.error("Missing or invalid Authorization header")
             raise HTTPException(
-                status_code=401, 
-                detail={
-                    "message": "Missing authentication token",
-                    "headers": dict(request.headers)
-                }
+                status_code=401,
+                detail="Missing or invalid Authorization header"
             )
         
         token = auth_header.split(' ')[1]
+        logger.info("Token extracted from header")
         
-        # Get user from token
         try:
             user = supabase.auth.get_user(token)
             user_id = user.user.id
-        except Exception as auth_error:
-            logger.error(f"Auth error: {str(auth_error)}")
-            raise HTTPException(
-                status_code=401, 
-                detail={
-                    "message": "Invalid authentication token",
-                    "error": str(auth_error)
-                }
-            )
-
-        # Get profile data with better error handling
-        try:
+            logger.info(f"User authenticated: {user_id}")
+            
             with get_db_connection() as conn:
                 with conn.cursor(cursor_factory=RealDictCursor) as cursor:
                     cursor.execute("""
                         SELECT * FROM profiles WHERE id = %s
                     """, (user_id,))
-                    
                     profile = cursor.fetchone()
                     
                     if not profile:
-                        # Create default profile
+                        logger.info(f"Creating new profile for user {user_id}")
                         cursor.execute("""
                             INSERT INTO profiles (id, email)
                             VALUES (%s, %s)
@@ -478,29 +468,24 @@ async def get_current_profile(request: Request):
                         """, (user_id, user.user.email))
                         conn.commit()
                         profile = cursor.fetchone()
-
+                    
+                    logger.info("Profile retrieved successfully")
                     return profile
-
-        except Exception as db_error:
-            logger.error(f"Database error: {str(db_error)}")
+                    
+        except Exception as e:
+            logger.error(f"Error processing profile request: {str(e)}")
             raise HTTPException(
                 status_code=500,
-                detail={
-                    "message": "Database error",
-                    "error": str(db_error)
-                }
+                detail=f"Error processing profile: {str(e)}"
             )
-
+            
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Unexpected error: {str(e)}")
+        logger.error(f"Unexpected error in profile endpoint: {str(e)}")
         raise HTTPException(
             status_code=500,
-            detail={
-                "message": "Unexpected error",
-                "error": str(e)
-            }
+            detail=f"Unexpected error: {str(e)}"
         )
 
 @api_router.get("/get_recommendations/", tags=["Recommendations"])
@@ -739,15 +724,19 @@ async def debug_profile(request: Request):
         logger.error(f"Profile debug error: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@api_router.post("/debug/token")
+@api_router.post("/debug/token", tags=["Debug"])
 async def get_debug_token(request: Request):
+    """Single endpoint for token generation"""
     try:
         data = await request.json()
         email = data.get('email')
         password = data.get('password')
         
         if not email or not password:
-            raise HTTPException(status_code=400, detail="Email and password required")
+            raise HTTPException(
+                status_code=400, 
+                detail="Email and password required"
+            )
             
         logger.info(f"Attempting authentication for {email}")
         
@@ -758,7 +747,10 @@ async def get_debug_token(request: Request):
             })
             
             if not res.session:
-                raise HTTPException(status_code=401, detail="Authentication failed")
+                raise HTTPException(
+                    status_code=401, 
+                    detail="Authentication failed"
+                )
                 
             return {
                 "access_token": res.session.access_token,
@@ -975,44 +967,6 @@ async def test_connection(request: Request):
         "allowed_origins": origins,
         "timestamp": datetime.now().isoformat()
     }
-
-@app.get("/api/debug/token")
-async def debug_token(request: Request):
-    """Debug endpoint for token verification"""
-    try:
-        auth_header = request.headers.get('Authorization')
-        if not auth_header or not auth_header.startswith('Bearer '):
-            return {
-                "status": "error",
-                "detail": "No Bearer token",
-                "headers": dict(request.headers)
-            }
-            
-        token = auth_header.split(' ')[1]
-        
-        try:
-            user = supabase.auth.get_user(token)
-            return {
-                "status": "success",
-                "user": {
-                    "id": user.id,
-                    "email": user.email
-                },
-                "token_valid": True,
-                "timestamp": datetime.now().isoformat()
-            }
-        except Exception as e:
-            return {
-                "status": "error",
-                "detail": str(e),
-                "token": token[:10] + "..."
-            }
-            
-    except Exception as e:
-        return {
-            "status": "error",
-            "detail": str(e)
-        }
 
 if __name__ == "__main__":
     import uvicorn
