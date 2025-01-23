@@ -529,153 +529,87 @@ async def get_current_profile(request: Request):
 async def get_recommendations(
     request: Request,
     zip_code: str,
-    radius: int = 25
+    radius: int = 25,
+    limit: int = 25
 ):
     try:
-        # Validate auth token
+        # Get user profile from token
         auth_header = request.headers.get('Authorization')
         if not auth_header or not auth_header.startswith('Bearer '):
-            raise HTTPException(
-                status_code=401, 
-                detail="Authentication token is missing or invalid"
-            )
+            raise HTTPException(status_code=401, detail="Missing authentication token")
         
         token = auth_header.split(' ')[1]
-        try:
-            user = supabase.auth.get_user(token)
-            user_id = user.user.id
-        except Exception as auth_error:
-            logger.error(f"Authentication error: {str(auth_error)}")
-            raise HTTPException(
-                status_code=401, 
-                detail=f"Failed to validate token: {str(auth_error)}"
-            )
+        user = supabase.auth.get_user(token)
+        user_id = user.user.id
 
-        # Get user preferences
-        try:
-            with get_db_connection() as conn:
-                with conn.cursor(cursor_factory=RealDictCursor) as cursor:
-                    cursor.execute("""
-                        SELECT 
-                            preferred_price_range,
-                            preferred_difficulty,
-                            skill_level,
-                            play_frequency,
-                            number_of_holes,
-                            club_membership,
-                            driving_range,
-                            putting_green,
-                            chipping_green,
-                            practice_bunker,
-                            restaurant,
-                            lodging_on_site,
-                            motor_cart,
-                            pull_cart,
-                            golf_clubs_rental,
-                            club_fitting,
-                            golf_lessons
-                        FROM profiles 
-                        WHERE id = %s
-                    """, (user_id,))
-                    user_preferences = cursor.fetchone()
-                    
-                    if not user_preferences:
-                        raise HTTPException(
-                            status_code=404, 
-                            detail="User profile not found or incomplete. Please update your profile preferences."
-                        )
+        # Get user profile preferences
+        with get_db_connection() as conn:
+            with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+                cursor.execute("SELECT * FROM profiles WHERE id = %s", (user_id,))
+                profile = cursor.fetchone()
+                
+                if not profile:
+                    raise HTTPException(status_code=404, detail="Profile not found")
 
-                    # Log preferences for debugging
-                    logger.info(f"Retrieved user preferences: {user_preferences}")
+                # Get coordinates from ZIP code
+                lat, lng = get_lat_lng(zip_code)
 
-                    # Validate that we have essential preferences
-                    essential_prefs = ['preferred_price_range', 'preferred_difficulty']
-                    missing_prefs = [pref for pref in essential_prefs if not user_preferences.get(pref)]
-                    if missing_prefs:
-                        raise HTTPException(
-                            status_code=400,
-                            detail=f"Missing essential preferences: {', '.join(missing_prefs)}. Please complete your profile."
-                        )
+                # Get clubs within radius using same method as find_clubs
+                cursor.execute("""
+                    SELECT DISTINCT
+                        gc.global_id as id,
+                        gc.club_name,
+                        gc.address,
+                        gc.city,
+                        gc.state,
+                        gc.zip_code,
+                        gc.price_tier,
+                        gc.difficulty,
+                        gc.number_of_holes,
+                        gc.club_membership,
+                        gc.driving_range,
+                        gc.putting_green,
+                        gc.chipping_green,
+                        gc.practice_bunker,
+                        gc.restaurant,
+                        gc.lodging_on_site,
+                        gc.motor_cart,
+                        gc.pull_cart,
+                        gc.golf_clubs_rental,
+                        gc.club_fitting,
+                        gc.golf_lessons,
+                        ST_Distance(
+                            gc.geom::geography,
+                            ST_SetSRID(ST_MakePoint(%s, %s), 4326)::geography
+                        ) / 1609.34 as distance_miles
+                    FROM golfclub gc
+                    WHERE ST_DWithin(
+                        gc.geom::geography,
+                        ST_SetSRID(ST_MakePoint(%s, %s), 4326)::geography,
+                        %s * 1609.34
+                    )
+                    LIMIT %s
+                """, (lng, lat, lng, lat, radius, limit))
+                
+                courses = cursor.fetchall()
 
-                    # Get coordinates from ZIP code
-                    try:
-                        lat, lng = get_lat_lng(zip_code)
-                    except Exception as geo_error:
-                        logger.error(f"Geocoding error: {str(geo_error)}")
-                        raise HTTPException(
-                            status_code=400, 
-                            detail=f"Invalid zip code: {str(geo_error)}"
-                        )
+                # Calculate recommendation scores
+                scored_courses = []
+                for course in courses:
+                    score = calculate_recommendation_score(course, profile)
+                    scored_courses.append({**course, 'score': score})
 
-                    # Get all clubs within radius
-                    try:
-                        cursor.execute("""
-                            SELECT 
-                                gc.*,
-                                ST_Distance(
-                                    gc.geom::geography,
-                                    ST_SetSRID(ST_MakePoint(%s, %s), 4326)::geography
-                                ) / 1609.34 as distance_miles
-                            FROM golfclub gc
-                            WHERE ST_DWithin(
-                                gc.geom::geography,
-                                ST_SetSRID(ST_MakePoint(%s, %s), 4326)::geography,
-                                %s * 1609.34
-                            )
-                        """, (lng, lat, lng, lat, radius))
-                        
-                        clubs = cursor.fetchall()
-                        
-                        if not clubs:
-                            return {
-                                "courses": [],
-                                "message": "No golf clubs found within the specified radius"
-                            }
+                # Sort by score
+                scored_courses.sort(key=lambda x: x['score'], reverse=True)
 
-                        # Calculate recommendations using recommendation_engine
-                        from utils.recommendation_engine import calculate_recommendation_score
-                        
-                        scored_clubs = []
-                        for club in clubs:
-                            try:
-                                score = calculate_recommendation_score(club, user_preferences)
-                                club_with_score = dict(club)
-                                club_with_score['score'] = score
-                                scored_clubs.append(club_with_score)
-                            except Exception as score_error:
-                                logger.error(f"Error calculating score for club {club.get('name')}: {str(score_error)}")
-                                continue
+                return {
+                    "courses": scored_courses[:limit],
+                    "total": len(scored_courses)
+                }
 
-                        # Sort by score descending
-                        scored_clubs.sort(key=lambda x: x['score'], reverse=True)
-
-                        return {
-                            "courses": scored_clubs,
-                            "total": len(scored_clubs)
-                        }
-
-                    except Exception as query_error:
-                        logger.error(f"Database query error: {str(query_error)}")
-                        raise HTTPException(
-                            status_code=500, 
-                            detail=f"Error fetching golf clubs: {str(query_error)}"
-                        )
-
-        except Exception as db_error:
-            logger.error(f"Database connection error: {str(db_error)}")
-            raise HTTPException(
-                status_code=500, 
-                detail=f"Database error: {str(db_error)}"
-            )
-
-    except HTTPException:
-        raise
     except Exception as e:
-        logger.error(f"Unexpected error in get_recommendations: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"An unexpected error occurred: {str(e)}"
-        )
+        logger.error(f"Error in get_recommendations: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @api_router.post("/recommend-courses", tags=["Courses"])
 async def recommend_courses(request: Request, data: dict):

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, CardContent, Typography, Chip, Box, Divider } from '@mui/material';
+import { Card, CardContent, Typography, Chip, Box, Divider, Grid } from '@mui/material';
 import GolfCourseIcon from '@mui/icons-material/GolfCourse';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
@@ -55,92 +55,99 @@ const ClubCard: React.FC<ClubCardProps> = ({ club, showScore = false }) => {
   return (
     <Card sx={{ mb: 2, width: '100%' }}>
       <CardContent>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-          <Typography variant="h6" component="div">
-            {club.club_name}
-          </Typography>
-          {showScore && (
-            <Chip 
-              label={`Score: ${club.score?.toFixed(1)}`}
-              color="primary"
-              sx={{ fontWeight: 'bold' }}
-            />
-          )}
-        </Box>
-
-        <Typography variant="body2" color="text.secondary" gutterBottom>
-          {club.address}
-        </Typography>
-        <Typography variant="body2" color="text.secondary" gutterBottom>
-          {club.city}, {club.state} {club.zip_code}
-        </Typography>
-        <Typography variant="body2" color="text.secondary" gutterBottom>
-          Distance: {club.distance_miles.toFixed(1)} miles
-        </Typography>
-
-        <Box sx={{ display: 'flex', gap: 1, mt: 2 }}>
-          <Chip 
-            label={club.price_tier} 
-            size="small"
-            color="primary"
-            variant="outlined"
-          />
-          <Chip 
-            label={club.difficulty} 
-            size="small"
-            color={
-              club.difficulty === 'Easy' ? 'success' :
-              club.difficulty === 'Medium' ? 'warning' : 'error'
-            }
-            variant="outlined"
-          />
-        </Box>
-
-        <Box sx={{ display: 'flex', gap: 1, mt: 2 }}>
-          <Chip
-            icon={<LocationOnIcon />}
-            label={`${club.distance_miles.toFixed(1)} miles`}
-            variant="outlined"
-            size="small"
-          />
-          <Chip
-            icon={<GolfCourseIcon />}
-            label={`${club.number_of_holes} Holes`}
-            variant="outlined"
-            size="small"
-          />
-          <Chip
-            label={club.club_membership}
-            variant="outlined"
-            size="small"
-          />
-        </Box>
-
-        {amenities.length > 0 && (
-          <>
-            <Typography variant="subtitle2" color="textSecondary" gutterBottom>
-              Amenities
-            </Typography>
-            <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', mb: 1 }}>
-              {amenities.map(({ label }) => (
-                <Chip key={label} label={label} size="small" color="primary" variant="outlined" />
-              ))}
+        <Grid container spacing={2}>
+          {/* Left Column - Basic Info */}
+          <Grid item xs={12} md={6}>
+            <Box sx={{ mb: 2 }}>
+              <Typography variant="h6" component="div" gutterBottom>
+                {club.club_name}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {club.address}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {club.city}, {club.state} {club.zip_code}
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                Distance: {club.distance_miles.toFixed(1)} miles
+              </Typography>
+              {showScore && (
+                <Chip 
+                  label={`Score: ${club.score?.toFixed(1)}`}
+                  color="primary"
+                  sx={{ mt: 1 }}
+                />
+              )}
             </Box>
-          </>
-        )}
+          </Grid>
 
-        {services.length > 0 && (
-          <>
-            <Typography variant="subtitle2" color="textSecondary" gutterBottom>
-              Services
-            </Typography>
-            <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-              {services.map(({ label }) => (
-                <Chip key={label} label={label} size="small" color="secondary" variant="outlined" />
-              ))}
+          {/* Right Column - Details */}
+          <Grid item xs={12} md={6}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              {/* Course Info */}
+              <Box sx={{ mb: 1 }}>
+                <Typography variant="subtitle2" color="textSecondary" gutterBottom>
+                  Course Info
+                </Typography>
+                <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                  <Chip 
+                    label={club.price_tier} 
+                    size="small"
+                    color="primary"
+                    variant="outlined"
+                  />
+                  <Chip 
+                    label={club.difficulty} 
+                    size="small"
+                    color={
+                      club.difficulty === 'Easy' ? 'success' :
+                      club.difficulty === 'Medium' ? 'warning' : 'error'
+                    }
+                    variant="outlined"
+                  />
+                  <Chip
+                    label={`${club.number_of_holes} Holes`}
+                    size="small"
+                    variant="outlined"
+                  />
+                  <Chip
+                    label={club.club_membership}
+                    size="small"
+                    variant="outlined"
+                  />
+                </Box>
+              </Box>
+
+              {/* Amenities */}
+              {amenities.length > 0 && (
+                <Box>
+                  <Typography variant="subtitle2" color="textSecondary" gutterBottom>
+                    Amenities & Facilities
+                  </Typography>
+                  <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                    {amenities.map(({ label }) => (
+                      <Chip key={label} label={label} size="small" color="primary" variant="outlined" />
+                    ))}
+                  </Box>
+                </Box>
+              )}
+
+              {/* Services */}
+              {services.length > 0 && (
+                <Box>
+                  <Typography variant="subtitle2" color="textSecondary" gutterBottom>
+                    Equipment & Services
+                  </Typography>
+                  <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                    {services.map(({ label }) => (
+                      <Chip key={label} label={label} size="small" color="secondary" variant="outlined" />
+                    ))}
+                  </Box>
+                </Box>
+              )}
             </Box>
-          </>
-        )}
+          </Grid>
+        </Grid>
       </CardContent>
     </Card>
   );
