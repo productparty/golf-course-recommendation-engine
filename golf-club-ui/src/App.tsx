@@ -22,6 +22,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { supabase } from './supabaseClient';
 import CreateAccountSuccessful from './pages/CreateAccount/CreateAccountSuccessful';
 import { Analytics } from "@vercel/analytics/react"
+import GolferProfileUpdated from './pages/GolferProfile/GolferProfileUpdated';
 
 const theme = createTheme();
 
@@ -59,6 +60,7 @@ const App: React.FC = () => {
                   <Route path="/golfer-profile" element={<ProtectedRoute><GolferProfile /></ProtectedRoute>} />
                   <Route path="/reset-password" element={<PasswordResetRequest />} />
                   <Route path="/reset-password/confirm" element={<PasswordResetConfirm />} />
+                  <Route path="/profile-updated" element={<ProtectedRoute><GolferProfileUpdated /></ProtectedRoute>} />
                   <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
               </div>
