@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
   Typography, Card, CardContent, Grid, CircularProgress,
-  Alert, Box
+  Alert, Box, TextField, FormControl, InputLabel, Select, MenuItem, Button
 } from '@mui/material';
 import { useAuth } from '../../context/AuthContext';
 import PageLayout from '../../components/PageLayout';
@@ -22,30 +22,32 @@ const RecommendClubUpdated: React.FC = () => {
   const [courses, setCourses] = useState<Course[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
+  const [zipCode, setZipCode] = useState('');
+  const [radius, setRadius] = useState('25');
+
+  const fetchRecommendations = async () => {
+    try {
+      const response = await fetch(`${config.API_URL}/api/recommend-courses`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session?.access_token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ zip_code: zipCode, radius: parseInt(radius) })
+      });
+
+      if (!response.ok) throw new Error('Failed to fetch recommendations');
+      const data = await response.json();
+      setCourses(data.courses);
+    } catch (error) {
+      console.error('Error fetching recommendations:', error);
+      setError('Failed to load recommendations');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchRecommendations = async () => {
-      try {
-        const response = await fetch(`${config.API_URL}/api/recommend-courses`, {
-          headers: {
-            'Authorization': `Bearer ${session?.access_token}`,
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch recommendations');
-        }
-
-        const data = await response.json();
-        setCourses(data.courses);
-      } catch (error) {
-        console.error('Error fetching recommendations:', error);
-        setError('Failed to load recommendations');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     if (session?.access_token) {
       fetchRecommendations();
     }
@@ -68,6 +70,48 @@ const RecommendClubUpdated: React.FC = () => {
           {error}
         </Alert>
       )}
+
+      <Card sx={{ mb: 3 }}>
+        <CardContent>
+          <Grid container spacing={2}>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Zip Code"
+                value={zipCode}
+                onChange={(e) => setZipCode(e.target.value)}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <FormControl fullWidth>
+                <InputLabel>Search Radius</InputLabel>
+                <Select
+                  value={radius}
+                  onChange={(e) => setRadius(e.target.value)}
+                  label="Search Radius"
+                >
+                  <MenuItem value="10">10 miles</MenuItem>
+                  <MenuItem value="25">25 miles</MenuItem>
+                  <MenuItem value="50">50 miles</MenuItem>
+                  <MenuItem value="100">100 miles</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+          </Grid>
+          <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
+            <Button
+              variant="contained"
+              onClick={() => {
+                setIsLoading(true);
+                fetchRecommendations();
+              }}
+              disabled={!zipCode || isLoading}
+            >
+              Find Recommendations
+            </Button>
+          </Box>
+        </CardContent>
+      </Card>
 
       <Grid container spacing={2}>
         {courses.map((course) => (

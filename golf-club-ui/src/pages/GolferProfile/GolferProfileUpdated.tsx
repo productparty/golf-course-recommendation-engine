@@ -266,6 +266,7 @@ const GolferProfileUpdated: React.FC = () => {
                       onChange={handleSelectChange('skill_level')}
                       label="Skill Level"
                     >
+                      <MenuItem value="">Select...</MenuItem>
                       <MenuItem value="beginner">Beginner</MenuItem>
                       <MenuItem value="intermediate">Intermediate</MenuItem>
                       <MenuItem value="advanced">Advanced</MenuItem>
@@ -280,6 +281,7 @@ const GolferProfileUpdated: React.FC = () => {
                       onChange={handleSelectChange('preferred_difficulty')}
                       label="Preferred Difficulty"
                     >
+                      <MenuItem value="">Select...</MenuItem>
                       <MenuItem value="easy">Easy</MenuItem>
                       <MenuItem value="medium">Medium</MenuItem>
                       <MenuItem value="hard">Hard</MenuItem>
@@ -294,6 +296,7 @@ const GolferProfileUpdated: React.FC = () => {
                       onChange={handleSelectChange('play_frequency')}
                       label="Play Frequency"
                     >
+                      <MenuItem value="">Select...</MenuItem>
                       <MenuItem value="rarely">Rarely</MenuItem>
                       <MenuItem value="sometimes">Sometimes</MenuItem>
                       <MenuItem value="often">Often</MenuItem>

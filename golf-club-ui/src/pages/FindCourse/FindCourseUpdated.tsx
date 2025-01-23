@@ -115,6 +115,11 @@ const FindCourseUpdated: React.FC = () => {
   };
 
   const handleSearch = async () => {
+    if (!filters.zipCode) {
+      setError('Please enter a zip code');
+      return;
+    }
+    
     setIsLoading(true);
     setError('');
     try {
@@ -122,14 +127,15 @@ const FindCourseUpdated: React.FC = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token}`,
         },
-        body: JSON.stringify(filters),
+        body: JSON.stringify({
+          ...filters,
+          radius: parseInt(filters.radius)
+        }),
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to search courses');
-      }
-
+      if (!response.ok) throw new Error('Failed to search courses');
       const data = await response.json();
       setCourses(data.courses);
     } catch (error) {
