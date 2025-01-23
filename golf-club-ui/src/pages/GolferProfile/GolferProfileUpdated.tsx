@@ -134,9 +134,9 @@ const GolferProfileUpdated: React.FC = () => {
         last_name: profile.last_name,
         handicap_index: profile.handicap_index,
         preferred_price_range: profile.preferred_price_range,
-        preferred_difficulty: profile.preferred_difficulty ? String(profile.preferred_difficulty) : null,
-        skill_level: profile.skill_level ? String(profile.skill_level) : null,
-        play_frequency: profile.play_frequency ? String(profile.play_frequency) : null,
+        preferred_difficulty: profile.preferred_difficulty?.toLowerCase() || null,
+        skill_level: profile.skill_level?.toLowerCase() || null,
+        play_frequency: profile.play_frequency?.toLowerCase() || null,
         preferred_tees: profile.preferred_tees ? String(profile.preferred_tees) : null,
         number_of_holes: profile.number_of_holes ? String(profile.number_of_holes) : null,
         club_membership: profile.club_membership ? String(profile.club_membership) : null,
@@ -161,12 +161,8 @@ const GolferProfileUpdated: React.FC = () => {
           onConflict: 'id'
         });
 
-      if (error) {
-        console.error('Supabase error:', error);
-        throw error;
-      }
+      if (error) throw error;
 
-      console.log('Save successful:', data);
       setSuccess('Profile saved successfully!');
       await fetchProfile();
     } catch (error: any) {
