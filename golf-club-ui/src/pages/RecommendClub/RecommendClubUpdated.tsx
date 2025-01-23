@@ -27,18 +27,28 @@ const RecommendClubUpdated: React.FC = () => {
 
   const fetchRecommendations = async () => {
     try {
-      const response = await fetch(`${config.API_URL}/api/recommend-courses`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${session?.access_token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ zip_code: zipCode, radius: parseInt(radius) })
+      if (!zipCode) {
+        setError('Please enter a zip code');
+        return;
+      }
+
+      const queryParams = new URLSearchParams({
+        zip_code: zipCode,
+        radius: radius
       });
+
+      const response = await fetch(
+        `${config.API_URL}/api/get_recommendations/?${queryParams}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${session?.access_token}`
+          }
+        }
+      );
 
       if (!response.ok) throw new Error('Failed to fetch recommendations');
       const data = await response.json();
-      setCourses(data.courses);
+      setCourses(data);
     } catch (error) {
       console.error('Error fetching recommendations:', error);
       setError('Failed to load recommendations');

@@ -125,21 +125,38 @@ const FindCourseUpdated: React.FC = () => {
     setIsLoading(true);
     setError('');
     try {
-      const response = await fetch(`${config.API_URL}/api/search-courses`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session?.access_token}`,
-        },
-        body: JSON.stringify({
-          ...filters,
-          radius: parseInt(filters.radius)
-        }),
+      const queryParams = new URLSearchParams({
+        zip_code: filters.zipCode,
+        radius: filters.radius,
+        ...(filters.preferred_price_range && { price_tier: filters.preferred_price_range }),
+        ...(filters.preferred_difficulty && { difficulty: filters.preferred_difficulty }),
+        ...(filters.number_of_holes && { number_of_holes: filters.number_of_holes }),
+        ...(filters.club_membership && { club_membership: filters.club_membership }),
+        ...(filters.driving_range && { driving_range: 'true' }),
+        ...(filters.putting_green && { putting_green: 'true' }),
+        ...(filters.chipping_green && { chipping_green: 'true' }),
+        ...(filters.practice_bunker && { practice_bunker: 'true' }),
+        ...(filters.restaurant && { restaurant: 'true' }),
+        ...(filters.lodging_on_site && { lodging_on_site: 'true' }),
+        ...(filters.motor_cart && { motor_cart: 'true' }),
+        ...(filters.pull_cart && { pull_cart: 'true' }),
+        ...(filters.golf_clubs_rental && { golf_clubs_rental: 'true' }),
+        ...(filters.club_fitting && { club_fitting: 'true' }),
+        ...(filters.golf_lessons && { golf_lessons: 'true' })
       });
+
+      const response = await fetch(
+        `${config.API_URL}/api/find_clubs/?${queryParams}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${session?.access_token}`
+          }
+        }
+      );
 
       if (!response.ok) throw new Error('Failed to search courses');
       const data = await response.json();
-      setCourses(data.courses);
+      setCourses(data);
     } catch (error) {
       console.error('Error searching courses:', error);
       setError('Failed to search courses');

@@ -29,20 +29,6 @@ interface GolferProfile {
   preferred_difficulty: string | null;
   skill_level: string | null;
   play_frequency: string | null;
-  preferred_tees: string | null;
-  number_of_holes: string | null;
-  club_membership: string | null;
-  driving_range: boolean | null;
-  putting_green: boolean | null;
-  chipping_green: boolean | null;
-  practice_bunker: boolean | null;
-  restaurant: boolean | null;
-  lodging_on_site: boolean | null;
-  motor_cart: boolean | null;
-  pull_cart: boolean | null;
-  golf_clubs_rental: boolean | null;
-  club_fitting: boolean | null;
-  golf_lessons: boolean | null;
 }
 
 const GolferProfile: React.FC = () => {
@@ -58,20 +44,6 @@ const GolferProfile: React.FC = () => {
     preferred_difficulty: null,
     skill_level: null,
     play_frequency: null,
-    preferred_tees: null,
-    number_of_holes: null,
-    club_membership: null,
-    driving_range: null,
-    putting_green: null,
-    chipping_green: null,
-    practice_bunker: null,
-    restaurant: null,
-    lodging_on_site: null,
-    motor_cart: null,
-    pull_cart: null,
-    golf_clubs_rental: null,
-    club_fitting: null,
-    golf_lessons: null
   });
   const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState<string>('');
