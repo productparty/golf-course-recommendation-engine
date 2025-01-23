@@ -444,14 +444,14 @@ async def get_golfer_profile(request: Request):
             with conn.cursor(cursor_factory=RealDictCursor) as cursor:
                 cursor.execute("""
                     SELECT * FROM profiles 
-                    WHERE user_id = %s
+                    WHERE id = %s
                 """, (user_id,))
                 profile = cursor.fetchone()
                 
                 if not profile:
                     # Create default profile if none exists
                     cursor.execute("""
-                        INSERT INTO profiles (user_id, email)
+                        INSERT INTO profiles (id, email)
                         VALUES (%s, %s)
                         RETURNING *
                     """, (user_id, user.user.email))
@@ -503,7 +503,7 @@ async def update_golfer_profile(request: Request, profile_update: UpdateGolferPr
                         golf_clubs_rental = %s,
                         club_fitting = %s,
                         golf_lessons = %s
-                    WHERE user_id = %s
+                    WHERE id = %s
                     RETURNING *
                 """, (
                     profile_update.first_name,

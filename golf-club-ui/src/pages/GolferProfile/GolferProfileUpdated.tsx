@@ -11,7 +11,6 @@ import { supabase } from '../../lib/supabase';
 
 interface GolferProfile {
   id: string;
-  user_id: string;
   email: string;
   first_name: string | null;
   last_name: string | null;
@@ -41,8 +40,7 @@ interface GolferProfile {
 const GolferProfileUpdated: React.FC = () => {
   const { session } = useAuth();
   const [profile, setProfile] = useState<GolferProfile>({
-    id: '',
-    user_id: session?.user.id || '',
+    id: session?.user.id || '',
     email: session?.user.email || '',
     first_name: null,
     last_name: null,
