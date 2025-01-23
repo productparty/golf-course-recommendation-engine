@@ -131,7 +131,9 @@ const GolferProfileUpdated: React.FC = () => {
   const handleSave = async () => {
     setIsSubmitting(true);
     try {
-      const { error } = await supabase
+      console.log('Saving profile:', profile);
+
+      const { data, error } = await supabase
         .from('profiles')
         .upsert({
           id: session?.user.id,
@@ -159,14 +161,21 @@ const GolferProfileUpdated: React.FC = () => {
           golf_clubs_rental: profile.golf_clubs_rental,
           club_fitting: profile.club_fitting,
           golf_lessons: profile.golf_lessons,
+        }, {
+          onConflict: 'id'  // Add this to specify the conflict resolution
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
+
+      console.log('Save successful:', data);
       setSuccess('Profile saved successfully!');
-      fetchProfile();
-    } catch (error) {
+      await fetchProfile(); // Refresh the data
+    } catch (error: any) {
       console.error('Error saving profile:', error);
-      setError('Failed to save profile');
+      setError(error.message || 'Failed to save profile');
     } finally {
       setIsSubmitting(false);
     }

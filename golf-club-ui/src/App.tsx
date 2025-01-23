@@ -24,6 +24,7 @@ import CreateAccountSuccessful from './pages/CreateAccount/CreateAccountSuccessf
 import { Analytics } from "@vercel/analytics/react"
 import GolferProfileUpdated from './pages/GolferProfile/GolferProfileUpdated';
 import { CircularProgress } from '@mui/material';
+import ErrorBoundary from './components/ErrorBoundary';
 
 const theme = createTheme();
 
@@ -61,7 +62,7 @@ const App: React.FC = () => {
                   <Route path="/golfer-profile" element={<ProtectedRoute><GolferProfile /></ProtectedRoute>} />
                   <Route path="/reset-password" element={<PasswordResetRequest />} />
                   <Route path="/reset-password/confirm" element={<PasswordResetConfirm />} />
-                  <Route path="/profile-updated" element={<ProtectedProfileRoute><GolferProfileUpdated /></ProtectedProfileRoute>} />
+                  <Route path="/profile-updated" element={<ProtectedProfileRoute><ErrorBoundary><GolferProfileUpdated /></ErrorBoundary></ProtectedProfileRoute>} />
                   <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
               </div>
