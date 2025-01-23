@@ -58,10 +58,15 @@ const GolferProfileUpdated: React.FC = () => {
   const [profile, setProfile] = useState<GolferProfile>({
     id: '',
     user_id: session?.user.id || '',
+    first_name: '',
+    last_name: '',
+    handicap_index: 0,
     skill_level: '',
     preferred_difficulty: '',
     preferred_price_range: '',
     play_frequency: '',
+    club_id: '',
+    preferred_tees: '',
     number_of_holes: '',
     club_membership: '',
     driving_range: false,
@@ -83,23 +88,54 @@ const GolferProfileUpdated: React.FC = () => {
   const [refreshAttempts, setRefreshAttempts] = useState(0);
 
   useEffect(() => {
-    fetchProfile();
-  }, [session]);
+    if (session?.user.id) {
+      console.log('Fetching profile for user:', session.user.id);
+      fetchProfile();
+    } else {
+      console.log('No session found');
+      setIsLoading(false);
+    }
+  }, [session?.user.id]);
 
   const fetchProfile = async () => {
-    if (!session?.user.id) return;
-    
+    setIsLoading(true);
     try {
+      console.log('Making Supabase request...');
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('user_id', session.user.id)
+        .eq('user_id', session?.user.id)
         .single();
 
-      if (error) throw error;
-      if (data) setProfile(data);
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
+
+      console.log('Profile data received:', data);
+      if (data) {
+        setProfile(prev => ({
+          ...prev,
+          ...data,
+          // Ensure boolean fields are properly set
+          driving_range: !!data.driving_range,
+          putting_green: !!data.putting_green,
+          chipping_green: !!data.chipping_green,
+          practice_bunker: !!data.practice_bunker,
+          restaurant: !!data.restaurant,
+          lodging_on_site: !!data.lodging_on_site,
+          motor_cart: !!data.motor_cart,
+          pull_cart: !!data.pull_cart,
+          golf_clubs_rental: !!data.golf_clubs_rental,
+          club_fitting: !!data.club_fitting,
+          golf_lessons: !!data.golf_lessons,
+        }));
+      }
     } catch (error) {
       console.error('Error fetching profile:', error);
+      setError('Failed to load profile');
+    } finally {
+      setIsLoading(false);
     }
   };
 
