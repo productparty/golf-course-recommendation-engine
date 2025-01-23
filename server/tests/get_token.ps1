@@ -1,13 +1,18 @@
-# Load .env file from server directory
-$envFile = "server/.env"
+# Load .env file from server/tests directory
+$envFile = "server/tests/.env"
 if (!(Test-Path $envFile)) {
     Write-Host "Error: .env file not found at $envFile"
+    Write-Host "Please create server/tests/.env with the following variables:"
+    Write-Host "TEST_USER_EMAIL=mwatson1983@gmail.com"
+    Write-Host "TEST_USER_PASSWORD=your_password"
+    Write-Host "API_URL=https://golf-course-recommendation-engin-production.up.railway.app"
     exit 1
 }
 
 # Clear existing env variables
 $env:TEST_USER_EMAIL = $null
 $env:TEST_USER_PASSWORD = $null
+$env:API_URL = $null
 
 # Load and set environment variables
 Get-Content $envFile | ForEach-Object {
@@ -20,7 +25,7 @@ Get-Content $envFile | ForEach-Object {
 
 # Verify required variables
 if (!$env:TEST_USER_EMAIL -or !$env:TEST_USER_PASSWORD) {
-    Write-Host "Error: TEST_USER_EMAIL and TEST_USER_PASSWORD must be set in .env file"
+    Write-Host "Error: TEST_USER_EMAIL and TEST_USER_PASSWORD must be set in server/tests/.env file"
     exit 1
 }
 
@@ -37,7 +42,7 @@ Write-Host "Making request to API..."
 # Make the request
 try {
     $response = Invoke-RestMethod `
-        -Uri "https://golf-course-recommendation-engin-production.up.railway.app/api/debug/token" `
+        -Uri "$($env:API_URL)/api/debug/token" `
         -Method Post `
         -Body $body `
         -ContentType "application/json"
