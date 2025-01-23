@@ -391,15 +391,29 @@ class GolferProfileResponse(BaseModel):
     is_verified: bool  # Include is_verified in the response model
 
 class UpdateGolferProfileRequest(BaseModel):
-    first_name: str
-    last_name: str
-    handicap_index: float
-    preferred_price_range: str
-    preferred_difficulty: str
-    skill_level: str
-    play_frequency: str
-    club_id: str | None  # Include club_id in the request model
-    preferred_tees: str | None  # Allow preferred_tees to be None
+    first_name: str | None
+    last_name: str | None
+    handicap_index: float | None
+    preferred_price_range: str | None
+    preferred_difficulty: str | None
+    skill_level: str | None
+    play_frequency: str | None
+    club_id: str | None
+    preferred_tees: str | None
+    # New fields
+    number_of_holes: str | None
+    club_membership: str | None
+    driving_range: bool | None
+    putting_green: bool | None
+    chipping_green: bool | None
+    practice_bunker: bool | None
+    restaurant: bool | None
+    lodging_on_site: bool | None
+    motor_cart: bool | None
+    pull_cart: bool | None
+    golf_clubs_rental: bool | None
+    club_fitting: bool | None
+    golf_lessons: bool | None
 
 class UpdateGolferProfileResponse(BaseModel):
     golfer_id: str
@@ -479,14 +493,12 @@ async def update_golfer_profile(request: Request, profile_update: UpdateGolferPr
         token = auth_header.split(' ')[1]
         
         try:
-            # Get user from token - fixed user.id access
             user = supabase.auth.get_user(token)
-            user_id = user.user.id  # Changed from user.id to user.user.id
+            user_id = user.user.id
         except Exception as e:
             logger.error(f"Token validation failed: {str(e)}")
             raise HTTPException(status_code=401, detail="Invalid token")
 
-        # Update profile in database
         try:
             with get_db_connection() as conn:
                 with conn.cursor(cursor_factory=RealDictCursor) as cursor:
@@ -501,7 +513,20 @@ async def update_golfer_profile(request: Request, profile_update: UpdateGolferPr
                             skill_level = %s,
                             play_frequency = %s,
                             club_id = %s,
-                            preferred_tees = %s
+                            preferred_tees = %s,
+                            number_of_holes = %s,
+                            club_membership = %s,
+                            driving_range = %s,
+                            putting_green = %s,
+                            chipping_green = %s,
+                            practice_bunker = %s,
+                            restaurant = %s,
+                            lodging_on_site = %s,
+                            motor_cart = %s,
+                            pull_cart = %s,
+                            golf_clubs_rental = %s,
+                            club_fitting = %s,
+                            golf_lessons = %s
                         WHERE id = %s
                         RETURNING *
                     """, (
@@ -514,6 +539,19 @@ async def update_golfer_profile(request: Request, profile_update: UpdateGolferPr
                         profile_update.play_frequency,
                         profile_update.club_id,
                         profile_update.preferred_tees,
+                        profile_update.number_of_holes,
+                        profile_update.club_membership,
+                        profile_update.driving_range,
+                        profile_update.putting_green,
+                        profile_update.chipping_green,
+                        profile_update.practice_bunker,
+                        profile_update.restaurant,
+                        profile_update.lodging_on_site,
+                        profile_update.motor_cart,
+                        profile_update.pull_cart,
+                        profile_update.golf_clubs_rental,
+                        profile_update.club_fitting,
+                        profile_update.golf_lessons,
                         user_id
                     ))
                     

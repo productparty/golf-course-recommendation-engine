@@ -47,7 +47,7 @@ const RecommendClub: React.FC = () => {
       const response = await fetch(
         `${config.API_URL}/api/get_recommendations/?` +
         new URLSearchParams({
-          zip_code: zipCode,
+        zip_code: zipCode,
           radius: radius.toString(),
           limit: '5',
           offset: offset.toString()
@@ -101,11 +101,11 @@ const RecommendClub: React.FC = () => {
             '& .MuiTextField-root': { width: '100%' }, // Make TextField full width
             '& .MuiFormControl-root': { width: '100%' } // Make FormControl full width
           }}>
-            <TextField
+                <TextField
               label="ZIP Code"
-              value={zipCode}
-              onChange={(e) => setZipCode(e.target.value)}
-              margin="normal"
+                  value={zipCode}
+                  onChange={(e) => setZipCode(e.target.value)}
+                  margin="normal"
               inputProps={{ maxLength: 5 }}
               sx={{ 
                 backgroundColor: 'white',
@@ -327,7 +327,7 @@ const RecommendClub: React.FC = () => {
                 <Typography variant="body2">
                   Page {currentPage} of {totalPages}
                 </Typography>
-              </Box>
+            </Box>
             </>
           ) : (
             <Typography>No recommendations found.</Typography>
