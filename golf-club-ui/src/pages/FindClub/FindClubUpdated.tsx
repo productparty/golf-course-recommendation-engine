@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Grid, TextField, Button, FormControl, InputLabel, Select, MenuItem, Box, Alert, CircularProgress, SelectChangeEvent } from '@mui/material';
+import { Grid, TextField, Button, FormControl, InputLabel, Select, MenuItem, Box, Alert, CircularProgress, SelectChangeEvent, Typography } from '@mui/material';
 import PageLayout from '../../components/PageLayout';
 import ClubCard from '../../components/ClubCard';
 import { useAuth } from '../../context/AuthContext';
@@ -7,7 +7,11 @@ import { config } from '../../config';
 
 interface Club {
   id: string;
-  name: string;
+  club_name: string;
+  address: string;
+  city: string;
+  state: string;
+  zip_code: string;
   distance_miles: number;
   price_tier: string;
   difficulty: string;
@@ -38,6 +42,10 @@ const FindClubUpdated: React.FC = () => {
   const [clubs, setClubs] = useState<Club[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const ITEMS_PER_PAGE = 4;
+  
   const [filters, setFilters] = useState<Filters>({
     zipCode: '',
     radius: '25'
@@ -68,6 +76,7 @@ const FindClubUpdated: React.FC = () => {
       const queryParams = new URLSearchParams({
         zip_code: filters.zipCode,
         radius: filters.radius,
+        limit: '25', // Maximum total results
         ...(filters.preferred_price_range && { price_tier: filters.preferred_price_range }),
         ...(filters.preferred_difficulty && { difficulty: filters.preferred_difficulty })
       });
@@ -88,12 +97,23 @@ const FindClubUpdated: React.FC = () => {
 
       const data = await response.json();
       setClubs(data.results || []);
+      setTotalPages(Math.ceil((data.results || []).length / ITEMS_PER_PAGE));
+      setCurrentPage(1);
     } catch (error: any) {
       console.error('Error finding clubs:', error);
       setError(error.message || 'Failed to find clubs');
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const getCurrentPageClubs = () => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    return clubs.slice(start, start + ITEMS_PER_PAGE);
+  };
+
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(Math.max(1, Math.min(newPage, totalPages)));
   };
 
   return (
@@ -179,13 +199,70 @@ const FindClubUpdated: React.FC = () => {
       )}
 
       {clubs.length > 0 && (
-        <Grid container spacing={2}>
-          {clubs.map((club) => (
-            <Grid item xs={12} md={6} key={club.id}>
-              <ClubCard club={club} />
-            </Grid>
-          ))}
-        </Grid>
+        <>
+          <Grid container spacing={2}>
+            {getCurrentPageClubs().map((club) => (
+              <Grid item xs={12} key={club.id}>
+                <ClubCard club={club} />
+              </Grid>
+            ))}
+          </Grid>
+
+          {/* Pagination Controls */}
+          <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center', gap: 1 }}>
+            <Button
+              onClick={() => handlePageChange(1)}
+              disabled={currentPage === 1}
+              variant="outlined"
+            >
+              First
+            </Button>
+            <Button
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              variant="outlined"
+            >
+              Previous
+            </Button>
+            
+            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+              const pageNum = currentPage - 2 + i;
+              if (pageNum > 0 && pageNum <= totalPages) {
+                return (
+                  <Button
+                    key={pageNum}
+                    onClick={() => handlePageChange(pageNum)}
+                    variant={pageNum === currentPage ? "contained" : "outlined"}
+                  >
+                    {pageNum}
+                  </Button>
+                );
+              }
+              return null;
+            })}
+            
+            <Button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              variant="outlined"
+            >
+              Next
+            </Button>
+            <Button
+              onClick={() => handlePageChange(totalPages)}
+              disabled={currentPage === totalPages}
+              variant="outlined"
+            >
+              Last
+            </Button>
+          </Box>
+          <Typography 
+            variant="body2" 
+            sx={{ mt: 1, textAlign: 'center' }}
+          >
+            Page {currentPage} of {totalPages}
+          </Typography>
+        </>
       )}
     </PageLayout>
   );

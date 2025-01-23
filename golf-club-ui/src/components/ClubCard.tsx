@@ -8,7 +8,11 @@ import StarIcon from '@mui/icons-material/Star';
 interface ClubCardProps {
   club: {
     id: string;
-    name: string;
+    club_name: string;
+    address: string;
+    city: string;
+    state: string;
+    zip_code: string;
     distance_miles: number;
     price_tier: string;
     difficulty: string;
@@ -49,23 +53,50 @@ const ClubCard: React.FC<ClubCardProps> = ({ club, showScore = false }) => {
   ].filter(({ value }) => value);
 
   return (
-    <Card elevation={3}>
+    <Card sx={{ mb: 2, width: '100%' }}>
       <CardContent>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
           <Typography variant="h6" component="div">
-            {club.name}
+            {club.club_name}
           </Typography>
-          {showScore && club.score !== undefined && (
-            <Chip
-              icon={<StarIcon />}
-              label={`${club.score.toFixed(1)}% Match`}
+          {showScore && (
+            <Chip 
+              label={`Score: ${club.score?.toFixed(1)}`}
               color="primary"
-              sx={{ ml: 1 }}
+              sx={{ fontWeight: 'bold' }}
             />
           )}
         </Box>
 
-        <Box sx={{ mb: 2, display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+        <Typography variant="body2" color="text.secondary" gutterBottom>
+          {club.address}
+        </Typography>
+        <Typography variant="body2" color="text.secondary" gutterBottom>
+          {club.city}, {club.state} {club.zip_code}
+        </Typography>
+        <Typography variant="body2" color="text.secondary" gutterBottom>
+          Distance: {club.distance_miles.toFixed(1)} miles
+        </Typography>
+
+        <Box sx={{ display: 'flex', gap: 1, mt: 2 }}>
+          <Chip 
+            label={club.price_tier} 
+            size="small"
+            color="primary"
+            variant="outlined"
+          />
+          <Chip 
+            label={club.difficulty} 
+            size="small"
+            color={
+              club.difficulty === 'Easy' ? 'success' :
+              club.difficulty === 'Medium' ? 'warning' : 'error'
+            }
+            variant="outlined"
+          />
+        </Box>
+
+        <Box sx={{ display: 'flex', gap: 1, mt: 2 }}>
           <Chip
             icon={<LocationOnIcon />}
             label={`${club.distance_miles.toFixed(1)} miles`}
@@ -73,19 +104,8 @@ const ClubCard: React.FC<ClubCardProps> = ({ club, showScore = false }) => {
             size="small"
           />
           <Chip
-            icon={<AttachMoneyIcon />}
-            label={club.price_tier}
-            variant="outlined"
-            size="small"
-          />
-          <Chip
             icon={<GolfCourseIcon />}
             label={`${club.number_of_holes} Holes`}
-            variant="outlined"
-            size="small"
-          />
-          <Chip
-            label={`${club.difficulty}`}
             variant="outlined"
             size="small"
           />

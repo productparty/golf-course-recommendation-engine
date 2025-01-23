@@ -10,7 +10,7 @@ import ClubCard from '../../components/ClubCard';
 
 interface Club {
   id: string;
-  name: string;
+  club_name: string;
   address: string;
   city: string;
   state: string;
@@ -42,6 +42,9 @@ const RecommendClubUpdated: React.FC = () => {
   const [zipCode, setZipCode] = useState('');
   const [radius, setRadius] = useState('25');
   const [hasSearched, setHasSearched] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const ITEMS_PER_PAGE = 4;
 
   const handleSearch = async () => {
     if (!zipCode) {
@@ -56,7 +59,8 @@ const RecommendClubUpdated: React.FC = () => {
     try {
       const queryParams = new URLSearchParams({
         zip_code: zipCode,
-        radius: radius
+        radius: radius,
+        limit: '25'  // Maximum total results
       });
 
       const response = await fetch(
@@ -79,6 +83,9 @@ const RecommendClubUpdated: React.FC = () => {
       }
 
       setCourses(data.courses);
+      setTotalPages(Math.ceil(data.courses.length / ITEMS_PER_PAGE));
+      setCurrentPage(1);
+
       if (data.courses.length === 0) {
         setError('No recommendations found for this location');
       }
@@ -88,6 +95,15 @@ const RecommendClubUpdated: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const getCurrentPageCourses = () => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    return courses.slice(start, start + ITEMS_PER_PAGE);
+  };
+
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(Math.max(1, Math.min(newPage, totalPages)));
   };
 
   return (
@@ -151,13 +167,71 @@ const RecommendClubUpdated: React.FC = () => {
       )}
 
       {courses.length > 0 && (
-        <Grid container spacing={2}>
-          {courses.map((course) => (
-            <Grid item xs={12} md={6} key={course.id}>
-              <ClubCard club={course} showScore={true} />
-            </Grid>
-          ))}
-        </Grid>
+        <>
+          <Grid container spacing={2}>
+            {getCurrentPageCourses().map((course) => (
+              <Grid item xs={12} key={course.id}>
+                <ClubCard club={course} showScore={true} />
+              </Grid>
+            ))}
+          </Grid>
+
+          {/* Pagination Controls */}
+          <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center', gap: 1 }}>
+            <Button
+              onClick={() => handlePageChange(1)}
+              disabled={currentPage === 1}
+              variant="outlined"
+            >
+              First
+            </Button>
+            <Button
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              variant="outlined"
+            >
+              Previous
+            </Button>
+            
+            {/* Page numbers */}
+            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+              const pageNum = currentPage - 2 + i;
+              if (pageNum > 0 && pageNum <= totalPages) {
+                return (
+                  <Button
+                    key={pageNum}
+                    onClick={() => handlePageChange(pageNum)}
+                    variant={pageNum === currentPage ? "contained" : "outlined"}
+                  >
+                    {pageNum}
+                  </Button>
+                );
+              }
+              return null;
+            })}
+            
+            <Button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              variant="outlined"
+            >
+              Next
+            </Button>
+            <Button
+              onClick={() => handlePageChange(totalPages)}
+              disabled={currentPage === totalPages}
+              variant="outlined"
+            >
+              Last
+            </Button>
+          </Box>
+          <Typography 
+            variant="body2" 
+            sx={{ mt: 1, textAlign: 'center' }}
+          >
+            Page {currentPage} of {totalPages}
+          </Typography>
+        </>
       )}
     </PageLayout>
   );
