@@ -57,16 +57,13 @@ const App: React.FC = () => {
                   <Route path="/password-reset" element={<PasswordResetRequest />} />
                   <Route path="/password-reset-confirm" element={<PasswordResetConfirm />} />
                   <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
-                  <Route path="/find-club" element={<ProtectedRoute><FindClub /></ProtectedRoute>} />
-                  <Route path="/recommend-club" element={<ProtectedRoute><RecommendClub /></ProtectedRoute>} />
+                  <Route path="/find-club" element={<ProtectedRoute><FindClubUpdated /></ProtectedRoute>} />
+                  <Route path="/recommend-club" element={<ProtectedRoute><RecommendClubUpdated /></ProtectedRoute>} />
                   <Route path="/sign-up" element={<SignUp />} />
                   <Route path="/submit-club" element={<ProtectedRoute><SubmitClub /></ProtectedRoute>} />
-                  <Route path="/golfer-profile" element={<ProtectedRoute><GolferProfile /></ProtectedRoute>} />
+                  <Route path="/golfer-profile" element={<ProtectedRoute><GolferProfileUpdated /></ProtectedRoute>} />
                   <Route path="/reset-password" element={<PasswordResetRequest />} />
                   <Route path="/reset-password/confirm" element={<PasswordResetConfirm />} />
-                  <Route path="/profile-updated" element={<ProtectedProfileRoute><ErrorBoundary><GolferProfileUpdated /></ErrorBoundary></ProtectedProfileRoute>} />
-                  <Route path="/find-club-updated" element={<ProtectedRoute><ErrorBoundary><FindClubUpdated /></ErrorBoundary></ProtectedRoute>} />
-                  <Route path="/recommend-club-updated" element={<ProtectedRoute><ErrorBoundary><RecommendClubUpdated /></ErrorBoundary></ProtectedRoute>} />
                   <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
               </div>
