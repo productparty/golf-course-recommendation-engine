@@ -195,7 +195,7 @@ const GolferProfileUpdated: React.FC = () => {
                   <FormControl fullWidth>
                     <Typography>Number of Holes</Typography>
                     <Select
-                      value={profile.number_of_holes}
+                      value={profile.number_of_holes || ''}
                       onChange={handleChange('number_of_holes')}
                     >
                       <MenuItem value="9">9 Holes</MenuItem>
@@ -208,7 +208,7 @@ const GolferProfileUpdated: React.FC = () => {
                   <FormControl fullWidth>
                     <Typography>Club Membership</Typography>
                     <Select
-                      value={profile.club_membership}
+                      value={profile.club_membership || ''}
                       onChange={handleChange('club_membership')}
                     >
                       <MenuItem value="public">Public</MenuItem>
@@ -222,7 +222,7 @@ const GolferProfileUpdated: React.FC = () => {
                   <FormControl fullWidth>
                     <Typography>Preferred Price Range</Typography>
                     <Select
-                      value={profile.preferred_price_range}
+                      value={profile.preferred_price_range || ''}
                       onChange={handleChange('preferred_price_range')}
                     >
                       <MenuItem value="$">$</MenuItem>
@@ -304,7 +304,7 @@ const GolferProfileUpdated: React.FC = () => {
                   <FormControl fullWidth>
                     <Typography>Skill Level</Typography>
                     <Select
-                      value={profile.skill_level}
+                      value={profile.skill_level || ''}
                       onChange={handleChange('skill_level')}
                     >
                       <MenuItem value="beginner">Beginner</MenuItem>
@@ -317,7 +317,7 @@ const GolferProfileUpdated: React.FC = () => {
                   <FormControl fullWidth>
                     <Typography>Preferred Difficulty</Typography>
                     <Select
-                      value={profile.preferred_difficulty}
+                      value={profile.preferred_difficulty || ''}
                       onChange={handleChange('preferred_difficulty')}
                     >
                       <MenuItem value="easy">Easy</MenuItem>
@@ -330,7 +330,7 @@ const GolferProfileUpdated: React.FC = () => {
                   <FormControl fullWidth>
                     <Typography>Play Frequency</Typography>
                     <Select
-                      value={profile.play_frequency}
+                      value={profile.play_frequency || ''}
                       onChange={handleChange('play_frequency')}
                     >
                       <MenuItem value="rarely">Rarely</MenuItem>
