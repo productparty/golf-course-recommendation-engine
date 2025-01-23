@@ -64,12 +64,23 @@ const RecommendClubUpdated: React.FC = () => {
         }
       );
 
-      if (!response.ok) throw new Error('Failed to fetch recommendations');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Failed to fetch recommendations');
+      }
+
       const data = await response.json();
-      setCourses(data);
-    } catch (error) {
+      if (!data.courses || !Array.isArray(data.courses)) {
+        throw new Error('Invalid response format');
+      }
+
+      setCourses(data.courses);
+      if (data.courses.length === 0) {
+        setError('No recommendations found for this location');
+      }
+    } catch (error: any) {
       console.error('Error fetching recommendations:', error);
-      setError('Failed to load recommendations');
+      setError(error.message || 'Failed to load recommendations');
     } finally {
       setIsLoading(false);
     }

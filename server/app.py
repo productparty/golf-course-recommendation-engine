@@ -753,6 +753,74 @@ async def recommend_courses(request: Request, data: dict):
         logger.error(f"Error in recommend_courses: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@api_router.get("/debug/profile", tags=["Debug"])
+async def debug_profile(request: Request):
+    """Debug endpoint to check profile data"""
+    try:
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            raise HTTPException(status_code=401, detail="Missing authentication token")
+        
+        token = auth_header.split(' ')[1]
+        user = supabase.auth.get_user(token)
+        user_id = user.user.id
+
+        with get_db_connection() as conn:
+            with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+                cursor.execute("SELECT * FROM profiles WHERE id = %s", (user_id,))
+                profile = cursor.fetchone()
+                
+                return {
+                    "profile": profile,
+                    "timestamp": datetime.now().isoformat()
+                }
+
+    except Exception as e:
+        logger.error(f"Profile debug error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.post("/debug/token")
+async def get_debug_token(request: Request):
+    try:
+        data = await request.json()
+        email = data.get('email')
+        password = data.get('password')
+        
+        if not email or not password:
+            raise HTTPException(status_code=400, detail="Email and password required")
+            
+        logger.info(f"Attempting authentication for {email}")
+        
+        try:
+            res = supabase.auth.sign_in_with_password({
+                "email": email,
+                "password": password
+            })
+            
+            if not res.session:
+                raise HTTPException(status_code=401, detail="Authentication failed")
+                
+            return {
+                "access_token": res.session.access_token,
+                "expires_at": res.session.expires_at
+            }
+            
+        except Exception as auth_error:
+            logger.error(f"Authentication error: {str(auth_error)}")
+            raise HTTPException(
+                status_code=401, 
+                detail=f"Authentication failed: {str(auth_error)}"
+            )
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Token generation error: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Server error: {str(e)}"
+        )
+
 # At the end of the file, include the router with the /api prefix
 app.include_router(api_router, prefix="/api")
 
