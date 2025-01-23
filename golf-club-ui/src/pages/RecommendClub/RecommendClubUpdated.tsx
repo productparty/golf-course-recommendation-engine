@@ -6,6 +6,7 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import PageLayout from '../../components/PageLayout';
 import { config } from '../../config';
+import ClubCard from '../../components/ClubCard';
 
 interface Course {
   id: string;
@@ -14,24 +15,41 @@ interface Course {
   price_tier: string;
   difficulty: string;
   score: number;
-  // ... other course properties
+  number_of_holes: string;
+  club_membership: string;
+  driving_range: boolean;
+  putting_green: boolean;
+  chipping_green: boolean;
+  practice_bunker: boolean;
+  restaurant: boolean;
+  lodging_on_site: boolean;
+  motor_cart: boolean;
+  pull_cart: boolean;
+  golf_clubs_rental: boolean;
+  club_fitting: boolean;
+  golf_lessons: boolean;
 }
 
 const RecommendClubUpdated: React.FC = () => {
   const { session } = useAuth();
   const [courses, setCourses] = useState<Course[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [zipCode, setZipCode] = useState('');
   const [radius, setRadius] = useState('25');
+  const [hasSearched, setHasSearched] = useState(false);
 
-  const fetchRecommendations = async () => {
+  const handleSearch = async () => {
+    if (!zipCode) {
+      setError('Please enter a zip code');
+      return;
+    }
+
+    setIsLoading(true);
+    setError('');
+    setHasSearched(true);
+
     try {
-      if (!zipCode) {
-        setError('Please enter a zip code');
-        return;
-      }
-
       const queryParams = new URLSearchParams({
         zip_code: zipCode,
         radius: radius
@@ -57,30 +75,8 @@ const RecommendClubUpdated: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    if (session?.access_token) {
-      fetchRecommendations();
-    }
-  }, [session]);
-
-  if (isLoading) {
-    return (
-      <PageLayout title="Recommended Courses">
-        <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
-          <CircularProgress />
-        </Box>
-      </PageLayout>
-    );
-  }
-
   return (
     <PageLayout title="Recommended Courses">
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
-        </Alert>
-      )}
-
       <Card sx={{ mb: 3 }}>
         <CardContent>
           <Grid container spacing={2}>
@@ -111,46 +107,42 @@ const RecommendClubUpdated: React.FC = () => {
           <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
             <Button
               variant="contained"
-              onClick={() => {
-                setIsLoading(true);
-                fetchRecommendations();
-              }}
-              disabled={!zipCode || isLoading}
+              onClick={handleSearch}
+              disabled={isLoading}
             >
-              Find Recommendations
+              {isLoading ? (
+                <>
+                  <CircularProgress size={24} sx={{ mr: 1 }} />
+                  Finding Recommendations...
+                </>
+              ) : (
+                'Find Recommendations'
+              )}
             </Button>
           </Box>
         </CardContent>
       </Card>
 
-      <Grid container spacing={2}>
-        {courses.map((course) => (
-          <Grid item xs={12} md={6} key={course.id}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6">{course.name}</Typography>
-                <Typography color="textSecondary" gutterBottom>
-                  Match Score: {course.score}%
-                </Typography>
-                <Typography variant="body2">
-                  Distance: {course.distance_miles.toFixed(1)} miles
-                </Typography>
-                <Typography variant="body2">
-                  Price Range: {course.price_tier}
-                </Typography>
-                <Typography variant="body2">
-                  Difficulty: {course.difficulty}
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-        ))}
-      </Grid>
-
-      {courses.length === 0 && !error && (
-        <Alert severity="info">
-          No recommendations found. Please update your profile preferences.
+      {error && hasSearched && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
         </Alert>
+      )}
+
+      {hasSearched && courses.length === 0 && !error && !isLoading && (
+        <Alert severity="info">
+          No recommendations found for this location.
+        </Alert>
+      )}
+
+      {courses.length > 0 && (
+        <Grid container spacing={2}>
+          {courses.map((course) => (
+            <Grid item xs={12} md={6} key={course.id}>
+              <ClubCard club={course} showScore={true} />
+            </Grid>
+          ))}
+        </Grid>
       )}
     </PageLayout>
   );

@@ -51,88 +51,115 @@ const GolferProfile: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [refreshAttempts, setRefreshAttempts] = useState(0);
 
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const { data: { session: currentSession } } = await supabase.auth.getSession();
-        
-        if (!currentSession?.access_token) {
-          setError('No valid session');
-          setIsLoading(false);
-          return;
-        }
-
-        const apiUrl = `${config.API_URL}/api/get-golfer-profile`;
-        console.log('Making request with token:', currentSession.access_token.substring(0, 10));
-
-        const response = await fetch(apiUrl, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${currentSession.access_token}`,
-            'Content-Type': 'application/json'
-          }
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          console.error('Profile fetch failed:', errorData);
-          throw new Error(errorData.detail?.error || 'Failed to fetch profile');
-        }
-
-        const data = await response.json();
-        setProfile(data);
-        setIsLoading(false);
-      } catch (error) {
-        console.error('Error fetching profile:', error);
-        setError(error instanceof Error ? error.message : 'Failed to fetch profile');
-        setIsLoading(false);
+  const fetchProfile = async () => {
+    setIsLoading(true);
+    setError('');
+    try {
+      if (!session?.user?.id) {
+        throw new Error('No user session found');
       }
-    };
 
+      const { data, error } = await supabase
+        .from('profiles')
+        .select(`
+          id,
+          email,
+          first_name,
+          last_name,
+          handicap_index,
+          preferred_price_range,
+          preferred_difficulty,
+          skill_level,
+          play_frequency
+        `)
+        .eq('id', session.user.id)
+        .single();
+
+      if (error) {
+        if (error.code === 'PGRST116') {
+          // Profile doesn't exist, create a new one
+          const newProfile = {
+            id: session.user.id,
+            email: session.user.email,
+          };
+          const { data: createdProfile, error: createError } = await supabase
+            .from('profiles')
+            .insert([newProfile])
+            .single();
+
+          if (createError) throw createError;
+          if (createdProfile) setProfile(createdProfile);
+        } else {
+          throw error;
+        }
+      } else if (data) {
+        setProfile({
+          ...data,
+          email: session.user.email || data.email,
+        });
+      }
+    } catch (error: any) {
+      console.error('Error fetching profile:', error);
+      setError(
+        error.message === 'No user session found'
+          ? 'Please log in to view your profile'
+          : 'Failed to load profile. Please try again.'
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
     if (session) {
       fetchProfile();
     } else {
       setIsLoading(false);
     }
-  }, [session, signOut, navigate]);
+  }, [session]);
 
-  const handleSubmit = async (event: React.FormEvent) => {
-    event.preventDefault();
+  const handleSave = async () => {
     setIsSubmitting(true);
     setError('');
-    setSuccess('');
-
     try {
-      if (!session?.access_token) {
-        throw new Error('Not authenticated');
+      if (!session?.user?.id) {
+        throw new Error('No user session found');
       }
 
-      const response = await fetch(`${config.API_URL}/api/update-golfer-profile`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`
-        },
-        body: JSON.stringify(profile)
-      });
-
-      if (response.status === 401) {
-        setError('Session expired - please log in again');
-        await signOut();
-        navigate('/login');
-        return;
+      // Validate required fields
+      if (!profile.email) {
+        throw new Error('Email is required');
       }
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
-        throw new Error(errorData?.detail || 'Failed to update profile');
-      }
+      const dataToSave = {
+        id: session.user.id,
+        email: profile.email,
+        first_name: profile.first_name?.trim() || null,
+        last_name: profile.last_name?.trim() || null,
+        handicap_index: profile.handicap_index,
+        preferred_price_range: profile.preferred_price_range,
+        preferred_difficulty: profile.preferred_difficulty,
+        skill_level: profile.skill_level,
+        play_frequency: profile.play_frequency
+      };
 
-      setSuccess('Profile updated successfully!');
-      const updatedData = await response.json();
-      setProfile(updatedData);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update profile');
+      const { error } = await supabase
+        .from('profiles')
+        .upsert(dataToSave, {
+          onConflict: 'id'
+        });
+
+      if (error) throw error;
+
+      setSuccess('Profile saved successfully!');
+      await fetchProfile(); // Refresh data
+    } catch (error: any) {
+      console.error('Error saving profile:', error);
+      setError(
+        error.message === 'No user session found'
+          ? 'Please log in to save your profile'
+          : 'Failed to save profile. Please try again.'
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -174,7 +201,7 @@ const GolferProfile: React.FC = () => {
           Email: {profile.email}
         </Typography>
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSave}>
           <TextField
             fullWidth
             margin="normal"

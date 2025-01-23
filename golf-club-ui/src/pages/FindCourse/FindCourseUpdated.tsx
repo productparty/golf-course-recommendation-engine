@@ -7,7 +7,7 @@ import {
 } from '@mui/material';
 import PageLayout from '../../components/PageLayout';
 import { config } from '../../config';
-import CourseCard from '../../components/CourseCard';
+import ClubCard from '../../components/ClubCard';
 import { useAuth } from '../../context/AuthContext';
 
 interface Course {
@@ -426,7 +426,7 @@ const FindCourseUpdated: React.FC = () => {
           <Grid container spacing={2}>
             {sortedCourses.map((course) => (
               <Grid item xs={12} md={6} key={course.id}>
-                <CourseCard course={course} />
+                <ClubCard club={course} />
               </Grid>
             ))}
           </Grid>
