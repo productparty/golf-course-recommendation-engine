@@ -9,9 +9,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
-    autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: true,
-    storage: localStorage
+    storageKey: 'golf-app-storage-key',
   }
 }); 

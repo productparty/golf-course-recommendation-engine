@@ -160,6 +160,15 @@ const GolferProfileUpdated: React.FC = () => {
     }
   };
 
+  const handleTextChange = (field: keyof GolferProfile) => (
+    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const value = field === 'handicap_index' 
+      ? Number(event.target.value) || null 
+      : event.target.value;
+    setProfile(prev => ({ ...prev, [field]: value }));
+  };
+
   const handleChange = (field: keyof GolferProfile) => (
     event: SelectChangeEvent<string> | React.ChangeEvent<HTMLInputElement>
   ) => {
@@ -167,6 +176,15 @@ const GolferProfileUpdated: React.FC = () => {
       ? event.target.checked 
       : event.target.value || null;
     setProfile({ ...profile, [field]: value });
+  };
+
+  const handleSwitchChange = (field: keyof GolferProfile) => (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setProfile(prev => ({
+      ...prev,
+      [field]: event.target.checked
+    }));
   };
 
   if (isLoading) {
@@ -184,6 +202,46 @@ const GolferProfileUpdated: React.FC = () => {
       <Card>
         <CardContent>
           <Grid container spacing={3}>
+            {/* Personal Information */}
+            <Grid item xs={12}>
+              <Typography variant="h6" gutterBottom>
+                Personal Information
+              </Typography>
+              <Divider sx={{ mb: 2 }} />
+              <Grid container spacing={2}>
+                <Grid item xs={12} sm={6}>
+                  <Typography variant="subtitle1" gutterBottom>
+                    Email: {profile.email}
+                  </Typography>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label="First Name"
+                    value={profile.first_name || ''}
+                    onChange={handleTextChange('first_name')}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label="Last Name"
+                    value={profile.last_name || ''}
+                    onChange={handleTextChange('last_name')}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label="Handicap Index"
+                    type="number"
+                    value={profile.handicap_index || ''}
+                    onChange={handleTextChange('handicap_index')}
+                  />
+                </Grid>
+              </Grid>
+            </Grid>
+
             {/* General Course Attributes */}
             <Grid item xs={12}>
               <Typography variant="h6" gutterBottom>
@@ -254,7 +312,7 @@ const GolferProfileUpdated: React.FC = () => {
                       control={
                         <Switch
                           checked={profile[field as keyof GolferProfile] as boolean}
-                          onChange={handleChange(field as keyof GolferProfile)}
+                          onChange={handleSwitchChange(field as keyof GolferProfile)}
                         />
                       }
                       label={label}
@@ -283,7 +341,7 @@ const GolferProfileUpdated: React.FC = () => {
                       control={
                         <Switch
                           checked={profile[field as keyof GolferProfile] as boolean}
-                          onChange={handleChange(field as keyof GolferProfile)}
+                          onChange={handleSwitchChange(field as keyof GolferProfile)}
                         />
                       }
                       label={label}
