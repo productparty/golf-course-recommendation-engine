@@ -399,6 +399,7 @@ class UpdateGolferProfileRequest(BaseModel):
     skill_level: str | None
     play_frequency: str | None
     club_id: str | None
+    club_name: str | None
     preferred_tees: str | None
     # New fields
     number_of_holes: str | None
@@ -428,59 +429,39 @@ class UpdateGolferProfileResponse(BaseModel):
     club_id: str | None  # Allow club_id to be None
     preferred_tees: str | None  # Allow preferred_tees to be None
 
-@api_router.get("/get-golfer-profile")
+@api_router.get("/get-golfer-profile", tags=["Golfers"])
 async def get_golfer_profile(request: Request):
     try:
         auth_header = request.headers.get('Authorization')
         if not auth_header or not auth_header.startswith('Bearer '):
-            raise HTTPException(status_code=401, detail="Missing token")
+            raise HTTPException(status_code=401, detail="Missing authentication token")
         
         token = auth_header.split(' ')[1]
-        
-        # Get user from token
-        try:
-            user = supabase.auth.get_user(token)
-            user_id = user.user.id
-        except Exception as e:
-            logger.error(f"Token validation failed: {str(e)}")
-            raise HTTPException(status_code=401, detail="Invalid token")
-        
-        # Query the profiles table
-        try:
-            with get_db_connection() as conn:
-                with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+        user = supabase.auth.get_user(token)
+        user_id = user.user.id
+
+        with get_db_connection() as conn:
+            with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+                cursor.execute("""
+                    SELECT * FROM profiles 
+                    WHERE user_id = %s
+                """, (user_id,))
+                profile = cursor.fetchone()
+                
+                if not profile:
+                    # Create default profile if none exists
                     cursor.execute("""
-                        SELECT 
-                            id as golfer_id,
-                            email,
-                            first_name,
-                            last_name,
-                            handicap_index,
-                            preferred_price_range,
-                            preferred_difficulty,
-                            skill_level,
-                            play_frequency,
-                            club_id,
-                            preferred_tees,
-                            true as is_verified
-                        FROM profiles 
-                        WHERE id = %s
-                    """, (user_id,))
-                    
+                        INSERT INTO profiles (user_id, email)
+                        VALUES (%s, %s)
+                        RETURNING *
+                    """, (user_id, user.user.email))
                     profile = cursor.fetchone()
-                    
-                    if not profile:
-                        raise HTTPException(status_code=404, detail="Profile not found")
-                        
-                    return profile
-        except psycopg2.Error as e:
-            logger.error(f"Database error: {str(e)}")
-            raise HTTPException(status_code=500, detail="Database error")
-                    
-    except HTTPException:
-        raise
+                    conn.commit()
+
+                return profile
+
     except Exception as e:
-        logger.error(f"Profile error: {str(e)}")
+        logger.error(f"Error getting golfer profile: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @api_router.put("/update-golfer-profile", tags=["Golfers"])
@@ -491,85 +472,75 @@ async def update_golfer_profile(request: Request, profile_update: UpdateGolferPr
             raise HTTPException(status_code=401, detail="Missing authentication token")
         
         token = auth_header.split(' ')[1]
-        
-        try:
-            user = supabase.auth.get_user(token)
-            user_id = user.user.id
-        except Exception as e:
-            logger.error(f"Token validation failed: {str(e)}")
-            raise HTTPException(status_code=401, detail="Invalid token")
+        user = supabase.auth.get_user(token)
+        user_id = user.user.id
 
-        try:
-            with get_db_connection() as conn:
-                with conn.cursor(cursor_factory=RealDictCursor) as cursor:
-                    cursor.execute("""
-                        UPDATE profiles
-                        SET 
-                            first_name = %s,
-                            last_name = %s,
-                            handicap_index = %s,
-                            preferred_price_range = %s,
-                            preferred_difficulty = %s,
-                            skill_level = %s,
-                            play_frequency = %s,
-                            club_id = %s,
-                            preferred_tees = %s,
-                            number_of_holes = %s,
-                            club_membership = %s,
-                            driving_range = %s,
-                            putting_green = %s,
-                            chipping_green = %s,
-                            practice_bunker = %s,
-                            restaurant = %s,
-                            lodging_on_site = %s,
-                            motor_cart = %s,
-                            pull_cart = %s,
-                            golf_clubs_rental = %s,
-                            club_fitting = %s,
-                            golf_lessons = %s
-                        WHERE id = %s
-                        RETURNING *
-                    """, (
-                        profile_update.first_name,
-                        profile_update.last_name,
-                        profile_update.handicap_index,
-                        profile_update.preferred_price_range,
-                        profile_update.preferred_difficulty,
-                        profile_update.skill_level,
-                        profile_update.play_frequency,
-                        profile_update.club_id,
-                        profile_update.preferred_tees,
-                        profile_update.number_of_holes,
-                        profile_update.club_membership,
-                        profile_update.driving_range,
-                        profile_update.putting_green,
-                        profile_update.chipping_green,
-                        profile_update.practice_bunker,
-                        profile_update.restaurant,
-                        profile_update.lodging_on_site,
-                        profile_update.motor_cart,
-                        profile_update.pull_cart,
-                        profile_update.golf_clubs_rental,
-                        profile_update.club_fitting,
-                        profile_update.golf_lessons,
-                        user_id
-                    ))
+        with get_db_connection() as conn:
+            with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+                cursor.execute("""
+                    UPDATE profiles
+                    SET 
+                        first_name = %s,
+                        last_name = %s,
+                        handicap_index = %s,
+                        preferred_price_range = %s,
+                        preferred_difficulty = %s,
+                        skill_level = %s,
+                        play_frequency = %s,
+                        club_id = %s,
+                        club_name = %s,
+                        preferred_tees = %s,
+                        number_of_holes = %s,
+                        club_membership = %s,
+                        driving_range = %s,
+                        putting_green = %s,
+                        chipping_green = %s,
+                        practice_bunker = %s,
+                        restaurant = %s,
+                        lodging_on_site = %s,
+                        motor_cart = %s,
+                        pull_cart = %s,
+                        golf_clubs_rental = %s,
+                        club_fitting = %s,
+                        golf_lessons = %s
+                    WHERE user_id = %s
+                    RETURNING *
+                """, (
+                    profile_update.first_name,
+                    profile_update.last_name,
+                    profile_update.handicap_index,
+                    profile_update.preferred_price_range,
+                    profile_update.preferred_difficulty,
+                    profile_update.skill_level,
+                    profile_update.play_frequency,
+                    profile_update.club_id,
+                    profile_update.club_name,
+                    profile_update.preferred_tees,
+                    profile_update.number_of_holes,
+                    profile_update.club_membership,
+                    profile_update.driving_range,
+                    profile_update.putting_green,
+                    profile_update.chipping_green,
+                    profile_update.practice_bunker,
+                    profile_update.restaurant,
+                    profile_update.lodging_on_site,
+                    profile_update.motor_cart,
+                    profile_update.pull_cart,
+                    profile_update.golf_clubs_rental,
+                    profile_update.club_fitting,
+                    profile_update.golf_lessons,
+                    user_id
+                ))
+                
+                updated_profile = cursor.fetchone()
+                if not updated_profile:
+                    raise HTTPException(status_code=404, detail="Profile not found")
                     
-                    updated_profile = cursor.fetchone()
-                    if not updated_profile:
-                        raise HTTPException(status_code=404, detail="Profile not found")
-                        
-                    conn.commit()
-                    return updated_profile
+                conn.commit()
+                return updated_profile
 
-        except psycopg2.Error as e:
-            logger.error(f"Database error: {str(e)}")
-            raise HTTPException(status_code=500, detail="Database error")
-                    
-    except HTTPException:
-        raise
     except Exception as e:
-        logger.error(f"Profile update error: {str(e)}")
+        logger.error(f"Error updating golfer profile: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @api_router.get("/get_recommendations/", tags=["Recommendations"])

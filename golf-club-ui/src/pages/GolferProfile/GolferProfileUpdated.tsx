@@ -1,28 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Typography, 
-  TextField, 
-  Button, 
-  MenuItem, 
-  Select, 
-  InputLabel, 
-  FormControl, 
-  Box, 
-  SelectChangeEvent,
-  Alert,
-  Snackbar,
-  CircularProgress,
-  Card,
-  CardContent,
-  FormControlLabel,
-  Grid,
-  Switch,
-  Divider
+  Typography, TextField, Button, MenuItem, Select, InputLabel, 
+  FormControl, Box, SelectChangeEvent, Alert, Snackbar, 
+  CircularProgress, Card, CardContent, FormControlLabel, 
+  Grid, Switch, Divider 
 } from '@mui/material';
 import { useAuth } from '../../context/AuthContext';
 import PageLayout from '../../components/PageLayout';
-import { config } from '../../config';
-import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 
 interface GolferProfile {
@@ -84,18 +68,16 @@ const GolferProfileUpdated: React.FC = () => {
     club_fitting: null,
     golf_lessons: null,
   });
+
   const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [refreshAttempts, setRefreshAttempts] = useState(0);
 
   useEffect(() => {
     if (session?.user.id) {
-      console.log('Fetching profile for user:', session.user.id);
       fetchProfile();
     } else {
-      console.log('No session found');
       setIsLoading(false);
     }
   }, [session?.user.id]);
@@ -113,7 +95,6 @@ const GolferProfileUpdated: React.FC = () => {
         console.error('Error fetching profile:', error);
         setError('Failed to load profile');
       } else if (data) {
-        console.log('Profile data loaded:', data);
         setProfile(prev => ({
           ...prev,
           ...data,
@@ -163,7 +144,7 @@ const GolferProfileUpdated: React.FC = () => {
 
       if (error) throw error;
       setSuccess('Profile saved successfully!');
-      fetchProfile(); // Reload the profile to ensure we have the latest data
+      fetchProfile();
     } catch (error) {
       console.error('Error saving profile:', error);
       setError('Failed to save profile');
@@ -193,6 +174,16 @@ const GolferProfileUpdated: React.FC = () => {
     setProfile(prev => ({ ...prev, [field]: event.target.checked }));
   };
 
+  if (isLoading) {
+    return (
+      <PageLayout title="Golfer Profile">
+        <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
+          <CircularProgress />
+        </Box>
+      </PageLayout>
+    );
+  }
+
   return (
     <PageLayout title="Golfer Profile">
       <Card>
@@ -200,15 +191,11 @@ const GolferProfileUpdated: React.FC = () => {
           <Grid container spacing={3}>
             {/* Personal Information */}
             <Grid item xs={12}>
-              <Typography variant="h6" gutterBottom>
-                Personal Information
-              </Typography>
+              <Typography variant="h6" gutterBottom>Personal Information</Typography>
               <Divider sx={{ mb: 2 }} />
               <Grid container spacing={2}>
                 <Grid item xs={12}>
-                  <Typography variant="subtitle1" gutterBottom>
-                    Email: {profile.email}
-                  </Typography>
+                  <Typography variant="subtitle1">Email: {profile.email}</Typography>
                 </Grid>
                 <Grid item xs={12} md={6}>
                   <TextField
@@ -231,9 +218,7 @@ const GolferProfileUpdated: React.FC = () => {
 
             {/* Skill and Play Style */}
             <Grid item xs={12}>
-              <Typography variant="h6" gutterBottom>
-                Skill and Play Style
-              </Typography>
+              <Typography variant="h6" gutterBottom>Skill and Play Style</Typography>
               <Divider sx={{ mb: 2 }} />
               <Grid container spacing={2}>
                 <Grid item xs={12} sm={6} md={3}>
@@ -247,10 +232,11 @@ const GolferProfileUpdated: React.FC = () => {
                 </Grid>
                 <Grid item xs={12} sm={6} md={3}>
                   <FormControl fullWidth>
-                    <Typography>Skill Level</Typography>
+                    <InputLabel>Skill Level</InputLabel>
                     <Select
                       value={profile.skill_level || ''}
                       onChange={handleSelectChange('skill_level')}
+                      label="Skill Level"
                     >
                       <MenuItem value="beginner">Beginner</MenuItem>
                       <MenuItem value="intermediate">Intermediate</MenuItem>
@@ -258,25 +244,142 @@ const GolferProfileUpdated: React.FC = () => {
                     </Select>
                   </FormControl>
                 </Grid>
-                {/* Rest of skill section... */}
+                <Grid item xs={12} sm={6} md={3}>
+                  <FormControl fullWidth>
+                    <InputLabel>Preferred Difficulty</InputLabel>
+                    <Select
+                      value={profile.preferred_difficulty || ''}
+                      onChange={handleSelectChange('preferred_difficulty')}
+                      label="Preferred Difficulty"
+                    >
+                      <MenuItem value="easy">Easy</MenuItem>
+                      <MenuItem value="medium">Medium</MenuItem>
+                      <MenuItem value="hard">Hard</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <FormControl fullWidth>
+                    <InputLabel>Play Frequency</InputLabel>
+                    <Select
+                      value={profile.play_frequency || ''}
+                      onChange={handleSelectChange('play_frequency')}
+                      label="Play Frequency"
+                    >
+                      <MenuItem value="rarely">Rarely</MenuItem>
+                      <MenuItem value="sometimes">Sometimes</MenuItem>
+                      <MenuItem value="often">Often</MenuItem>
+                      <MenuItem value="very_often">Very Often</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
               </Grid>
             </Grid>
 
-            {/* 4. Mobile responsiveness updates */}
-            <Grid container spacing={2}>
-              {[/* Amenities array */].map(({ field, label }) => (
-                <Grid item xs={12} sm={6} md={4} key={field}>
-                  <FormControlLabel
-                    control={
-                      <Switch
-                        checked={profile[field as keyof GolferProfile] as boolean}
-                        onChange={handleSwitchChange(field as keyof GolferProfile)}
-                      />
-                    }
-                    label={label}
-                  />
+            {/* Course Preferences */}
+            <Grid item xs={12}>
+              <Typography variant="h6" gutterBottom>Course Preferences</Typography>
+              <Divider sx={{ mb: 2 }} />
+              <Grid container spacing={2}>
+                <Grid item xs={12} sm={6} md={4}>
+                  <FormControl fullWidth>
+                    <InputLabel>Number of Holes</InputLabel>
+                    <Select
+                      value={profile.number_of_holes || ''}
+                      onChange={handleSelectChange('number_of_holes')}
+                      label="Number of Holes"
+                    >
+                      <MenuItem value="9">9 Holes</MenuItem>
+                      <MenuItem value="18">18 Holes</MenuItem>
+                      <MenuItem value="any">Any</MenuItem>
+                    </Select>
+                  </FormControl>
                 </Grid>
-              ))}
+                <Grid item xs={12} sm={6} md={4}>
+                  <FormControl fullWidth>
+                    <InputLabel>Club Membership</InputLabel>
+                    <Select
+                      value={profile.club_membership || ''}
+                      onChange={handleSelectChange('club_membership')}
+                      label="Club Membership"
+                    >
+                      <MenuItem value="public">Public</MenuItem>
+                      <MenuItem value="private">Private</MenuItem>
+                      <MenuItem value="military">Military</MenuItem>
+                      <MenuItem value="municipal">Municipal</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
+                <Grid item xs={12} sm={6} md={4}>
+                  <FormControl fullWidth>
+                    <InputLabel>Price Range</InputLabel>
+                    <Select
+                      value={profile.preferred_price_range || ''}
+                      onChange={handleSelectChange('preferred_price_range')}
+                      label="Price Range"
+                    >
+                      <MenuItem value="$">$</MenuItem>
+                      <MenuItem value="$$">$$</MenuItem>
+                      <MenuItem value="$$$">$$$</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
+              </Grid>
+            </Grid>
+
+            {/* Amenities */}
+            <Grid item xs={12}>
+              <Typography variant="h6" gutterBottom>Amenities and Facilities</Typography>
+              <Divider sx={{ mb: 2 }} />
+              <Grid container spacing={2}>
+                {[
+                  { field: 'driving_range', label: 'Driving Range' },
+                  { field: 'putting_green', label: 'Putting Green' },
+                  { field: 'chipping_green', label: 'Chipping Green' },
+                  { field: 'practice_bunker', label: 'Practice Bunker' },
+                  { field: 'restaurant', label: 'Restaurant' },
+                  { field: 'lodging_on_site', label: 'Lodging On-Site' },
+                ].map(({ field, label }) => (
+                  <Grid item xs={12} sm={6} md={4} key={field}>
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={!!profile[field as keyof GolferProfile]}
+                          onChange={handleSwitchChange(field as keyof GolferProfile)}
+                        />
+                      }
+                      label={label}
+                    />
+                  </Grid>
+                ))}
+              </Grid>
+            </Grid>
+
+            {/* Equipment and Services */}
+            <Grid item xs={12}>
+              <Typography variant="h6" gutterBottom>Equipment and Services</Typography>
+              <Divider sx={{ mb: 2 }} />
+              <Grid container spacing={2}>
+                {[
+                  { field: 'motor_cart', label: 'Motor Cart' },
+                  { field: 'pull_cart', label: 'Pull Cart' },
+                  { field: 'golf_clubs_rental', label: 'Golf Club Rentals' },
+                  { field: 'club_fitting', label: 'Club Fitting' },
+                  { field: 'golf_lessons', label: 'Golf Lessons' },
+                ].map(({ field, label }) => (
+                  <Grid item xs={12} sm={6} md={4} key={field}>
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={!!profile[field as keyof GolferProfile]}
+                          onChange={handleSwitchChange(field as keyof GolferProfile)}
+                        />
+                      }
+                      label={label}
+                    />
+                  </Grid>
+                ))}
+              </Grid>
             </Grid>
           </Grid>
 
@@ -293,24 +396,12 @@ const GolferProfileUpdated: React.FC = () => {
         </CardContent>
       </Card>
 
-      <Snackbar 
-        open={!!error} 
-        autoHideDuration={6000} 
-        onClose={() => setError('')}
-      >
-        <Alert severity="error" onClose={() => setError('')}>
-          {error}
-        </Alert>
+      <Snackbar open={!!error} autoHideDuration={6000} onClose={() => setError('')}>
+        <Alert severity="error" onClose={() => setError('')}>{error}</Alert>
       </Snackbar>
 
-      <Snackbar 
-        open={!!success} 
-        autoHideDuration={3000} 
-        onClose={() => setSuccess('')}
-      >
-        <Alert severity="success" onClose={() => setSuccess('')}>
-          {success}
-        </Alert>
+      <Snackbar open={!!success} autoHideDuration={3000} onClose={() => setSuccess('')}>
+        <Alert severity="success" onClose={() => setSuccess('')}>{success}</Alert>
       </Snackbar>
     </PageLayout>
   );
