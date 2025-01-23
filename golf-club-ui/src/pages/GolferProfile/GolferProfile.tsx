@@ -100,35 +100,37 @@ const GolferProfile: React.FC = () => {
         throw new Error('Email is required');
       }
 
-      const dataToSave = {
-        id: session.user.id,
-        email: profile.email,
-        first_name: profile.first_name?.trim() || null,
-        last_name: profile.last_name?.trim() || null,
-        handicap_index: profile.handicap_index,
-        preferred_price_range: profile.preferred_price_range,
-        preferred_difficulty: profile.preferred_difficulty,
-        skill_level: profile.skill_level,
-        play_frequency: profile.play_frequency
-      };
+      const response = await fetch(
+        `${config.API_URL}/api/profiles/current`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`
+          },
+          body: JSON.stringify({
+            email: profile.email,
+            first_name: profile.first_name?.trim() || null,
+            last_name: profile.last_name?.trim() || null,
+            handicap_index: profile.handicap_index,
+            preferred_price_range: profile.preferred_price_range,
+            preferred_difficulty: profile.preferred_difficulty,
+            skill_level: profile.skill_level,
+            play_frequency: profile.play_frequency
+          })
+        }
+      );
 
-      const { error } = await supabase
-        .from('profiles')
-        .upsert(dataToSave, {
-          onConflict: 'id'
-        });
-
-      if (error) throw error;
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Failed to save profile');
+      }
 
       setSuccess('Profile saved successfully!');
       await fetchProfile(); // Refresh data
     } catch (error: any) {
       console.error('Error saving profile:', error);
-      setError(
-        error.message === 'No user session found'
-          ? 'Please log in to save your profile'
-          : 'Failed to save profile. Please try again.'
-      );
+      setError(error.message || 'Failed to save profile');
     } finally {
       setIsSubmitting(false);
     }

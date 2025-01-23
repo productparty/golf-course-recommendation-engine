@@ -8,9 +8,13 @@ import PageLayout from '../../components/PageLayout';
 import { config } from '../../config';
 import ClubCard from '../../components/ClubCard';
 
-interface Course {
+interface Club {
   id: string;
   name: string;
+  address: string;
+  city: string;
+  state: string;
+  zip_code: string;
   distance_miles: number;
   price_tier: string;
   difficulty: string;
@@ -32,7 +36,7 @@ interface Course {
 
 const RecommendClubUpdated: React.FC = () => {
   const { session } = useAuth();
-  const [courses, setCourses] = useState<Course[]>([]);
+  const [courses, setCourses] = useState<Club[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [zipCode, setZipCode] = useState('');

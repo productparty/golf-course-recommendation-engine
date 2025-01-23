@@ -785,6 +785,62 @@ async def list_routes():
         })
     return {"routes": routes}
 
+@api_router.put("/profiles/current", tags=["Profiles"])
+async def update_current_profile(request: Request):
+    try:
+        # Validate token
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            raise HTTPException(status_code=401, detail="Missing authentication token")
+        
+        token = auth_header.split(' ')[1]
+        user = supabase.auth.get_user(token)
+        user_id = user.user.id
+
+        # Get request data
+        data = await request.json()
+        
+        # Update profile
+        with get_db_connection() as conn:
+            with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+                cursor.execute("""
+                    UPDATE profiles 
+                    SET 
+                        email = %s,
+                        first_name = %s,
+                        last_name = %s,
+                        handicap_index = %s,
+                        preferred_price_range = %s,
+                        preferred_difficulty = %s,
+                        skill_level = %s,
+                        play_frequency = %s
+                    WHERE id = %s
+                    RETURNING *
+                """, (
+                    data.get('email'),
+                    data.get('first_name'),
+                    data.get('last_name'),
+                    data.get('handicap_index'),
+                    data.get('preferred_price_range'),
+                    data.get('preferred_difficulty'),
+                    data.get('skill_level'),
+                    data.get('play_frequency'),
+                    user_id
+                ))
+                conn.commit()
+                updated_profile = cursor.fetchone()
+                
+                if not updated_profile:
+                    raise HTTPException(status_code=404, detail="Profile not found")
+                    
+                return updated_profile
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating profile: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 # At the end of the file, include the router with the /api prefix
 app.include_router(api_router, prefix="/api")
 
