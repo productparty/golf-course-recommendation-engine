@@ -8,6 +8,7 @@ import {
 import PageLayout from '../../components/PageLayout';
 import { config } from '../../config';
 import CourseCard from '../../components/CourseCard';
+import { useAuth } from '../../context/AuthContext';
 
 interface Course {
   id: string;
@@ -62,6 +63,7 @@ interface SortOption {
 }
 
 const FindCourseUpdated: React.FC = () => {
+  const { session } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>('');
   const [courses, setCourses] = useState<Course[]>([]);
