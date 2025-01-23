@@ -13,10 +13,8 @@ def calculate_recommendation_score(club, user_preferences):
             'distance': 0.25,
             'price': 0.25,
             'difficulty': 0.20,
-            'holes': 0.05,
-            'membership': 0.05,
-            'amenities': 0.10,
-            'services': 0.10
+            'amenities': 0.15,
+            'services': 0.15
         }
 
         # Log inputs for debugging
@@ -39,20 +37,16 @@ def calculate_recommendation_score(club, user_preferences):
             difficulty_score = 100 if user_preferences['preferred_difficulty'].lower() == club['difficulty'].lower() else 0
             score += weights['difficulty'] * difficulty_score
 
-        # Calculate amenities score
-        amenities = [
-            'driving_range', 'putting_green', 'chipping_green',
-            'practice_bunker', 'restaurant', 'lodging_on_site'
-        ]
-        amenity_score = sum(1 for amenity in amenities if club.get(amenity)) / len(amenities) * 100
+        # Amenities score
+        amenities = ['driving_range', 'putting_green', 'chipping_green', 'practice_bunker', 'restaurant', 'lodging_on_site']
+        amenity_count = sum(1 for amenity in amenities if club.get(amenity))
+        amenity_score = (amenity_count / len(amenities)) * 100
         score += weights['amenities'] * amenity_score
 
-        # Calculate services score
-        services = [
-            'motor_cart', 'pull_cart', 'golf_clubs_rental',
-            'club_fitting', 'golf_lessons'
-        ]
-        service_score = sum(1 for service in services if club.get(service)) / len(services) * 100
+        # Services score
+        services = ['motor_cart', 'pull_cart', 'golf_clubs_rental', 'club_fitting', 'golf_lessons']
+        service_count = sum(1 for service in services if club.get(service))
+        service_score = (service_count / len(services)) * 100
         score += weights['services'] * service_score
 
         logger.info(f"Final score for {club.get('name')}: {score}")
@@ -60,4 +54,4 @@ def calculate_recommendation_score(club, user_preferences):
 
     except Exception as e:
         logger.error(f"Error calculating recommendation score: {str(e)}")
-        raise
+        return 0

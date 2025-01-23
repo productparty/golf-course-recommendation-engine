@@ -55,56 +55,25 @@ const GolferProfile: React.FC = () => {
     setIsLoading(true);
     setError('');
     try {
-      if (!session?.user?.id) {
-        throw new Error('No user session found');
-      }
-
-      const { data, error } = await supabase
-        .from('profiles')
-        .select(`
-          id,
-          email,
-          first_name,
-          last_name,
-          handicap_index,
-          preferred_price_range,
-          preferred_difficulty,
-          skill_level,
-          play_frequency
-        `)
-        .eq('id', session.user.id)
-        .single();
-
-      if (error) {
-        if (error.code === 'PGRST116') {
-          // Profile doesn't exist, create a new one
-          const newProfile = {
-            id: session.user.id,
-            email: session.user.email,
-          };
-          const { data: createdProfile, error: createError } = await supabase
-            .from('profiles')
-            .insert([newProfile])
-            .single();
-
-          if (createError) throw createError;
-          if (createdProfile) setProfile(createdProfile);
-        } else {
-          throw error;
+      const response = await fetch(
+        `${config.API_URL}/api/profiles/current`,
+        {
+          headers: {
+            'Authorization': `Bearer ${session?.access_token}`
+          }
         }
-      } else if (data) {
-        setProfile({
-          ...data,
-          email: session.user.email || data.email,
-        });
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Failed to load profile');
       }
+
+      const data = await response.json();
+      setProfile(data);
     } catch (error: any) {
       console.error('Error fetching profile:', error);
-      setError(
-        error.message === 'No user session found'
-          ? 'Please log in to view your profile'
-          : 'Failed to load profile. Please try again.'
-      );
+      setError(error.message || 'Failed to load profile');
     } finally {
       setIsLoading(false);
     }
