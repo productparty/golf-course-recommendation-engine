@@ -1,74 +1,63 @@
-def calculate_recommendation_score(course, user_preferences):
-    score = 0
-    weights = {
-        'distance': 0.25,
-        'price': 0.25,
-        'difficulty': 0.20,
-        'holes': 0.05,
-        'membership': 0.05,
-        'amenities': 0.10,
-        'services': 0.10
-    }
+import logging
 
-    # Base distance score
-    max_distance = 100
-    distance_score = (max_distance - min(course['distance_miles'], max_distance)) / max_distance
-    score += weights['distance'] * distance_score * 100
+logger = logging.getLogger(__name__)
 
-    # Price match
-    if course['price_tier'] == user_preferences['preferred_price_range']:
-        score += weights['price'] * 100
-    elif course['price_tier'] and user_preferences['preferred_price_range']:
-        price_levels = {'$': 1, '$$': 2, '$$$': 3}
-        price_diff = abs(
-            price_levels.get(course['price_tier'], 0) - 
-            price_levels.get(user_preferences['preferred_price_range'], 0)
-        )
-        if price_diff == 1:
-            score += weights['price'] * 50
+def calculate_recommendation_score(club, user_preferences):
+    """
+    Calculate a recommendation score for a golf club based on user preferences.
+    Returns a score from 0-100.
+    """
+    try:
+        score = 0
+        weights = {
+            'distance': 0.25,
+            'price': 0.25,
+            'difficulty': 0.20,
+            'holes': 0.05,
+            'membership': 0.05,
+            'amenities': 0.10,
+            'services': 0.10
+        }
 
-    # Difficulty match
-    if course['difficulty'] == user_preferences['preferred_difficulty']:
-        score += weights['difficulty'] * 100
-    elif course['difficulty'] and user_preferences['preferred_difficulty']:
-        difficulty_levels = {'EASY': 1, 'MEDIUM': 2, 'HARD': 3}
-        diff_diff = abs(
-            difficulty_levels.get(course['difficulty'].upper(), 0) - 
-            difficulty_levels.get(user_preferences['preferred_difficulty'].upper(), 0)
-        )
-        if diff_diff == 1:
-            score += weights['difficulty'] * 50
+        # Log inputs for debugging
+        logger.info(f"Calculating score for club: {club.get('name')}")
+        logger.info(f"User preferences: {user_preferences}")
+        
+        # Distance score (inverse relationship)
+        max_distance = 100  # miles
+        distance = min(club['distance_miles'], max_distance)
+        distance_score = (1 - (distance / max_distance)) * 100
+        score += weights['distance'] * distance_score
 
-    # Number of holes match
-    if course['number_of_holes'] == user_preferences['number_of_holes']:
-        score += weights['holes'] * 100
-    elif user_preferences['number_of_holes'] == 'any':
-        score += weights['holes'] * 75
+        # Price match
+        if user_preferences['preferred_price_range'] and club['price_tier']:
+            price_score = 100 if user_preferences['preferred_price_range'] == club['price_tier'] else 0
+            score += weights['price'] * price_score
 
-    # Membership type match
-    if course['club_membership'] == user_preferences['club_membership']:
-        score += weights['membership'] * 100
+        # Difficulty match
+        if user_preferences['preferred_difficulty'] and club['difficulty']:
+            difficulty_score = 100 if user_preferences['preferred_difficulty'].lower() == club['difficulty'].lower() else 0
+            score += weights['difficulty'] * difficulty_score
 
-    # Amenities match
-    amenities = [
-        'driving_range', 'putting_green', 'chipping_green', 
-        'practice_bunker', 'restaurant', 'lodging_on_site'
-    ]
-    amenity_matches = sum(
-        1 for amenity in amenities 
-        if course.get(amenity) and user_preferences.get(amenity)
-    )
-    score += weights['amenities'] * (amenity_matches / len(amenities)) * 100
+        # Calculate amenities score
+        amenities = [
+            'driving_range', 'putting_green', 'chipping_green',
+            'practice_bunker', 'restaurant', 'lodging_on_site'
+        ]
+        amenity_score = sum(1 for amenity in amenities if club.get(amenity)) / len(amenities) * 100
+        score += weights['amenities'] * amenity_score
 
-    # Services match
-    services = [
-        'motor_cart', 'pull_cart', 'golf_clubs_rental',
-        'club_fitting', 'golf_lessons'
-    ]
-    service_matches = sum(
-        1 for service in services 
-        if course.get(service) and user_preferences.get(service)
-    )
-    score += weights['services'] * (service_matches / len(services)) * 100
+        # Calculate services score
+        services = [
+            'motor_cart', 'pull_cart', 'golf_clubs_rental',
+            'club_fitting', 'golf_lessons'
+        ]
+        service_score = sum(1 for service in services if club.get(service)) / len(services) * 100
+        score += weights['services'] * service_score
 
-    return round(score, 2)
+        logger.info(f"Final score for {club.get('name')}: {score}")
+        return round(score, 2)
+
+    except Exception as e:
+        logger.error(f"Error calculating recommendation score: {str(e)}")
+        raise
