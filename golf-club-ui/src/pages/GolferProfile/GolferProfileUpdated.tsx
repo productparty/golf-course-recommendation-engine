@@ -103,37 +103,72 @@ const GolferProfileUpdated: React.FC = () => {
   const fetchProfile = async () => {
     setIsLoading(true);
     try {
-      console.log('Making Supabase request...');
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('user_id', session?.user.id)
         .single();
 
-      if (error && error.code === 'PGRST116') { // No profile found
-        // Create new profile
-        const newProfile = {
-          user_id: session?.user.id,
-          email: session?.user.email,
-        };
-        const { data: createdProfile, error: createError } = await supabase
-          .from('profiles')
-          .insert([newProfile])
-          .select()
-          .single();
-
-        if (createError) throw createError;
-        if (createdProfile) setProfile(prev => ({ ...prev, ...createdProfile }));
-      } else if (error) {
-        throw error;
+      if (error) {
+        console.error('Error fetching profile:', error);
+        setError('Failed to load profile');
       } else if (data) {
-        setProfile(prev => ({ ...prev, ...data }));
+        console.log('Profile data loaded:', data);
+        setProfile(prev => ({
+          ...prev,
+          ...data,
+          email: session?.user.email || prev.email,
+        }));
       }
     } catch (error) {
-      console.error('Error fetching/creating profile:', error);
+      console.error('Error:', error);
       setError('Failed to load profile');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleSave = async () => {
+    setIsSubmitting(true);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .upsert({
+          user_id: session?.user.id,
+          email: session?.user.email,
+          first_name: profile.first_name,
+          last_name: profile.last_name,
+          handicap_index: profile.handicap_index,
+          preferred_price_range: profile.preferred_price_range,
+          preferred_difficulty: profile.preferred_difficulty,
+          skill_level: profile.skill_level,
+          play_frequency: profile.play_frequency,
+          club_id: profile.club_id,
+          club_name: profile.club_name,
+          preferred_tees: profile.preferred_tees,
+          number_of_holes: profile.number_of_holes,
+          club_membership: profile.club_membership,
+          driving_range: profile.driving_range,
+          putting_green: profile.putting_green,
+          chipping_green: profile.chipping_green,
+          practice_bunker: profile.practice_bunker,
+          restaurant: profile.restaurant,
+          lodging_on_site: profile.lodging_on_site,
+          motor_cart: profile.motor_cart,
+          pull_cart: profile.pull_cart,
+          golf_clubs_rental: profile.golf_clubs_rental,
+          club_fitting: profile.club_fitting,
+          golf_lessons: profile.golf_lessons,
+        });
+
+      if (error) throw error;
+      setSuccess('Profile saved successfully!');
+      fetchProfile(); // Reload the profile to ensure we have the latest data
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      setError('Failed to save profile');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -244,8 +279,39 @@ const GolferProfileUpdated: React.FC = () => {
               ))}
             </Grid>
           </Grid>
+
+          <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={handleSave}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? 'Saving...' : 'Save Profile'}
+            </Button>
+          </Box>
         </CardContent>
       </Card>
+
+      <Snackbar 
+        open={!!error} 
+        autoHideDuration={6000} 
+        onClose={() => setError('')}
+      >
+        <Alert severity="error" onClose={() => setError('')}>
+          {error}
+        </Alert>
+      </Snackbar>
+
+      <Snackbar 
+        open={!!success} 
+        autoHideDuration={3000} 
+        onClose={() => setSuccess('')}
+      >
+        <Alert severity="success" onClose={() => setSuccess('')}>
+          {success}
+        </Alert>
+      </Snackbar>
     </PageLayout>
   );
 };
