@@ -226,7 +226,7 @@ async def find_clubs(
         # Base query with filters
         base_query = """
         SELECT DISTINCT
-            gc.global_id,
+            gc.global_id as id,
             gc.club_name,
             gc.address,
             gc.city,
@@ -234,6 +234,19 @@ async def find_clubs(
             gc.zip_code,
             gc.price_tier,
             gc.difficulty,
+            gc.number_of_holes,
+            gc.club_membership,
+            gc.driving_range,
+            gc.putting_green,
+            gc.chipping_green,
+            gc.practice_bunker,
+            gc.restaurant,
+            gc.lodging_on_site,
+            gc.motor_cart,
+            gc.pull_cart,
+            gc.golf_clubs_rental,
+            gc.club_fitting,
+            gc.golf_lessons,
             ST_Distance(
                 gc.geom::geography,
                 ST_SetSRID(ST_MakePoint(%s, %s), 4326)::geography
@@ -283,8 +296,32 @@ async def find_clubs(
         if conditions:
             base_query += " AND " + " AND ".join(conditions)
 
-        # Add GROUP BY clause before ORDER BY
-        base_query += " GROUP BY gc.global_id, gc.club_name, gc.address, gc.city, gc.state, gc.zip_code, gc.price_tier, gc.difficulty, gc.geom"
+        # Update GROUP BY clause to include all selected fields
+        base_query += """
+        GROUP BY 
+            gc.global_id,
+            gc.club_name,
+            gc.address,
+            gc.city,
+            gc.state,
+            gc.zip_code,
+            gc.price_tier,
+            gc.difficulty,
+            gc.number_of_holes,
+            gc.club_membership,
+            gc.driving_range,
+            gc.putting_green,
+            gc.chipping_green,
+            gc.practice_bunker,
+            gc.restaurant,
+            gc.lodging_on_site,
+            gc.motor_cart,
+            gc.pull_cart,
+            gc.golf_clubs_rental,
+            gc.club_fitting,
+            gc.golf_lessons,
+            gc.geom
+        """
         base_query += " ORDER BY distance_miles LIMIT %s OFFSET %s"
         params.extend([limit, offset])
 

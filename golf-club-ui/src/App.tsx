@@ -65,7 +65,7 @@ const App: React.FC = () => {
                   <Route path="/reset-password" element={<PasswordResetRequest />} />
                   <Route path="/reset-password/confirm" element={<PasswordResetConfirm />} />
                   <Route path="/profile-updated" element={<ProtectedProfileRoute><ErrorBoundary><GolferProfileUpdated /></ErrorBoundary></ProtectedProfileRoute>} />
-                  <Route path="/find-clubs" element={<ProtectedRoute><ErrorBoundary><FindClubUpdated /></ErrorBoundary></ProtectedRoute>} />
+                  <Route path="/find-club-updated" element={<ProtectedRoute><ErrorBoundary><FindClubUpdated /></ErrorBoundary></ProtectedRoute>} />
                   <Route path="/recommend-club-updated" element={<ProtectedRoute><ErrorBoundary><RecommendClubUpdated /></ErrorBoundary></ProtectedRoute>} />
                   <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
