@@ -28,29 +28,30 @@ import { supabase } from '../../lib/supabase';
 interface GolferProfile {
   id: string;
   user_id: string;
-  first_name?: string;
-  last_name?: string;
-  handicap_index?: number;
-  skill_level: string;
-  preferred_difficulty: string;
-  preferred_price_range: string;
-  play_frequency: string;
-  club_id?: string;
-  preferred_tees?: string;
-  // New fields
-  number_of_holes: string;
-  club_membership: string;
-  driving_range: boolean;
-  putting_green: boolean;
-  chipping_green: boolean;
-  practice_bunker: boolean;
-  restaurant: boolean;
-  lodging_on_site: boolean;
-  motor_cart: boolean;
-  pull_cart: boolean;
-  golf_clubs_rental: boolean;
-  club_fitting: boolean;
-  golf_lessons: boolean;
+  email: string;
+  first_name: string | null;
+  last_name: string | null;
+  handicap_index: number | null;
+  preferred_price_range: string | null;
+  preferred_difficulty: string | null;
+  skill_level: string | null;
+  play_frequency: string | null;
+  club_id: string | null;
+  club_name: string | null;
+  preferred_tees: string | null;
+  number_of_holes: string | null;
+  club_membership: string | null;
+  driving_range: boolean | null;
+  putting_green: boolean | null;
+  chipping_green: boolean | null;
+  practice_bunker: boolean | null;
+  restaurant: boolean | null;
+  lodging_on_site: boolean | null;
+  motor_cart: boolean | null;
+  pull_cart: boolean | null;
+  golf_clubs_rental: boolean | null;
+  club_fitting: boolean | null;
+  golf_lessons: boolean | null;
 }
 
 const GolferProfileUpdated: React.FC = () => {
@@ -58,28 +59,30 @@ const GolferProfileUpdated: React.FC = () => {
   const [profile, setProfile] = useState<GolferProfile>({
     id: '',
     user_id: session?.user.id || '',
-    first_name: '',
-    last_name: '',
-    handicap_index: 0,
-    skill_level: '',
-    preferred_difficulty: '',
-    preferred_price_range: '',
-    play_frequency: '',
-    club_id: '',
-    preferred_tees: '',
-    number_of_holes: '',
-    club_membership: '',
-    driving_range: false,
-    putting_green: false,
-    chipping_green: false,
-    practice_bunker: false,
-    restaurant: false,
-    lodging_on_site: false,
-    motor_cart: false,
-    pull_cart: false,
-    golf_clubs_rental: false,
-    club_fitting: false,
-    golf_lessons: false,
+    email: session?.user.email || '',
+    first_name: null,
+    last_name: null,
+    handicap_index: null,
+    preferred_price_range: null,
+    preferred_difficulty: null,
+    skill_level: null,
+    play_frequency: null,
+    club_id: null,
+    club_name: null,
+    preferred_tees: null,
+    number_of_holes: null,
+    club_membership: null,
+    driving_range: null,
+    putting_green: null,
+    chipping_green: null,
+    practice_bunker: null,
+    restaurant: null,
+    lodging_on_site: null,
+    motor_cart: null,
+    pull_cart: null,
+    golf_clubs_rental: null,
+    club_fitting: null,
+    golf_lessons: null,
   });
   const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState<string>('');
@@ -117,18 +120,19 @@ const GolferProfileUpdated: React.FC = () => {
         setProfile(prev => ({
           ...prev,
           ...data,
-          // Ensure boolean fields are properly set
-          driving_range: !!data.driving_range,
-          putting_green: !!data.putting_green,
-          chipping_green: !!data.chipping_green,
-          practice_bunker: !!data.practice_bunker,
-          restaurant: !!data.restaurant,
-          lodging_on_site: !!data.lodging_on_site,
-          motor_cart: !!data.motor_cart,
-          pull_cart: !!data.pull_cart,
-          golf_clubs_rental: !!data.golf_clubs_rental,
-          club_fitting: !!data.club_fitting,
-          golf_lessons: !!data.golf_lessons,
+          email: session?.user.email || prev.email,
+          // Convert undefined to null for all boolean fields
+          driving_range: data.driving_range ?? null,
+          putting_green: data.putting_green ?? null,
+          chipping_green: data.chipping_green ?? null,
+          practice_bunker: data.practice_bunker ?? null,
+          restaurant: data.restaurant ?? null,
+          lodging_on_site: data.lodging_on_site ?? null,
+          motor_cart: data.motor_cart ?? null,
+          pull_cart: data.pull_cart ?? null,
+          golf_clubs_rental: data.golf_clubs_rental ?? null,
+          club_fitting: data.club_fitting ?? null,
+          golf_lessons: data.golf_lessons ?? null,
         }));
       }
     } catch (error) {
@@ -161,7 +165,7 @@ const GolferProfileUpdated: React.FC = () => {
   ) => {
     const value = 'checked' in event.target 
       ? event.target.checked 
-      : event.target.value;
+      : event.target.value || null;
     setProfile({ ...profile, [field]: value });
   };
 
