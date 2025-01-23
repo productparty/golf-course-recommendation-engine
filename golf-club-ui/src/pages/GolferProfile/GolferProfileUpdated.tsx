@@ -19,8 +19,6 @@ interface GolferProfile {
   preferred_difficulty: string | null;
   skill_level: string | null;
   play_frequency: string | null;
-  club_id: string | null;
-  club_name: string | null;
   preferred_tees: string | null;
   number_of_holes: string | null;
   club_membership: string | null;
@@ -49,8 +47,6 @@ const GolferProfileUpdated: React.FC = () => {
     preferred_difficulty: null,
     skill_level: null,
     play_frequency: null,
-    club_id: null,
-    club_name: null,
     preferred_tees: null,
     number_of_holes: null,
     club_membership: null,
@@ -145,8 +141,6 @@ const GolferProfileUpdated: React.FC = () => {
           preferred_difficulty: profile.preferred_difficulty,
           skill_level: profile.skill_level,
           play_frequency: profile.play_frequency,
-          club_id: profile.club_id,
-          club_name: profile.club_name,
           preferred_tees: profile.preferred_tees,
           number_of_holes: profile.number_of_holes,
           club_membership: profile.club_membership,
@@ -162,7 +156,7 @@ const GolferProfileUpdated: React.FC = () => {
           club_fitting: profile.club_fitting,
           golf_lessons: profile.golf_lessons,
         }, {
-          onConflict: 'id'  // Add this to specify the conflict resolution
+          onConflict: 'id'
         });
 
       if (error) {
