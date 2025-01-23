@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import CreateAccount from './pages/CreateAccount/CreateAccount';
 import './App.css';
 import Header from './components/header';
@@ -23,6 +23,7 @@ import { supabase } from './supabaseClient';
 import CreateAccountSuccessful from './pages/CreateAccount/CreateAccountSuccessful';
 import { Analytics } from "@vercel/analytics/react"
 import GolferProfileUpdated from './pages/GolferProfile/GolferProfileUpdated';
+import { CircularProgress } from '@mui/material';
 
 const theme = createTheme();
 
@@ -60,7 +61,7 @@ const App: React.FC = () => {
                   <Route path="/golfer-profile" element={<ProtectedRoute><GolferProfile /></ProtectedRoute>} />
                   <Route path="/reset-password" element={<PasswordResetRequest />} />
                   <Route path="/reset-password/confirm" element={<PasswordResetConfirm />} />
-                  <Route path="/profile-updated" element={<ProtectedRoute><GolferProfileUpdated /></ProtectedRoute>} />
+                  <Route path="/profile-updated" element={<ProtectedProfileRoute><GolferProfileUpdated /></ProtectedProfileRoute>} />
                   <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
               </div>
@@ -82,6 +83,20 @@ const ProtectedRoute: React.FC<{ children: JSX.Element }> = ({ children }) => {
   }
 
   return <>{children}</>;
+};
+
+const ProtectedProfileRoute = ({ children }: { children: React.ReactNode }) => {
+  const { session, loading } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!loading && !session) {
+      navigate('/login');
+    }
+  }, [session, loading, navigate]);
+
+  if (loading) return <CircularProgress />;
+  return session ? <>{children}</> : null;
 };
 
 export default App;
