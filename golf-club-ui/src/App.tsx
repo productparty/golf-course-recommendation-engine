@@ -26,6 +26,7 @@ import GolferProfileUpdated from './pages/GolferProfile/GolferProfileUpdated';
 import { CircularProgress } from '@mui/material';
 import ErrorBoundary from './components/ErrorBoundary';
 import FindCourseUpdated from './pages/FindCourse/FindCourseUpdated';
+import RecommendClubUpdated from './pages/RecommendClub/RecommendClubUpdated';
 
 const theme = createTheme();
 
@@ -65,6 +66,7 @@ const App: React.FC = () => {
                   <Route path="/reset-password/confirm" element={<PasswordResetConfirm />} />
                   <Route path="/profile-updated" element={<ProtectedProfileRoute><ErrorBoundary><GolferProfileUpdated /></ErrorBoundary></ProtectedProfileRoute>} />
                   <Route path="/find-course-updated" element={<ProtectedRoute><ErrorBoundary><FindCourseUpdated /></ErrorBoundary></ProtectedRoute>} />
+                  <Route path="/recommend-club-updated" element={<ProtectedRoute><ErrorBoundary><RecommendClubUpdated /></ErrorBoundary></ProtectedRoute>} />
                   <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
               </div>

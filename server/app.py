@@ -750,6 +750,53 @@ async def search_courses(filters: CourseSearchFilters):
         logger.error(f"Error searching courses: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@api_router.post("/recommend-courses", tags=["Courses"])
+async def recommend_courses(request: Request):
+    try:
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            raise HTTPException(status_code=401, detail="Missing authentication token")
+        
+        token = auth_header.split(' ')[1]
+        user = supabase.auth.get_user(token)
+        user_id = user.user.id
+
+        # Get user preferences
+        with get_db_connection() as conn:
+            with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+                cursor.execute("""
+                    SELECT * FROM profiles WHERE id = %s
+                """, (user_id,))
+                user_preferences = cursor.fetchone()
+
+                if not user_preferences:
+                    raise HTTPException(status_code=404, detail="User profile not found")
+
+                # Get all courses
+                cursor.execute("SELECT * FROM courses")
+                courses = cursor.fetchall()
+
+                # Calculate scores for each course
+                scored_courses = []
+                for course in courses:
+                    score = calculate_recommendation_score(course, user_preferences)
+                    scored_courses.append({
+                        **course,
+                        'score': score
+                    })
+
+                # Sort by score descending
+                scored_courses.sort(key=lambda x: x['score'], reverse=True)
+
+                return {
+                    "courses": scored_courses[:10],  # Return top 10
+                    "total": len(scored_courses)
+                }
+
+    except Exception as e:
+        logger.error(f"Error recommending courses: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 # At the end of the file, include the router with the /api prefix
 app.include_router(api_router, prefix="/api")
 

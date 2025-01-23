@@ -1,54 +1,74 @@
-def calculate_recommendation_score(distance_miles, difficulty, price_tier, preferred_difficulty, preferred_price_range):
+def calculate_recommendation_score(course, user_preferences):
     score = 0
-    weight_price = 0.4
-    weight_difficulty = 0.3
-    weight_distance = 0.3
+    weights = {
+        'distance': 0.25,
+        'price': 0.25,
+        'difficulty': 0.20,
+        'holes': 0.05,
+        'membership': 0.05,
+        'amenities': 0.10,
+        'services': 0.10
+    }
 
-    # Debug logging
-    print(f"Scoring - Difficulty: {difficulty} vs {preferred_difficulty}")
-    print(f"Scoring - Price: {price_tier} vs {preferred_price_range}")
+    # Base distance score
+    max_distance = 100
+    distance_score = (max_distance - min(course['distance_miles'], max_distance)) / max_distance
+    score += weights['distance'] * distance_score * 100
 
-    # Handle null values
-    if not all([difficulty, price_tier, preferred_difficulty, preferred_price_range]):
-        # If any preferences are missing, use distance only
-        max_distance = 100
-        distance_score = (max_distance - min(distance_miles, max_distance)) / max_distance
-        return round(distance_score * 100, 2)
-
-    # Normalize values for comparison
-    def normalize_value(val):
-        if val is None:
-            return None
-        return str(val).strip().upper()
-
-    difficulty = normalize_value(difficulty)
-    preferred_difficulty = normalize_value(preferred_difficulty)
-    price_tier = normalize_value(price_tier)
-    preferred_price_range = normalize_value(preferred_price_range)
-
-    # Price Match
-    if price_tier == preferred_price_range:
-        score += weight_price * 100
-    elif price_tier and preferred_price_range:
-        # Partial match based on price difference
+    # Price match
+    if course['price_tier'] == user_preferences['preferred_price_range']:
+        score += weights['price'] * 100
+    elif course['price_tier'] and user_preferences['preferred_price_range']:
         price_levels = {'$': 1, '$$': 2, '$$$': 3}
-        price_diff = abs(price_levels.get(price_tier, 0) - price_levels.get(preferred_price_range, 0))
-        if price_diff == 1:  # One level difference
-            score += weight_price * 50  # Half score for close match
+        price_diff = abs(
+            price_levels.get(course['price_tier'], 0) - 
+            price_levels.get(user_preferences['preferred_price_range'], 0)
+        )
+        if price_diff == 1:
+            score += weights['price'] * 50
 
-    # Difficulty Match
-    if difficulty == preferred_difficulty:
-        score += weight_difficulty * 100
-    elif difficulty and preferred_difficulty:
-        # Partial match based on difficulty difference
+    # Difficulty match
+    if course['difficulty'] == user_preferences['preferred_difficulty']:
+        score += weights['difficulty'] * 100
+    elif course['difficulty'] and user_preferences['preferred_difficulty']:
         difficulty_levels = {'EASY': 1, 'MEDIUM': 2, 'HARD': 3}
-        diff_diff = abs(difficulty_levels.get(difficulty, 0) - difficulty_levels.get(preferred_difficulty, 0))
-        if diff_diff == 1:  # One level difference
-            score += weight_difficulty * 50  # Half score for close match
+        diff_diff = abs(
+            difficulty_levels.get(course['difficulty'].upper(), 0) - 
+            difficulty_levels.get(user_preferences['preferred_difficulty'].upper(), 0)
+        )
+        if diff_diff == 1:
+            score += weights['difficulty'] * 50
 
-    # Distance Score (inverse relationship)
-    max_distance = 100  # Maximum distance to consider
-    distance_score = (max_distance - min(distance_miles, max_distance)) / max_distance
-    score += weight_distance * distance_score * 100
+    # Number of holes match
+    if course['number_of_holes'] == user_preferences['number_of_holes']:
+        score += weights['holes'] * 100
+    elif user_preferences['number_of_holes'] == 'any':
+        score += weights['holes'] * 75
 
-    return round(score, 2)  # Round to 2 decimal places
+    # Membership type match
+    if course['club_membership'] == user_preferences['club_membership']:
+        score += weights['membership'] * 100
+
+    # Amenities match
+    amenities = [
+        'driving_range', 'putting_green', 'chipping_green', 
+        'practice_bunker', 'restaurant', 'lodging_on_site'
+    ]
+    amenity_matches = sum(
+        1 for amenity in amenities 
+        if course.get(amenity) and user_preferences.get(amenity)
+    )
+    score += weights['amenities'] * (amenity_matches / len(amenities)) * 100
+
+    # Services match
+    services = [
+        'motor_cart', 'pull_cart', 'golf_clubs_rental',
+        'club_fitting', 'golf_lessons'
+    ]
+    service_matches = sum(
+        1 for service in services 
+        if course.get(service) and user_preferences.get(service)
+    )
+    score += weights['services'] * (service_matches / len(services)) * 100
+
+    return round(score, 2)

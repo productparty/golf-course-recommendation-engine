@@ -7,6 +7,28 @@ import {
 } from '@mui/material';
 import PageLayout from '../../components/PageLayout';
 import { config } from '../../config';
+import CourseCard from '../../components/CourseCard';
+
+interface Course {
+  id: string;
+  name: string;
+  distance_miles: number;
+  price_tier: string;
+  difficulty: string;
+  number_of_holes: string;
+  club_membership: string;
+  driving_range: boolean;
+  putting_green: boolean;
+  chipping_green: boolean;
+  practice_bunker: boolean;
+  restaurant: boolean;
+  lodging_on_site: boolean;
+  motor_cart: boolean;
+  pull_cart: boolean;
+  golf_clubs_rental: boolean;
+  club_fitting: boolean;
+  golf_lessons: boolean;
+}
 
 interface CourseFilters {
   zipCode: string;
@@ -33,10 +55,16 @@ interface CourseFilters {
   golf_lessons: boolean;
 }
 
+interface SortOption {
+  value: keyof Course;
+  label: string;
+  transform?: (a: any, b: any) => number;
+}
+
 const FindCourseUpdated: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>('');
-  const [courses, setCourses] = useState<any[]>([]);
+  const [courses, setCourses] = useState<Course[]>([]);
   const [filters, setFilters] = useState<CourseFilters>({
     zipCode: '',
     radius: '25',
@@ -57,6 +85,16 @@ const FindCourseUpdated: React.FC = () => {
     club_fitting: false,
     golf_lessons: false,
   });
+
+  const [sortBy, setSortBy] = useState<keyof Course>('distance_miles');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+
+  const sortOptions: SortOption[] = [
+    { value: 'distance_miles', label: 'Distance' },
+    { value: 'price_tier', label: 'Price' },
+    { value: 'difficulty', label: 'Difficulty' },
+    { value: 'name', label: 'Name' },
+  ];
 
   const handleTextChange = (field: keyof CourseFilters) => (
     event: React.ChangeEvent<HTMLInputElement>
@@ -101,6 +139,22 @@ const FindCourseUpdated: React.FC = () => {
       setIsLoading(false);
     }
   };
+
+  const sortedCourses = [...courses].sort((a, b) => {
+    const direction = sortDirection === 'asc' ? 1 : -1;
+    const aVal = a[sortBy];
+    const bVal = b[sortBy];
+
+    if (sortBy === 'distance_miles') {
+      return ((aVal as number) - (bVal as number)) * direction;
+    }
+    
+    if (typeof aVal === 'string' && typeof bVal === 'string') {
+      return aVal.localeCompare(bVal) * direction;
+    }
+    
+    return 0;
+  });
 
   return (
     <PageLayout title="Find a Course">
@@ -317,7 +371,40 @@ const FindCourseUpdated: React.FC = () => {
           <Typography variant="h6" gutterBottom>
             Found {courses.length} courses
           </Typography>
-          {/* Add course list component here */}
+          <Box sx={{ mb: 2, display: 'flex', gap: 2 }}>
+            <FormControl size="small">
+              <InputLabel>Sort By</InputLabel>
+              <Select
+                value={sortBy}
+                label="Sort By"
+                onChange={(e) => setSortBy(e.target.value as keyof Course)}
+              >
+                {sortOptions.map(option => (
+                  <MenuItem key={option.value} value={option.value}>
+                    {option.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <FormControl size="small">
+              <InputLabel>Direction</InputLabel>
+              <Select
+                value={sortDirection}
+                label="Direction"
+                onChange={(e) => setSortDirection(e.target.value as 'asc' | 'desc')}
+              >
+                <MenuItem value="asc">Ascending</MenuItem>
+                <MenuItem value="desc">Descending</MenuItem>
+              </Select>
+            </FormControl>
+          </Box>
+          <Grid container spacing={2}>
+            {sortedCourses.map((course) => (
+              <Grid item xs={12} md={6} key={course.id}>
+                <CourseCard course={course} />
+              </Grid>
+            ))}
+          </Grid>
         </Box>
       )}
     </PageLayout>
