@@ -1,0 +1,327 @@
+import React, { useState } from 'react';
+import {
+  Typography, TextField, Button, Card, CardContent,
+  Grid, FormControl, InputLabel, Select, MenuItem,
+  Divider, FormControlLabel, Switch, Box, SelectChangeEvent,
+  CircularProgress, Alert
+} from '@mui/material';
+import PageLayout from '../../components/PageLayout';
+import { config } from '../../config';
+
+interface CourseFilters {
+  zipCode: string;
+  radius: string;
+  // Course Basics
+  preferred_price_range: string | null;
+  number_of_holes: string | null;
+  club_membership: string | null;
+  // Skill and Difficulty
+  skill_level: string | null;
+  preferred_difficulty: string | null;
+  // Amenities
+  driving_range: boolean;
+  putting_green: boolean;
+  chipping_green: boolean;
+  practice_bunker: boolean;
+  restaurant: boolean;
+  lodging_on_site: boolean;
+  // Equipment and Services
+  motor_cart: boolean;
+  pull_cart: boolean;
+  golf_clubs_rental: boolean;
+  club_fitting: boolean;
+  golf_lessons: boolean;
+}
+
+const FindCourseUpdated: React.FC = () => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string>('');
+  const [courses, setCourses] = useState<any[]>([]);
+  const [filters, setFilters] = useState<CourseFilters>({
+    zipCode: '',
+    radius: '25',
+    preferred_price_range: null,
+    number_of_holes: null,
+    club_membership: null,
+    skill_level: null,
+    preferred_difficulty: null,
+    driving_range: false,
+    putting_green: false,
+    chipping_green: false,
+    practice_bunker: false,
+    restaurant: false,
+    lodging_on_site: false,
+    motor_cart: false,
+    pull_cart: false,
+    golf_clubs_rental: false,
+    club_fitting: false,
+    golf_lessons: false,
+  });
+
+  const handleTextChange = (field: keyof CourseFilters) => (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setFilters(prev => ({ ...prev, [field]: event.target.value }));
+  };
+
+  const handleSelectChange = (field: keyof CourseFilters) => (
+    event: SelectChangeEvent<string>
+  ) => {
+    setFilters(prev => ({ ...prev, [field]: event.target.value }));
+  };
+
+  const handleSwitchChange = (field: keyof CourseFilters) => (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setFilters(prev => ({ ...prev, [field]: event.target.checked }));
+  };
+
+  const handleSearch = async () => {
+    setIsLoading(true);
+    setError('');
+    try {
+      const response = await fetch(`${config.API_URL}/api/search-courses`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(filters),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to search courses');
+      }
+
+      const data = await response.json();
+      setCourses(data.courses);
+    } catch (error) {
+      console.error('Error searching courses:', error);
+      setError('Failed to search courses');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <PageLayout title="Find a Course">
+      <Card>
+        <CardContent>
+          <Grid container spacing={3}>
+            {/* Location Search */}
+            <Grid item xs={12}>
+              <Typography variant="h6" gutterBottom>Location</Typography>
+              <Divider sx={{ mb: 2 }} />
+              <Grid container spacing={2}>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label="Zip Code"
+                    value={filters.zipCode}
+                    onChange={handleTextChange('zipCode')}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <FormControl fullWidth>
+                    <InputLabel>Search Radius</InputLabel>
+                    <Select
+                      value={filters.radius}
+                      onChange={handleSelectChange('radius')}
+                      label="Search Radius"
+                    >
+                      <MenuItem value="10">10 miles</MenuItem>
+                      <MenuItem value="25">25 miles</MenuItem>
+                      <MenuItem value="50">50 miles</MenuItem>
+                      <MenuItem value="100">100 miles</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
+              </Grid>
+            </Grid>
+
+            {/* Course Basics */}
+            <Grid item xs={12}>
+              <Typography variant="h6" gutterBottom>Course Basics</Typography>
+              <Divider sx={{ mb: 2 }} />
+              <Grid container spacing={2}>
+                <Grid item xs={12} sm={4}>
+                  <FormControl fullWidth>
+                    <InputLabel>Price Range</InputLabel>
+                    <Select
+                      value={filters.preferred_price_range || ''}
+                      onChange={handleSelectChange('preferred_price_range')}
+                      label="Price Range"
+                    >
+                      <MenuItem value="">Any</MenuItem>
+                      <MenuItem value="$">$</MenuItem>
+                      <MenuItem value="$$">$$</MenuItem>
+                      <MenuItem value="$$$">$$$</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
+                <Grid item xs={12} sm={4}>
+                  <FormControl fullWidth>
+                    <InputLabel>Number of Holes</InputLabel>
+                    <Select
+                      value={filters.number_of_holes || ''}
+                      onChange={handleSelectChange('number_of_holes')}
+                      label="Number of Holes"
+                    >
+                      <MenuItem value="">Any</MenuItem>
+                      <MenuItem value="9">9 Holes</MenuItem>
+                      <MenuItem value="18">18 Holes</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
+                <Grid item xs={12} sm={4}>
+                  <FormControl fullWidth>
+                    <InputLabel>Club Type</InputLabel>
+                    <Select
+                      value={filters.club_membership || ''}
+                      onChange={handleSelectChange('club_membership')}
+                      label="Club Type"
+                    >
+                      <MenuItem value="">Any</MenuItem>
+                      <MenuItem value="public">Public</MenuItem>
+                      <MenuItem value="private">Private</MenuItem>
+                      <MenuItem value="military">Military</MenuItem>
+                      <MenuItem value="municipal">Municipal</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
+              </Grid>
+            </Grid>
+
+            {/* Skill and Difficulty */}
+            <Grid item xs={12}>
+              <Typography variant="h6" gutterBottom>Skill and Difficulty</Typography>
+              <Divider sx={{ mb: 2 }} />
+              <Grid container spacing={2}>
+                <Grid item xs={12} sm={6}>
+                  <FormControl fullWidth>
+                    <InputLabel>Skill Level</InputLabel>
+                    <Select
+                      value={filters.skill_level || ''}
+                      onChange={handleSelectChange('skill_level')}
+                      label="Skill Level"
+                    >
+                      <MenuItem value="">Any</MenuItem>
+                      <MenuItem value="beginner">Beginner</MenuItem>
+                      <MenuItem value="intermediate">Intermediate</MenuItem>
+                      <MenuItem value="advanced">Advanced</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <FormControl fullWidth>
+                    <InputLabel>Course Difficulty</InputLabel>
+                    <Select
+                      value={filters.preferred_difficulty || ''}
+                      onChange={handleSelectChange('preferred_difficulty')}
+                      label="Course Difficulty"
+                    >
+                      <MenuItem value="">Any</MenuItem>
+                      <MenuItem value="easy">Easy</MenuItem>
+                      <MenuItem value="medium">Medium</MenuItem>
+                      <MenuItem value="hard">Hard</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
+              </Grid>
+            </Grid>
+
+            {/* Amenities */}
+            <Grid item xs={12}>
+              <Typography variant="h6" gutterBottom>Amenities</Typography>
+              <Divider sx={{ mb: 2 }} />
+              <Grid container spacing={2}>
+                {[
+                  { field: 'driving_range', label: 'Driving Range' },
+                  { field: 'putting_green', label: 'Putting Green' },
+                  { field: 'chipping_green', label: 'Chipping Green' },
+                  { field: 'practice_bunker', label: 'Practice Bunker' },
+                  { field: 'restaurant', label: 'Restaurant' },
+                  { field: 'lodging_on_site', label: 'Lodging On-Site' },
+                ].map(({ field, label }) => (
+                  <Grid item xs={12} sm={6} md={4} key={field}>
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={filters[field as keyof CourseFilters] as boolean}
+                          onChange={handleSwitchChange(field as keyof CourseFilters)}
+                        />
+                      }
+                      label={label}
+                    />
+                  </Grid>
+                ))}
+              </Grid>
+            </Grid>
+
+            {/* Equipment and Services */}
+            <Grid item xs={12}>
+              <Typography variant="h6" gutterBottom>Equipment and Services</Typography>
+              <Divider sx={{ mb: 2 }} />
+              <Grid container spacing={2}>
+                {[
+                  { field: 'motor_cart', label: 'Motor Cart' },
+                  { field: 'pull_cart', label: 'Pull Cart' },
+                  { field: 'golf_clubs_rental', label: 'Golf Club Rentals' },
+                  { field: 'club_fitting', label: 'Club Fitting' },
+                  { field: 'golf_lessons', label: 'Golf Lessons' },
+                ].map(({ field, label }) => (
+                  <Grid item xs={12} sm={6} md={4} key={field}>
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={filters[field as keyof CourseFilters] as boolean}
+                          onChange={handleSwitchChange(field as keyof CourseFilters)}
+                        />
+                      }
+                      label={label}
+                    />
+                  </Grid>
+                ))}
+              </Grid>
+            </Grid>
+          </Grid>
+
+          <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={handleSearch}
+              disabled={isLoading}
+              size="large"
+            >
+              {isLoading ? (
+                <>
+                  <CircularProgress size={24} sx={{ mr: 1 }} />
+                  Searching...
+                </>
+              ) : (
+                'Search Courses'
+              )}
+            </Button>
+          </Box>
+        </CardContent>
+      </Card>
+
+      {error && (
+        <Alert severity="error" sx={{ mt: 2 }}>
+          {error}
+        </Alert>
+      )}
+
+      {courses.length > 0 && (
+        <Box sx={{ mt: 3 }}>
+          <Typography variant="h6" gutterBottom>
+            Found {courses.length} courses
+          </Typography>
+          {/* Add course list component here */}
+        </Box>
+      )}
+    </PageLayout>
+  );
+};
+
+export default FindCourseUpdated; 

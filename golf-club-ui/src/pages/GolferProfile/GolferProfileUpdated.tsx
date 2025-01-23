@@ -127,35 +127,37 @@ const GolferProfileUpdated: React.FC = () => {
   const handleSave = async () => {
     setIsSubmitting(true);
     try {
-      console.log('Saving profile:', profile);
+      const dataToSave = {
+        id: session?.user.id,
+        email: session?.user.email,
+        first_name: profile.first_name,
+        last_name: profile.last_name,
+        handicap_index: profile.handicap_index,
+        preferred_price_range: profile.preferred_price_range,
+        preferred_difficulty: profile.preferred_difficulty ? String(profile.preferred_difficulty) : null,
+        skill_level: profile.skill_level ? String(profile.skill_level) : null,
+        play_frequency: profile.play_frequency ? String(profile.play_frequency) : null,
+        preferred_tees: profile.preferred_tees ? String(profile.preferred_tees) : null,
+        number_of_holes: profile.number_of_holes ? String(profile.number_of_holes) : null,
+        club_membership: profile.club_membership ? String(profile.club_membership) : null,
+        driving_range: !!profile.driving_range,
+        putting_green: !!profile.putting_green,
+        chipping_green: !!profile.chipping_green,
+        practice_bunker: !!profile.practice_bunker,
+        restaurant: !!profile.restaurant,
+        lodging_on_site: !!profile.lodging_on_site,
+        motor_cart: !!profile.motor_cart,
+        pull_cart: !!profile.pull_cart,
+        golf_clubs_rental: !!profile.golf_clubs_rental,
+        club_fitting: !!profile.club_fitting,
+        golf_lessons: !!profile.golf_lessons,
+      };
+
+      console.log('Saving profile:', dataToSave);
 
       const { data, error } = await supabase
         .from('profiles')
-        .upsert({
-          id: session?.user.id,
-          email: session?.user.email,
-          first_name: profile.first_name,
-          last_name: profile.last_name,
-          handicap_index: profile.handicap_index,
-          preferred_price_range: profile.preferred_price_range,
-          preferred_difficulty: profile.preferred_difficulty,
-          skill_level: profile.skill_level,
-          play_frequency: profile.play_frequency,
-          preferred_tees: profile.preferred_tees,
-          number_of_holes: profile.number_of_holes,
-          club_membership: profile.club_membership,
-          driving_range: profile.driving_range,
-          putting_green: profile.putting_green,
-          chipping_green: profile.chipping_green,
-          practice_bunker: profile.practice_bunker,
-          restaurant: profile.restaurant,
-          lodging_on_site: profile.lodging_on_site,
-          motor_cart: profile.motor_cart,
-          pull_cart: profile.pull_cart,
-          golf_clubs_rental: profile.golf_clubs_rental,
-          club_fitting: profile.club_fitting,
-          golf_lessons: profile.golf_lessons,
-        }, {
+        .upsert(dataToSave, {
           onConflict: 'id'
         });
 
@@ -166,7 +168,7 @@ const GolferProfileUpdated: React.FC = () => {
 
       console.log('Save successful:', data);
       setSuccess('Profile saved successfully!');
-      await fetchProfile(); // Refresh the data
+      await fetchProfile();
     } catch (error: any) {
       console.error('Error saving profile:', error);
       setError(error.message || 'Failed to save profile');
@@ -187,7 +189,11 @@ const GolferProfileUpdated: React.FC = () => {
   const handleSelectChange = (field: keyof GolferProfile) => (
     event: SelectChangeEvent<string>
   ) => {
-    setProfile(prev => ({ ...prev, [field]: event.target.value || null }));
+    const value = event.target.value || null;
+    setProfile(prev => ({
+      ...prev,
+      [field]: value
+    }));
   };
 
   const handleSwitchChange = (field: keyof GolferProfile) => (

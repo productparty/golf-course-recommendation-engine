@@ -670,6 +670,86 @@ async def get_recommendations(
         logger.error(f"Error in get_recommendations: {str(e)}")
         raise HTTPException(status_code=400, detail=f"Failed to get recommendations: {str(e)}")
 
+class CourseSearchFilters(BaseModel):
+    zip_code: str
+    radius: int
+    preferred_price_range: str | None
+    number_of_holes: str | None
+    club_membership: str | None
+    skill_level: str | None
+    preferred_difficulty: str | None
+    driving_range: bool | None
+    putting_green: bool | None
+    chipping_green: bool | None
+    practice_bunker: bool | None
+    restaurant: bool | None
+    lodging_on_site: bool | None
+    motor_cart: bool | None
+    pull_cart: bool | None
+    golf_clubs_rental: bool | None
+    club_fitting: bool | None
+    golf_lessons: bool | None
+
+@api_router.post("/search-courses", tags=["Courses"])
+async def search_courses(filters: CourseSearchFilters):
+    try:
+        query = """
+            SELECT c.* 
+            FROM courses c
+            WHERE 1=1
+            AND ST_DWithin(
+                c.location::geography,
+                (SELECT ST_SetSRID(ST_MakePoint(longitude, latitude), 4326)::geography 
+                FROM zip_codes 
+                WHERE zip_code = %s),
+                %s * 1609.34  -- Convert miles to meters
+            )
+        """
+        params = [filters.zip_code, filters.radius]
+
+        # Add filter conditions
+        if filters.preferred_price_range:
+            query += " AND c.price_range = %s"
+            params.append(filters.preferred_price_range)
+            
+        if filters.number_of_holes:
+            query += " AND c.number_of_holes = %s"
+            params.append(filters.number_of_holes)
+            
+        if filters.club_membership:
+            query += " AND c.club_type = %s"
+            params.append(filters.club_membership)
+            
+        if filters.preferred_difficulty:
+            query += " AND c.difficulty = %s"
+            params.append(filters.preferred_difficulty)
+
+        # Add amenity filters
+        amenities = [
+            'driving_range', 'putting_green', 'chipping_green', 
+            'practice_bunker', 'restaurant', 'lodging_on_site',
+            'motor_cart', 'pull_cart', 'golf_clubs_rental',
+            'club_fitting', 'golf_lessons'
+        ]
+        
+        for amenity in amenities:
+            if getattr(filters, amenity):
+                query += f" AND c.{amenity} = TRUE"
+
+        with get_db_connection() as conn:
+            with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+                cursor.execute(query, params)
+                courses = cursor.fetchall()
+                
+                return {
+                    "courses": courses,
+                    "total": len(courses)
+                }
+
+    except Exception as e:
+        logger.error(f"Error searching courses: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 # At the end of the file, include the router with the /api prefix
 app.include_router(api_router, prefix="/api")
 

@@ -21,7 +21,7 @@ const formatApiUrl = (url: string) => {
 
 // Export configuration object
 export const config = {
-  API_URL: formatApiUrl(VITE_API_URL),
+  API_URL: process.env.REACT_APP_API_URL || 'http://localhost:8000',
   SUPABASE_URL: import.meta.env.VITE_SUPABASE_URL,
   SUPABASE_ANON_KEY: import.meta.env.VITE_SUPABASE_ANON_KEY,
   APP_URL: import.meta.env.VITE_APP_URL
