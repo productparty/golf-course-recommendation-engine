@@ -29,6 +29,20 @@ interface GolferProfile {
   preferred_difficulty: string | null;
   skill_level: string | null;
   play_frequency: string | null;
+  preferred_tees: string | null;
+  number_of_holes: string | null;
+  club_membership: string | null;
+  driving_range: boolean | null;
+  putting_green: boolean | null;
+  chipping_green: boolean | null;
+  practice_bunker: boolean | null;
+  restaurant: boolean | null;
+  lodging_on_site: boolean | null;
+  motor_cart: boolean | null;
+  pull_cart: boolean | null;
+  golf_clubs_rental: boolean | null;
+  club_fitting: boolean | null;
+  golf_lessons: boolean | null;
 }
 
 const GolferProfile: React.FC = () => {
@@ -44,6 +58,20 @@ const GolferProfile: React.FC = () => {
     preferred_difficulty: null,
     skill_level: null,
     play_frequency: null,
+    preferred_tees: null,
+    number_of_holes: null,
+    club_membership: null,
+    driving_range: null,
+    putting_green: null,
+    chipping_green: null,
+    practice_bunker: null,
+    restaurant: null,
+    lodging_on_site: null,
+    motor_cart: null,
+    pull_cart: null,
+    golf_clubs_rental: null,
+    club_fitting: null,
+    golf_lessons: null,
   });
   const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState<string>('');
@@ -100,6 +128,31 @@ const GolferProfile: React.FC = () => {
         throw new Error('Email is required');
       }
 
+      const dataToSave = {
+        email: profile.email,
+        first_name: profile.first_name?.trim() || null,
+        last_name: profile.last_name?.trim() || null,
+        handicap_index: profile.handicap_index,
+        preferred_price_range: profile.preferred_price_range,
+        preferred_difficulty: profile.preferred_difficulty?.toLowerCase() || null,
+        skill_level: profile.skill_level?.toLowerCase() || null,
+        play_frequency: profile.play_frequency?.toLowerCase() || null,
+        preferred_tees: profile.preferred_tees,
+        number_of_holes: profile.number_of_holes,
+        club_membership: profile.club_membership,
+        driving_range: profile.driving_range,
+        putting_green: profile.putting_green,
+        chipping_green: profile.chipping_green,
+        practice_bunker: profile.practice_bunker,
+        restaurant: profile.restaurant,
+        lodging_on_site: profile.lodging_on_site,
+        motor_cart: profile.motor_cart,
+        pull_cart: profile.pull_cart,
+        golf_clubs_rental: profile.golf_clubs_rental,
+        club_fitting: profile.club_fitting,
+        golf_lessons: profile.golf_lessons,
+      };
+
       const response = await fetch(
         `${config.API_URL}/api/profiles/current`,
         {
@@ -108,16 +161,7 @@ const GolferProfile: React.FC = () => {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${session.access_token}`
           },
-          body: JSON.stringify({
-            email: profile.email,
-            first_name: profile.first_name?.trim() || null,
-            last_name: profile.last_name?.trim() || null,
-            handicap_index: profile.handicap_index,
-            preferred_price_range: profile.preferred_price_range,
-            preferred_difficulty: profile.preferred_difficulty,
-            skill_level: profile.skill_level,
-            play_frequency: profile.play_frequency
-          })
+          body: JSON.stringify(dataToSave)
         }
       );
 
@@ -220,10 +264,10 @@ const GolferProfile: React.FC = () => {
               onChange={handleSelectChange}
               label="Preferred Difficulty"
             >
-              <MenuItem value="">None</MenuItem>
-              <MenuItem value="Easy">Easy</MenuItem>
-              <MenuItem value="Medium">Medium</MenuItem>
-              <MenuItem value="Hard">Hard</MenuItem>
+              <MenuItem value="">Select...</MenuItem>
+              <MenuItem value="easy">Easy</MenuItem>
+              <MenuItem value="medium">Medium</MenuItem>
+              <MenuItem value="hard">Hard</MenuItem>
             </Select>
           </FormControl>
           <FormControl fullWidth margin="normal">
@@ -234,10 +278,10 @@ const GolferProfile: React.FC = () => {
               onChange={handleSelectChange}
               label="Skill Level"
             >
-              <MenuItem value="">None</MenuItem>
-              <MenuItem value="Beginner">Beginner</MenuItem>
-              <MenuItem value="Intermediate">Intermediate</MenuItem>
-              <MenuItem value="Advanced">Advanced</MenuItem>
+              <MenuItem value="">Select...</MenuItem>
+              <MenuItem value="beginner">Beginner</MenuItem>
+              <MenuItem value="intermediate">Intermediate</MenuItem>
+              <MenuItem value="advanced">Advanced</MenuItem>
             </Select>
           </FormControl>
           <FormControl fullWidth margin="normal">
@@ -248,11 +292,11 @@ const GolferProfile: React.FC = () => {
               onChange={handleSelectChange}
               label="Play Frequency"
             >
-              <MenuItem value="">None</MenuItem>
-              <MenuItem value="Rarely">Rarely</MenuItem>
-              <MenuItem value="Sometimes">Sometimes</MenuItem>
-              <MenuItem value="Often">Often</MenuItem>
-              <MenuItem value="Very Often">Very Often</MenuItem>
+              <MenuItem value="">Select...</MenuItem>
+              <MenuItem value="rarely">Rarely</MenuItem>
+              <MenuItem value="sometimes">Sometimes</MenuItem>
+              <MenuItem value="often">Often</MenuItem>
+              <MenuItem value="very_often">Very Often</MenuItem>
             </Select>
           </FormControl>
           <Button
