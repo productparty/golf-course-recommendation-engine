@@ -40,8 +40,9 @@ const FeatureChip: React.FC<{ label: string; isMatch?: boolean }> = ({ label, is
     label={label}
     size="small"
     sx={{ 
-      borderColor: isMatch ? 'success.main' : 'grey.300',
-      color: isMatch ? 'success.main' : 'text.secondary',
+      borderColor: isMatch ? '#2E5A27' : 'grey.300',
+      color: isMatch ? '#2E5A27' : 'text.secondary',
+      backgroundColor: isMatch ? '#2E5A2710' : 'transparent',
       '& .MuiChip-label': {
         fontWeight: isMatch ? 'bold' : 'normal',
       }

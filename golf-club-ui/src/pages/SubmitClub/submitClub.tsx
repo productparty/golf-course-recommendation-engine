@@ -74,9 +74,6 @@ const SubmitClub = () => {
 
   return (
     <PageLayout title="Submit Club">
-      <Typography variant="h4" gutterBottom>
-        Submit Club
-      </Typography>
       <Typography variant="subtitle1" color="text.secondary" sx={{ mb: 4 }}>
         Can't find a specific golf club? Send us a note below and we will get it added.
       </Typography>

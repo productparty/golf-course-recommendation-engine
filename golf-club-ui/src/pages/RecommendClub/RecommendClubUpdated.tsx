@@ -114,7 +114,11 @@ const RecommendClubUpdated: React.FC = () => {
       <Typography variant="subtitle1" color="text.secondary" sx={{ mb: 4 }}>
         Enter your desired zip code and search radius below for club recommendations based on your profile.
       </Typography>
-      <Card sx={{ mb: 3, mt: -2 }}>
+      <Card sx={{ 
+        mb: 3, 
+        mt: -2,
+        mx: { xs: -2, sm: 0 }  // Add margin for mobile
+      }}>
         <CardContent>
           <Grid container spacing={2}>
             <Grid item xs={12} sm={6}>

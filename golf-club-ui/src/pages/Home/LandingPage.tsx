@@ -107,10 +107,16 @@ const LandingPage = () => {
         }
       }}>
         <Box sx={{ position: 'relative', zIndex: 1 }}>
-          <Typography variant="h2" component="h1" gutterBottom>
+          <Typography variant="h2" component="h1" gutterBottom sx={{
+            fontSize: { xs: '2.5rem', sm: '3.5rem', md: '4rem' }
+          }}>
             Find My Club
           </Typography>
-          <Typography variant="h5" sx={{ mb: 4 }}>
+          <Typography variant="h5" sx={{ 
+            mb: 4,
+            fontSize: { xs: '1.1rem', sm: '1.25rem', md: '1.5rem' },
+            px: { xs: 2, sm: 0 }
+          }}>
             Personalized golf club recommendations for golfers of every level.
           </Typography>
           <Box sx={{ mt: 4 }}>
@@ -155,7 +161,10 @@ const LandingPage = () => {
 
       {/* Database Statistics Section */}
       <Box sx={{ py: 12, textAlign: 'center' }}>
-        <Typography variant="h3" gutterBottom>
+        <Typography variant="h3" gutterBottom sx={{
+          fontSize: { xs: '2rem', sm: '2.5rem', md: '3rem' },
+          px: { xs: 2, sm: 0 }
+        }}>
           Unmatched Database
         </Typography>
         <Typography variant="subtitle1" sx={{ mb: 8, maxWidth: 800, mx: 'auto' }}>
@@ -163,17 +172,17 @@ const LandingPage = () => {
           in-depth details about facilities, services, pricing, and more.
         </Typography>
         
-        <Grid container spacing={4} sx={{ mb: 8 }}>
-          <Grid item xs={6} md={3}>
+        <Grid container spacing={2} sx={{ mb: 8 }}>
+          <Grid item xs={12} sm={6} md={3}>
             <StatisticBox number="14,680" label="Golf Clubs" />
           </Grid>
-          <Grid item xs={6} md={3}>
+          <Grid item xs={12} sm={6} md={3}>
             <StatisticBox number="18,091" label="Golf Courses" />
           </Grid>
-          <Grid item xs={6} md={3}>
+          <Grid item xs={12} sm={6} md={3}>
             <StatisticBox number="84,861" label="Tees" />
           </Grid>
-          <Grid item xs={6} md={3}>
+          <Grid item xs={12} sm={6} md={3}>
             <StatisticBox number="108" label="Data Points per Club" />
           </Grid>
         </Grid>
