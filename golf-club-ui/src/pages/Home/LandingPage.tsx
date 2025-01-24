@@ -153,70 +153,13 @@ const LandingPage = () => {
         </Box>
       </Box>
 
-      {/* Features Grid */}
-      <Grid container spacing={4} sx={{ mb: 8 }}>
-        <Grid item xs={12} md={4}>
-          <Paper elevation={3} sx={{
-            p: 4,
-            height: '100%',
-            transition: 'transform 0.2s',
-            '&:hover': {
-              transform: 'translateY(-8px)',
-            }
-          }}>
-            <Typography variant="h5" gutterBottom color="primary" sx={{ fontWeight: 500 }}>
-              Find Clubs
-            </Typography>
-            <Typography>
-              Discover golf clubs that match your preferences with our advanced search filters. 
-              Filter by location, amenities, and more.
-            </Typography>
-          </Paper>
-        </Grid>
-        <Grid item xs={12} md={4}>
-          <Paper elevation={3} sx={{
-            p: 4,
-            height: '100%',
-            transition: 'transform 0.2s',
-            '&:hover': {
-              transform: 'translateY(-8px)',
-            }
-          }}>
-            <Typography variant="h5" gutterBottom color="primary" sx={{ fontWeight: 500 }}>
-              Recommended Clubs
-            </Typography>
-            <Typography>
-              Get personalized club recommendations based on your skill level, preferences, 
-              and playing style.
-            </Typography>
-          </Paper>
-        </Grid>
-        <Grid item xs={12} md={4}>
-          <Paper elevation={3} sx={{
-            p: 4,
-            height: '100%',
-            transition: 'transform 0.2s',
-            '&:hover': {
-              transform: 'translateY(-8px)',
-            }
-          }}>
-            <Typography variant="h5" gutterBottom color="primary" sx={{ fontWeight: 500 }}>
-              Submit Club
-            </Typography>
-            <Typography>
-              Are you a club operator? Add your facility to our database and reach more golfers.
-            </Typography>
-          </Paper>
-        </Grid>
-      </Grid>
-
       {/* Database Statistics Section */}
       <Box sx={{ py: 12, textAlign: 'center' }}>
         <Typography variant="h3" gutterBottom>
           Unmatched Golf Club Database
         </Typography>
         <Typography variant="subtitle1" sx={{ mb: 8, maxWidth: 800, mx: 'auto' }}>
-          Our comprehensive database covers clubs across the U.S., offering 
+          Our comprehensive database covers clubs and courses across the U.S., offering 
           in-depth details about facilities, services, pricing, and more.
         </Typography>
         
@@ -236,81 +179,101 @@ const LandingPage = () => {
         </Grid>
       </Box>
 
-      {/* Database Content Section */}
-      <Box sx={{ py: 8, backgroundColor: 'grey.50', borderRadius: 2, mb: 8 }}>
-        <Container>
-          <Typography variant="h4" gutterBottom textAlign="center" sx={{ mb: 6 }}>
-            What's Inside?
-          </Typography>
-          <Grid container spacing={4}>
-            <Grid item xs={12} md={4}>
-              <Paper elevation={2} sx={{ p: 3, height: '100%' }}>
-                <Typography variant="h6" gutterBottom color="primary">
-                  Golf Club Details
-                </Typography>
-                <Divider sx={{ mb: 2 }} />
-                <Typography variant="body2" component="ul" sx={{ pl: 2 }}>
-                  <li>Location & Contact Information</li>
-                  <li>Available Amenities</li>
-                  <li>Facility Types</li>
-                  <li>Operating Hours</li>
-                  <li>Membership Options</li>
-                </Typography>
-              </Paper>
-            </Grid>
-            <Grid item xs={12} md={4}>
-              <Paper elevation={2} sx={{ p: 3, height: '100%' }}>
-                <Typography variant="h6" gutterBottom color="primary">
-                  Course Information
-                </Typography>
-                <Divider sx={{ mb: 2 }} />
-                <Typography variant="body2" component="ul" sx={{ pl: 2 }}>
-                  <li>Course Par & Layout</li>
-                  <li>Architect Details</li>
-                  <li>Pricing Structure</li>
-                  <li>Course Difficulty</li>
-                  <li>Course Conditions</li>
-                </Typography>
-              </Paper>
-            </Grid>
-            <Grid item xs={12} md={4}>
-              <Paper elevation={2} sx={{ p: 3, height: '100%' }}>
-                <Typography variant="h6" gutterBottom color="primary">
-                  Tee Details
-                </Typography>
-                <Divider sx={{ mb: 2 }} />
-                <Typography variant="body2" component="ul" sx={{ pl: 2 }}>
-                  <li>Tee Distances</li>
-                  <li>Course Rating</li>
-                  <li>Slope Rating</li>
-                  <li>Handicap Information</li>
-                  <li>Hole-by-Hole Data</li>
-                </Typography>
-              </Paper>
-            </Grid>
-          </Grid>
-        </Container>
-      </Box>
-
-      {/* Screenshots Section */}
+      {/* Combined Database Content & Screenshots Section */}
       <Box sx={{ py: 8 }}>
+        <Typography variant="h4" gutterBottom textAlign="center" sx={{ mb: 6 }}>
+          What's Inside?
+        </Typography>
+
         <Screenshot
           src="/find-club.jpeg"
-          title="Find the Perfect Club"
-          description="Use our advanced search filters to find golf clubs that match your exact needs. Filter by location, amenities, price range, and more."
+          title="Advanced Search & Filtering"
+          description={
+            <Box component="div">
+              <Typography variant="body1" sx={{ mb: 2 }}>
+                Find your perfect match with detailed filtering options:
+              </Typography>
+              <Grid container spacing={2}>
+                <Grid item xs={12} md={6}>
+                  <Typography component="ul" sx={{ pl: 2 }}>
+                    <li>Location & Contact Details</li>
+                    <li>Available Amenities</li>
+                    <li>Facility Types</li>
+                    <li>Operating Hours</li>
+                  </Typography>
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <Typography component="ul" sx={{ pl: 2 }}>
+                    <li>Membership Options</li>
+                    <li>Pricing Structure</li>
+                    <li>Course Difficulty</li>
+                    <li>Course Conditions</li>
+                  </Typography>
+                </Grid>
+              </Grid>
+            </Box>
+          }
         />
         
         <Screenshot
           src="/recommendations.jpg"
-          title="Personalized Recommendations"
-          description="Get club recommendations tailored to your skill level and preferences."
+          title="Comprehensive Course Data"
+          description={
+            <Box component="div">
+              <Typography variant="body1" sx={{ mb: 2 }}>
+                Access detailed course information tailored to your needs:
+              </Typography>
+              <Grid container spacing={2}>
+                <Grid item xs={12} md={6}>
+                  <Typography component="ul" sx={{ pl: 2 }}>
+                    <li>Course Par & Layout</li>
+                    <li>Architect Details</li>
+                    <li>Course Rating</li>
+                    <li>Slope Rating</li>
+                  </Typography>
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <Typography component="ul" sx={{ pl: 2 }}>
+                    <li>Tee Distances</li>
+                    <li>Handicap Information</li>
+                    <li>Hole-by-Hole Data</li>
+                    <li>Practice Facilities</li>
+                  </Typography>
+                </Grid>
+              </Grid>
+            </Box>
+          }
           align="right"
         />
         
         <Screenshot
           src="/submit-club.jpg"
-          title="Easy Club Submission"
-          description="Club operators can easily add their facilities to our growing database."
+          title="Easy Club Management"
+          description={
+            <Box component="div">
+              <Typography variant="body1" sx={{ mb: 2 }}>
+                Club operators can easily manage their facility information:
+              </Typography>
+              <Grid container spacing={2}>
+                <Grid item xs={12} md={6}>
+                  <Typography component="ul" sx={{ pl: 2 }}>
+                    <li>Facility Details</li>
+                    <li>Service Offerings</li>
+                    <li>Pricing Updates</li>
+                    <li>Course Changes</li>
+                  </Typography>
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <Typography component="ul" sx={{ pl: 2 }}>
+                    <li>Special Events</li>
+                    <li>Amenity Updates</li>
+                    <li>Contact Information</li>
+                    <li>Operating Hours</li>
+                  </Typography>
+                </Grid>
+              </Grid>
+            </Box>
+          }
         />
       </Box>
 
