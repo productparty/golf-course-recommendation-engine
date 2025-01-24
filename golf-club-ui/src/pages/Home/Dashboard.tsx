@@ -131,18 +131,6 @@ const Dashboard: React.FC = () => {
           />
         </Grid>
       </Grid>
-
-      {/* Quick Stats or Recent Activity could go here */}
-      <Box sx={{ mb: 6 }}>
-        <Typography variant="h4" gutterBottom sx={{ mb: 3 }}>
-          Recent Activity
-        </Typography>
-        <Paper sx={{ p: 3, bgcolor: 'grey.50' }}>
-          <Typography variant="body1" color="text.secondary">
-            Coming soon: View your recent searches, favorite courses, and activity history.
-          </Typography>
-        </Paper>
-      </Box>
     </Container>
   );
 };
