@@ -214,7 +214,7 @@ const FindClubUpdated: React.FC = () => {
   };
 
   return (
-    <PageLayout title="Find Club">
+    <PageLayout title="Find Clubs">
       <div className="content">
         <aside className="filters">
           <Typography variant="h6" gutterBottom>Filters</Typography>

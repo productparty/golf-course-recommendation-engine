@@ -25,19 +25,20 @@ const Dashboard = () => {
       color: '#2196F3'
     },
     {
-      title: 'Profile',
-      description: 'Update your preferences and settings',
-      icon: <PersonIcon sx={{ fontSize: 40 }} />,
-      path: '/golfer-profile',
-      color: '#9C27B0'
-    },
-    {
       title: 'Submit Club',
       description: 'Add a new golf club to our database',
       icon: <AddLocationIcon sx={{ fontSize: 40 }} />,
       path: '/submit-club',
       color: '#FF9800'
+    },
+    {
+      title: 'My Profile',
+      description: 'Update your preferences and settings',
+      icon: <PersonIcon sx={{ fontSize: 40 }} />,
+      path: '/golfer-profile',
+      color: '#9C27B0'
     }
+    
   ];
 
   return (

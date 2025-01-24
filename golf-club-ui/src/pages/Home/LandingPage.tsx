@@ -22,7 +22,7 @@ const LandingPage = () => {
           Find My Club
         </Typography>
         <Typography variant="h5" sx={{ mb: 4 }}>
-          Your Personalized Golf Course Discovery Platform
+          Personalized Golf Club Search
         </Typography>
       </Box>
 
@@ -56,7 +56,7 @@ const LandingPage = () => {
       {/* Problem Section */}
       <Paper elevation={3} sx={{ p: 4, mb: 4 }}>
         <Typography variant="h4" component="h2" gutterBottom color="primary">
-          The Problem
+          Problem
         </Typography>
         <Typography variant="body1" paragraph>
           Golfers face significant challenges in finding courses that match their skill level, 
@@ -71,9 +71,8 @@ const LandingPage = () => {
           Our Solution
         </Typography>
         <Typography variant="body1" paragraph>
-          Find My Club is a one-stop platform tailored for golfers and course operators, 
-          offering personalized course recommendations, advanced search capabilities, and 
-          an easy-to-use course submission tool.
+          Find My Club is a one-stop platform tailored for golfers,offering personalized course 
+          recommendations, advanced search capabilities, and an easy-to-use course submission tool.
         </Typography>
       </Paper>
 
@@ -82,27 +81,27 @@ const LandingPage = () => {
         <Grid item xs={12} md={4}>
           <Paper elevation={2} sx={{ p: 3, height: '100%' }}>
             <Typography variant="h6" gutterBottom color="primary">
-              Personalized Recommendations
+              Find Clubs
+            </Typography>
+            <Typography>
+              Find the perfect course using our detailed search filters including price, difficulty, and amenities.
+            </Typography>
+          </Paper>
+        </Grid><Grid item xs={12} md={4}>
+          <Paper elevation={2} sx={{ p: 3, height: '100%' }}>
+            <Typography variant="h6" gutterBottom color="primary">
+              Recommended Clubs
             </Typography>
             <Typography>
               Get course recommendations based on your skill level, preferences, and playing history.
             </Typography>
           </Paper>
         </Grid>
+        
         <Grid item xs={12} md={4}>
           <Paper elevation={2} sx={{ p: 3, height: '100%' }}>
             <Typography variant="h6" gutterBottom color="primary">
-              Advanced Search
-            </Typography>
-            <Typography>
-              Find the perfect course using our detailed search filters including price, difficulty, and amenities.
-            </Typography>
-          </Paper>
-        </Grid>
-        <Grid item xs={12} md={4}>
-          <Paper elevation={2} sx={{ p: 3, height: '100%' }}>
-            <Typography variant="h6" gutterBottom color="primary">
-              Course Submission
+              Submit Club
             </Typography>
             <Typography>
               Course operators can easily submit and manage their facility information.

@@ -209,7 +209,7 @@ const GolferProfileUpdated: React.FC = () => {
   }
 
   return (
-    <PageLayout title="Golfer Profile">
+    <PageLayout title="My Profile">
       <Card>
         <CardContent>
           <Grid container spacing={3}>
