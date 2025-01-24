@@ -219,7 +219,20 @@ const GolferProfileUpdated: React.FC = () => {
               <Divider sx={{ mb: 2 }} />
               <Grid container spacing={2}>
                 <Grid item xs={12}>
-                  <Typography variant="subtitle1">Email: {profile.email}</Typography>
+                  <Typography 
+                    variant="subtitle1" 
+                    sx={{ 
+                      mb: 3, 
+                      color: 'text.secondary',
+                      wordBreak: 'break-word',
+                      overflowWrap: 'break-word',
+                      maxWidth: '100%',
+                      px: 2,
+                      fontSize: { xs: '0.875rem', sm: '1rem' }
+                    }}
+                  >
+                    Email: {profile.email}
+                  </Typography>
                 </Grid>
                 <Grid item xs={12} md={6}>
                   <TextField

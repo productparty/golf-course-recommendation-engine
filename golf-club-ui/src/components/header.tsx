@@ -20,7 +20,7 @@ const Header: React.FC = () => {
     { label: 'Find Club', path: '/find-club' },
     { label: 'Recommend Club', path: '/recommend-club' },
     { label: 'Submit Club', path: '/submit-club' },
-    { label: 'Golfer Profile', path: '/golfer-profile' },
+    { label: 'My Profile', path: '/golfer-profile' },
   ];
 
   return (

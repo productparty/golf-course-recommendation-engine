@@ -107,7 +107,13 @@ const RecommendClubUpdated: React.FC = () => {
   };
 
   return (
-    <PageLayout title="Recommended Courses">
+    <PageLayout title="Recommended Clubs">
+      <Typography variant="h6" sx={{ 
+        fontSize: { xs: '1.1rem', sm: '1.25rem' },
+        textAlign: 'left'
+      }}>
+        Recommended Clubs
+      </Typography>
       <Card sx={{ mb: 3 }}>
         <CardContent>
           <Grid container spacing={2}>
@@ -177,7 +183,18 @@ const RecommendClubUpdated: React.FC = () => {
           </Grid>
 
           {/* Pagination Controls */}
-          <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center', gap: 1 }}>
+          <Box sx={{ 
+            mt: 3, 
+            display: 'flex', 
+            flexWrap: 'wrap',
+            justifyContent: 'center', 
+            gap: { xs: 0.5, sm: 1 },
+            '& .MuiButton-root': {
+              minWidth: { xs: '40px', sm: 'auto' },
+              px: { xs: 1, sm: 2 },
+              fontSize: { xs: '0.75rem', sm: '0.875rem' }
+            }
+          }}>
             <Button
               onClick={() => handlePageChange(1)}
               disabled={currentPage === 1}
