@@ -111,7 +111,7 @@ const LandingPage = () => {
             Find My Club
           </Typography>
           <Typography variant="h5" sx={{ mb: 4 }}>
-            Personalized recommendations and unmatched course data for golfers of every level.
+            Personalized golf club recommendations for golfers of every level.
           </Typography>
           <Box sx={{ mt: 4 }}>
             <Button 
@@ -147,7 +147,7 @@ const LandingPage = () => {
                 }
               }}
             >
-              Log In
+              Sign In
             </Button>
           </Box>
         </Box>
@@ -156,7 +156,7 @@ const LandingPage = () => {
       {/* Database Statistics Section */}
       <Box sx={{ py: 12, textAlign: 'center' }}>
         <Typography variant="h3" gutterBottom>
-          Unmatched Golf Club Database
+          Unmatched Database
         </Typography>
         <Typography variant="subtitle1" sx={{ mb: 8, maxWidth: 800, mx: 'auto' }}>
           Our comprehensive database covers clubs and courses across the U.S., offering 
@@ -181,7 +181,7 @@ const LandingPage = () => {
 
       {/* Combined Database Content & Screenshots Section */}
       <Box sx={{ py: 8 }}>
-        <Typography variant="h4" gutterBottom textAlign="center" sx={{ mb: 6 }}>
+        <Typography variant="h3" gutterBottom textAlign="center" sx={{ mb: 6 }}>
           What's Inside?
         </Typography>
 
@@ -281,13 +281,13 @@ const LandingPage = () => {
       <Box sx={{ 
         textAlign: 'center', 
         py: 8,
-        backgroundColor: 'primary.main',
+        backgroundColor: '#2E5A27',
         color: 'white',
         borderRadius: 2,
         mb: 6 
       }}>
         <Typography variant="h4" gutterBottom>
-          Ready to find your perfect golf course?
+          Ready to find your perfect golf club?
         </Typography>
         <Button 
           variant="contained" 
@@ -296,7 +296,7 @@ const LandingPage = () => {
           sx={{ 
             mt: 3,
             backgroundColor: 'white',
-            color: 'primary.main',
+            color: '#2E5A27',
             '&:hover': {
               backgroundColor: 'grey.100',
             }
