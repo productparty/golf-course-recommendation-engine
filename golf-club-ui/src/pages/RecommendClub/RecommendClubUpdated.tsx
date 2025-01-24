@@ -108,13 +108,7 @@ const RecommendClubUpdated: React.FC = () => {
 
   return (
     <PageLayout title="Recommended Clubs">
-      <Typography variant="h6" sx={{ 
-        fontSize: { xs: '1.1rem', sm: '1.25rem' },
-        textAlign: 'left'
-      }}>
-        Recommended Clubs
-      </Typography>
-      <Card sx={{ mb: 3 }}>
+      <Card sx={{ mb: 3, mt: -2 }}>
         <CardContent>
           <Grid container spacing={2}>
             <Grid item xs={12} sm={6}>
