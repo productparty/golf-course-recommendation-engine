@@ -64,7 +64,7 @@ const Header: React.FC = () => {
         ) : (
           <>
             <Link to="/create-account" className={styles.navLink}>Create Account</Link>
-            <Link to="/login" className={styles.navLink}>Log In</Link>
+            <Link to="/login" className={styles.navLink}>Login</Link>
           </>
         )}
       </nav>
