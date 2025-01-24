@@ -121,24 +121,6 @@ const SubmitClub = () => {
             required
             margin="normal"
           />
-          <TextField
-            fullWidth
-            label="Price Tier ($, $$, $$$)"
-            name="price_tier"
-            value={clubData.price_tier}
-            onChange={handleChange}
-            required
-            margin="normal"
-          />
-          <TextField
-            fullWidth
-            label="Difficulty (Easy, Medium, Hard)"
-            name="difficulty"
-            value={clubData.difficulty}
-            onChange={handleChange}
-            required
-            margin="normal"
-          />
           <Button
             type="submit"
             variant="contained"
