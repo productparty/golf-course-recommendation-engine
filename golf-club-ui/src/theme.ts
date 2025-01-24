@@ -1,58 +1,39 @@
 import { createTheme } from '@mui/material/styles';
 
-export const theme = createTheme({
+// Create a theme instance
+const theme = createTheme({
   palette: {
     primary: {
-      main: '#2E7D32', // Golf green
-      light: '#4CAF50',
-      dark: '#1B5E20',
+      main: '#1976d2',
     },
     secondary: {
-      main: '#1976D2', // Blue
-      light: '#42A5F5',
-      dark: '#1565C0',
-    },
-    background: {
-      default: '#F5F5F5',
-      paper: '#FFFFFF',
-    },
-  },
-  typography: {
-    h4: {
-      fontWeight: 600,
-    },
-    h6: {
-      fontWeight: 500,
-    },
-    button: {
-      textTransform: 'none',
+      main: '#9c27b0',
     },
   },
   components: {
-    MuiPaper: {
-      defaultProps: {
-        elevation: 2,
-      },
-      styleOverrides: {
-        root: {
-          borderRadius: 8,
-        },
-      },
-    },
     MuiButton: {
       styleOverrides: {
         root: {
-          borderRadius: 8,
-          padding: '8px 16px',
+          textTransform: 'none', // Prevents all-caps buttons
+          transition: 'all 0.2s ease-in-out',
         },
       },
     },
     MuiCard: {
       styleOverrides: {
         root: {
-          borderRadius: 8,
+          borderRadius: '8px',
+        },
+      },
+    },
+    MuiPaper: {
+      styleOverrides: {
+        root: {
+          transition: 'all 0.3s ease-in-out',
         },
       },
     },
   },
 });
+
+export default theme;

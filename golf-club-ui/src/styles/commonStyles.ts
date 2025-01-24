@@ -2,16 +2,28 @@ import { Theme } from '@mui/material/styles';
 
 export const commonStyles = (theme: Theme) => ({
   pageContainer: {
-    py: 4,
+    p: 3,
+    maxWidth: 1200,
+    mx: 'auto',
   },
   card: {
+    height: '100%',
+    display: 'flex',
+    flexDirection: 'column',
     p: 3,
     mb: 2,
     borderRadius: 2,
     boxShadow: 1,
+    transition: 'transform 0.2s ease-in-out',
     '&:hover': {
+      transform: 'translateY(-4px)',
       boxShadow: 3,
     },
+  },
+  flexCenter: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   sectionTitle: {
     color: 'primary.main',
@@ -45,4 +57,6 @@ export const commonStyles = (theme: Theme) => ({
     fontSize: '0.875rem',
     fontWeight: 'medium',
   },
-}); 
+});
+
+export type CommonStylesKeys = keyof ReturnType<typeof commonStyles>; 

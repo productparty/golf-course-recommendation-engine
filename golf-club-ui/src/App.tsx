@@ -9,7 +9,7 @@ import FindClub from './pages/FindClub/FindClub';
 import RecommendClub from './pages/RecommendClub/RecommendClub';
 import SignUp from './pages/SignUp/signUp';
 import SubmitClub from './pages/SubmitClub/submitClub';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
+import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import LogIn from './pages/LogIn/LogIn';
 import GolferProfile from './pages/GolferProfile/GolferProfile';
@@ -27,8 +27,7 @@ import { CircularProgress } from '@mui/material';
 import ErrorBoundary from './components/ErrorBoundary';
 import FindClubUpdated from './pages/FindClub/FindClubUpdated';
 import RecommendClubUpdated from './pages/RecommendClub/RecommendClubUpdated';
-
-const theme = createTheme();
+import theme from './theme';
 
 const App: React.FC = () => {
   useEffect(() => {
