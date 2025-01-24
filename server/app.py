@@ -231,9 +231,46 @@ async def find_clubs(
     golf_lessons: bool | None = None
 ):
     try:
+        # Get coordinates from ZIP code
         lat, lng = get_lat_lng(zip_code)
         params = [lng, lat, lng, lat, radius]
         conditions = []
+
+        # Define base query first
+        base_query = """
+        SELECT DISTINCT
+            gc.global_id as id,
+            gc.club_name,
+            gc.address,
+            gc.city,
+            gc.state,
+            gc.zip_code,
+            gc.price_tier,
+            gc.difficulty,
+            gc.number_of_holes,
+            gc.club_membership,
+            gc.driving_range,
+            gc.putting_green,
+            gc.chipping_green,
+            gc.practice_bunker,
+            gc.restaurant,
+            gc.lodging_on_site,
+            gc.motor_cart,
+            gc.pull_cart,
+            gc.golf_clubs_rental,
+            gc.club_fitting,
+            gc.golf_lessons,
+            ST_Distance(
+                gc.geom::geography,
+                ST_SetSRID(ST_MakePoint(%s, %s), 4326)::geography
+            ) / 1609.34 as distance_miles
+        FROM golfclub gc
+        WHERE ST_DWithin(
+            gc.geom::geography,
+            ST_SetSRID(ST_MakePoint(%s, %s), 4326)::geography,
+            %s * 1609.34
+        )
+        """
 
         # Add filters if specified
         if price_tier:
@@ -268,111 +305,28 @@ async def find_clubs(
         }
 
         for field, value in boolean_filters.items():
-            if value is True:  # Only add condition if True
+            if value is True:
                 conditions.append(f"gc.{field} = TRUE")
 
         # Add conditions to base query
         if conditions:
-            base_query = """
-            SELECT DISTINCT
-                gc.global_id as id,
-                gc.club_name,
-                gc.address,
-                gc.city,
-                gc.state,
-                gc.zip_code,
-                gc.price_tier,
-                gc.difficulty,
-                gc.number_of_holes,
-                gc.club_membership,
-                gc.driving_range,
-                gc.putting_green,
-                gc.chipping_green,
-                gc.practice_bunker,
-                gc.restaurant,
-                gc.lodging_on_site,
-                gc.motor_cart,
-                gc.pull_cart,
-                gc.golf_clubs_rental,
-                gc.club_fitting,
-                gc.golf_lessons,
-                ST_Distance(
-                    gc.geom::geography,
-                    ST_SetSRID(ST_MakePoint(%s, %s), 4326)::geography
-                ) / 1609.34 as distance_miles,
-                array_agg(ti.technology_name) FILTER (WHERE ti.technology_name IS NOT NULL) as available_technologies
-            FROM golfclub gc
-            LEFT JOIN golfclub_technology gct ON gc.global_id = gct.global_id
-            LEFT JOIN technologyintegration ti ON gct.technology_id = ti.technology_id
-            WHERE ST_DWithin(
-                gc.geom::geography,
-                ST_SetSRID(ST_MakePoint(%s, %s), 4326)::geography,
-                %s * 1609.34
-            )
-            """
             base_query += " AND " + " AND ".join(conditions)
 
-        # Update GROUP BY clause to include all selected fields
-        base_query += """
-        GROUP BY 
-            gc.global_id,
-            gc.club_name,
-            gc.address,
-            gc.city,
-            gc.state,
-            gc.zip_code,
-            gc.price_tier,
-            gc.difficulty,
-            gc.number_of_holes,
-            gc.club_membership,
-            gc.driving_range,
-            gc.putting_green,
-            gc.chipping_green,
-            gc.practice_bunker,
-            gc.restaurant,
-            gc.lodging_on_site,
-            gc.motor_cart,
-            gc.pull_cart,
-            gc.golf_clubs_rental,
-            gc.club_fitting,
-            gc.golf_lessons,
-            gc.geom
-        """
-        base_query += " ORDER BY distance_miles LIMIT %s OFFSET %s"
-        params.extend([limit, offset])
+        # Add ORDER BY and LIMIT
+        base_query += " ORDER BY distance_miles ASC LIMIT %s"
+        params.append(limit)
 
-        # Log the final query and parameters for debugging
-        logger.info(f"Executing query with params: {params}")
-
-        # Get total count first
-        count_query = f"""
-        SELECT COUNT(*) 
-        FROM ({base_query.replace('ORDER BY distance_miles LIMIT %s OFFSET %s', '')}) AS filtered_clubs
-        """
-        count_params = params[:-2]  # Remove limit and offset
-
+        # Execute query
         with get_db_connection() as conn:
             with conn.cursor(cursor_factory=RealDictCursor) as cursor:
-                # Get total count
-                cursor.execute(count_query, count_params)
-                total_count = cursor.fetchone()['count']
-                
-                # Get paginated results
                 cursor.execute(base_query, params)
                 results = cursor.fetchall()
                 
-                logger.info(f"Found {total_count} total clubs, returning {len(results)} results")
-                
-                return {
-                    "results": results,
-                    "total": total_count,
-                    "page": offset // limit + 1,
-                    "total_pages": (total_count + limit - 1) // limit
-                }
+                return {"results": results}
 
     except Exception as e:
         logger.error(f"Error in find_clubs: {str(e)}")
-        raise HTTPException(status_code=400, detail=f"Failed to fetch clubs: {str(e)}")
+        raise HTTPException(status_code=400, detail=str(e))
 
 class UpdateGolfCourseRequest(BaseModel):
     club_id: str
