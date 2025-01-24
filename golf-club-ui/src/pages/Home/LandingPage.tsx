@@ -1,8 +1,12 @@
-import { Container, Typography, Box, Button, Grid, Paper } from '@mui/material';
+import { Container, Typography, Box, Button, Grid, Paper, Divider } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { commonStyles } from '../../styles/commonStyles';
 import { useTheme } from '@mui/material/styles';
 import { motion } from 'framer-motion';
+import SearchIcon from '@mui/icons-material/Search';
+import RecommendIcon from '@mui/icons-material/Recommend';
+import StorageIcon from '@mui/icons-material/Storage';
+import AddLocationIcon from '@mui/icons-material/AddLocation';
 
 const Screenshot = ({ src, title, description, align = 'left' }: any) => (
   <motion.div
@@ -40,6 +44,31 @@ const Screenshot = ({ src, title, description, align = 'left' }: any) => (
       }}>
         <img src={src} alt={title} />
       </Box>
+    </Box>
+  </motion.div>
+);
+
+const StatisticBox = ({ number, label }: { number: string; label: string }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    whileInView={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.5 }}
+    viewport={{ once: true }}
+  >
+    <Box sx={{ textAlign: 'center', p: 2 }}>
+      <Typography 
+        variant="h3" 
+        sx={{ 
+          fontWeight: 'bold',
+          color: 'primary.main',
+          mb: 1 
+        }}
+      >
+        {number}
+      </Typography>
+      <Typography variant="subtitle1" color="text.secondary">
+        {label}
+      </Typography>
     </Box>
   </motion.div>
 );
@@ -82,7 +111,7 @@ const LandingPage = () => {
             Find My Club
           </Typography>
           <Typography variant="h5" sx={{ mb: 4 }}>
-            Your Personalized Golf Club Search
+            Personalized recommendations and unmatched course data for golfers of every level.
           </Typography>
           <Box sx={{ mt: 4 }}>
             <Button 
@@ -180,6 +209,88 @@ const LandingPage = () => {
           </Paper>
         </Grid>
       </Grid>
+
+      {/* Database Statistics Section */}
+      <Box sx={{ py: 12, textAlign: 'center' }}>
+        <Typography variant="h3" gutterBottom>
+          Unmatched Golf Club Database
+        </Typography>
+        <Typography variant="subtitle1" sx={{ mb: 8, maxWidth: 800, mx: 'auto' }}>
+          Our comprehensive database covers clubs across the U.S., offering 
+          in-depth details about facilities, services, pricing, and more.
+        </Typography>
+        
+        <Grid container spacing={4} sx={{ mb: 8 }}>
+          <Grid item xs={6} md={3}>
+            <StatisticBox number="14,680" label="Golf Clubs" />
+          </Grid>
+          <Grid item xs={6} md={3}>
+            <StatisticBox number="18,091" label="Golf Courses" />
+          </Grid>
+          <Grid item xs={6} md={3}>
+            <StatisticBox number="84,861" label="Tees" />
+          </Grid>
+          <Grid item xs={6} md={3}>
+            <StatisticBox number="108" label="Data Points per Club" />
+          </Grid>
+        </Grid>
+      </Box>
+
+      {/* Database Content Section */}
+      <Box sx={{ py: 8, backgroundColor: 'grey.50', borderRadius: 2, mb: 8 }}>
+        <Container>
+          <Typography variant="h4" gutterBottom textAlign="center" sx={{ mb: 6 }}>
+            What's Inside?
+          </Typography>
+          <Grid container spacing={4}>
+            <Grid item xs={12} md={4}>
+              <Paper elevation={2} sx={{ p: 3, height: '100%' }}>
+                <Typography variant="h6" gutterBottom color="primary">
+                  Golf Club Details
+                </Typography>
+                <Divider sx={{ mb: 2 }} />
+                <Typography variant="body2" component="ul" sx={{ pl: 2 }}>
+                  <li>Location & Contact Information</li>
+                  <li>Available Amenities</li>
+                  <li>Facility Types</li>
+                  <li>Operating Hours</li>
+                  <li>Membership Options</li>
+                </Typography>
+              </Paper>
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <Paper elevation={2} sx={{ p: 3, height: '100%' }}>
+                <Typography variant="h6" gutterBottom color="primary">
+                  Course Information
+                </Typography>
+                <Divider sx={{ mb: 2 }} />
+                <Typography variant="body2" component="ul" sx={{ pl: 2 }}>
+                  <li>Course Par & Layout</li>
+                  <li>Architect Details</li>
+                  <li>Pricing Structure</li>
+                  <li>Course Difficulty</li>
+                  <li>Course Conditions</li>
+                </Typography>
+              </Paper>
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <Paper elevation={2} sx={{ p: 3, height: '100%' }}>
+                <Typography variant="h6" gutterBottom color="primary">
+                  Tee Details
+                </Typography>
+                <Divider sx={{ mb: 2 }} />
+                <Typography variant="body2" component="ul" sx={{ pl: 2 }}>
+                  <li>Tee Distances</li>
+                  <li>Course Rating</li>
+                  <li>Slope Rating</li>
+                  <li>Handicap Information</li>
+                  <li>Hole-by-Hole Data</li>
+                </Typography>
+              </Paper>
+            </Grid>
+          </Grid>
+        </Container>
+      </Box>
 
       {/* Screenshots Section */}
       <Box sx={{ py: 8 }}>
