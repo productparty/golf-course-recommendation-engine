@@ -18,7 +18,7 @@ const Header: React.FC = () => {
 
   const navItems = [
     { label: 'Find Clubs', path: '/find-club' },
-    { label: 'Recommend Clubs', path: '/recommend-club' },
+    { label: 'Recommended Clubs', path: '/recommend-club' },
     { label: 'Submit Club', path: '/submit-club' },
     { label: 'My Profile', path: '/golfer-profile' },
   ];
@@ -50,7 +50,7 @@ const Header: React.FC = () => {
         {session ? (
           <>
             <Link to="/find-club" className={styles.navLink}>Find Clubs</Link>
-            <Link to="/recommend-club" className={styles.navLink}>Recommend Clubs</Link>
+            <Link to="/recommend-club" className={styles.navLink}>Recommended Clubs</Link>
             <Link to="/submit-club" className={styles.navLink}>Submit Club</Link>
             <Link to="/golfer-profile" className={styles.navLink}>My Profile</Link>
             <button 

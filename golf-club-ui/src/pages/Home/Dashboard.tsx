@@ -30,12 +30,20 @@ const FeatureCard: React.FC<FeatureCardProps> = ({ title, description, icon, but
       display: 'flex',
       flexDirection: 'column',
       transition: 'transform 0.2s',
+      minHeight: '300px',
       '&:hover': {
         transform: 'translateY(-8px)',
         boxShadow: 6,
       }
     }}>
-      <CardContent sx={{ flexGrow: 1, textAlign: 'center', p: 4 }}>
+      <CardContent sx={{ 
+        flexGrow: 1, 
+        textAlign: 'center', 
+        p: 4,
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center'
+      }}>
         {icon}
         <Typography variant="h5" component="h2" gutterBottom sx={{ mt: 2 }}>
           {title}
@@ -91,7 +99,7 @@ const Dashboard: React.FC = () => {
       </Box>
 
       {/* Main Actions */}
-      <Grid container spacing={4} sx={{ mb: 6 }}>
+      <Grid container spacing={4}>
         <Grid item xs={12} md={4}>
           <FeatureCard
             title="Find Clubs"
@@ -107,7 +115,7 @@ const Dashboard: React.FC = () => {
             title="Get Recommendations"
             description="Receive personalized club recommendations based on your profile."
             icon={<RecommendIcon sx={{ fontSize: 48, color: 'primary.main' }} />}
-            buttonText="View Recommendations"
+            buttonText="Recommended Clubs"
             onClick={() => navigate('/recommend-club')}
             delay={0.4}
           />
