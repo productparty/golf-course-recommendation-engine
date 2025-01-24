@@ -18,7 +18,28 @@ const Screenshot = ({ src, title, description, align = 'left' }: any) => (
       gap: 4,
       mb: 8 
     }}>
-      {/* ... rest of the Screenshot component ... */}
+      <Box sx={{ flex: 1 }}>
+        <Typography variant="h4" gutterBottom color="primary">
+          {title}
+        </Typography>
+        <Typography variant="body1" sx={{ mb: 3 }}>
+          {description}
+        </Typography>
+      </Box>
+      <Box sx={{ 
+        flex: 1,
+        '& img': {
+          width: '100%',
+          borderRadius: 2,
+          boxShadow: 3,
+          transition: 'transform 0.3s ease-in-out',
+          '&:hover': {
+            transform: 'scale(1.02)',
+          }
+        }
+      }}>
+        <img src={src} alt={title} />
+      </Box>
     </Box>
   </motion.div>
 );
