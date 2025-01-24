@@ -108,6 +108,12 @@ const RecommendClubUpdated: React.FC = () => {
 
   return (
     <PageLayout title="Recommended Clubs">
+      <Typography variant="h4" gutterBottom>
+        Recommended Clubs
+      </Typography>
+      <Typography variant="subtitle1" color="text.secondary" sx={{ mb: 4 }}>
+        Enter your desired zip code and search radius below for club recommendations based on your profile.
+      </Typography>
       <Card sx={{ mb: 3, mt: -2 }}>
         <CardContent>
           <Grid container spacing={2}>

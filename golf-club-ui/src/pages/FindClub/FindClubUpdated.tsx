@@ -215,6 +215,12 @@ const FindClubUpdated: React.FC = () => {
 
   return (
     <PageLayout title="Find Clubs">
+      <Typography variant="h4" gutterBottom>
+        Find Clubs
+      </Typography>
+      <Typography variant="subtitle1" color="text.secondary" sx={{ mb: 4 }}>
+        Search and filter golf clubs based on your preferences and location.
+      </Typography>
       <div className="content">
         <aside className="filters">
           <Typography variant="h6" gutterBottom>Filters</Typography>
