@@ -52,7 +52,7 @@ const Header: React.FC = () => {
             <Link to="/find-club" className={styles.navLink}>Find Club</Link>
             <Link to="/recommend-club" className={styles.navLink}>Recommend Club</Link>
             <Link to="/submit-club" className={styles.navLink}>Submit Club</Link>
-            <Link to="/golfer-profile" className={styles.navLink}>Golfer Profile</Link>
+            <Link to="/golfer-profile" className={styles.navLink}>My Profile</Link>
             <button 
               onClick={handleSignOut} 
               className={styles.navLink} 
