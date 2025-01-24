@@ -42,7 +42,8 @@ const FeatureCard: React.FC<FeatureCardProps> = ({ title, description, icon, but
         p: 4,
         display: 'flex',
         flexDirection: 'column',
-        justifyContent: 'center'
+        justifyContent: 'center',
+        alignItems: 'center'
       }}>
         {icon}
         <Typography variant="h5" component="h2" gutterBottom sx={{ mt: 2 }}>

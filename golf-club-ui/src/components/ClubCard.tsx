@@ -32,9 +32,25 @@ interface ClubCardProps {
     golf_lessons: boolean;
   };
   showScore?: boolean;
+  userPreferences?: Record<string, any>;
 }
 
-const ClubCard: React.FC<ClubCardProps> = ({ club, showScore = false }) => {
+const FeatureChip: React.FC<{ label: string; isMatch?: boolean }> = ({ label, isMatch = false }) => (
+  <Chip 
+    label={label}
+    size="small"
+    sx={{ 
+      borderColor: isMatch ? 'success.main' : 'grey.300',
+      color: isMatch ? 'success.main' : 'text.secondary',
+      '& .MuiChip-label': {
+        fontWeight: isMatch ? 'bold' : 'normal',
+      }
+    }}
+    variant="outlined"
+  />
+);
+
+const ClubCard: React.FC<ClubCardProps> = ({ club, showScore = false, userPreferences }) => {
   const amenities = [
     { label: 'Driving Range', value: club.driving_range },
     { label: 'Putting Green', value: club.putting_green },
@@ -51,6 +67,10 @@ const ClubCard: React.FC<ClubCardProps> = ({ club, showScore = false }) => {
     { label: 'Club Fitting', value: club.club_fitting },
     { label: 'Golf Lessons', value: club.golf_lessons },
   ].filter(({ value }) => value);
+
+  const isMatch = (feature: string, value: any) => {
+    return userPreferences?.[feature] === value;
+  };
 
   return (
     <Card sx={{ mb: 2, width: '100%' }}>
@@ -90,20 +110,13 @@ const ClubCard: React.FC<ClubCardProps> = ({ club, showScore = false }) => {
                   Course Info
                 </Typography>
                 <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                  <Chip 
+                  <FeatureChip 
                     label={club.price_tier} 
-                    size="small"
-                    color="primary"
-                    variant="outlined"
+                    isMatch={isMatch('preferred_price_range', club.price_tier)}
                   />
-                  <Chip 
+                  <FeatureChip 
                     label={club.difficulty} 
-                    size="small"
-                    color={
-                      club.difficulty === 'Easy' ? 'success' :
-                      club.difficulty === 'Medium' ? 'warning' : 'error'
-                    }
-                    variant="outlined"
+                    isMatch={isMatch('preferred_difficulty', club.difficulty)}
                   />
                   <Chip
                     label={`${club.number_of_holes} Holes`}
@@ -126,7 +139,7 @@ const ClubCard: React.FC<ClubCardProps> = ({ club, showScore = false }) => {
                   </Typography>
                   <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
                     {amenities.map(({ label }) => (
-                      <Chip key={label} label={label} size="small" color="primary" variant="outlined" />
+                      <FeatureChip key={label} label={label} isMatch={isMatch('preferred_amenities', label)} />
                     ))}
                   </Box>
                 </Box>
@@ -140,7 +153,7 @@ const ClubCard: React.FC<ClubCardProps> = ({ club, showScore = false }) => {
                   </Typography>
                   <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
                     {services.map(({ label }) => (
-                      <Chip key={label} label={label} size="small" color="secondary" variant="outlined" />
+                      <FeatureChip key={label} label={label} isMatch={isMatch('preferred_services', label)} />
                     ))}
                   </Box>
                 </Box>
