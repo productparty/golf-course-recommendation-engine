@@ -1,87 +1,140 @@
 import React from 'react';
-import { Container, Typography, Grid, Paper, Box } from '@mui/material';
+import { 
+  Container, Typography, Box, Grid, Paper, Button,
+  Card, CardContent, CardActions
+} from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import SearchIcon from '@mui/icons-material/Search';
 import RecommendIcon from '@mui/icons-material/Recommend';
 import PersonIcon from '@mui/icons-material/Person';
-import AddLocationIcon from '@mui/icons-material/AddLocation';
+import { useAuth } from '../../context/AuthContext';
 
-const Dashboard = () => {
+interface FeatureCardProps {
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+  buttonText: string;
+  onClick: () => void;
+  delay?: number;
+}
+
+const FeatureCard: React.FC<FeatureCardProps> = ({ title, description, icon, buttonText, onClick, delay = 0 }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.5, delay }}
+  >
+    <Card sx={{ 
+      height: '100%',
+      display: 'flex',
+      flexDirection: 'column',
+      transition: 'transform 0.2s',
+      '&:hover': {
+        transform: 'translateY(-8px)',
+        boxShadow: 6,
+      }
+    }}>
+      <CardContent sx={{ flexGrow: 1, textAlign: 'center', p: 4 }}>
+        {icon}
+        <Typography variant="h5" component="h2" gutterBottom sx={{ mt: 2 }}>
+          {title}
+        </Typography>
+        <Typography variant="body1" color="text.secondary">
+          {description}
+        </Typography>
+      </CardContent>
+      <CardActions sx={{ p: 2, pt: 0, justifyContent: 'center' }}>
+        <Button 
+          variant="contained" 
+          size="large"
+          onClick={onClick}
+          sx={{ px: 4 }}
+        >
+          {buttonText}
+        </Button>
+      </CardActions>
+    </Card>
+  </motion.div>
+);
+
+const Dashboard: React.FC = () => {
   const navigate = useNavigate();
-
-  const menuItems = [
-    {
-      title: 'Find Clubs',
-      description: 'Search for golf clubs using filters',
-      icon: <SearchIcon sx={{ fontSize: 40 }} />,
-      path: '/find-club',
-      color: '#4CAF50'
-    },
-    {
-      title: 'Recommended Clubs',
-      description: 'View personalized club recommendations',
-      icon: <RecommendIcon sx={{ fontSize: 40 }} />,
-      path: '/recommend-club',
-      color: '#2196F3'
-    },
-    {
-      title: 'Submit Club',
-      description: 'Add a new golf club to our database',
-      icon: <AddLocationIcon sx={{ fontSize: 40 }} />,
-      path: '/submit-club',
-      color: '#FF9800'
-    },
-    {
-      title: 'My Profile',
-      description: 'Update your preferences and settings',
-      icon: <PersonIcon sx={{ fontSize: 40 }} />,
-      path: '/golfer-profile',
-      color: '#9C27B0'
-    }
-    
-  ];
+  const { session } = useAuth();
+  const firstName = session?.user?.user_metadata?.first_name || 'Golfer';
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 4 }}>
-      <Typography variant="h4" gutterBottom sx={{ mb: 4 }}>
-        Welcome to Find My Club
-      </Typography>
+    <Container maxWidth="lg">
+      {/* Welcome Section */}
+      <Box sx={{ 
+        textAlign: 'center',
+        py: 6,
+        mb: 6,
+        borderRadius: 2,
+        bgcolor: 'primary.main',
+        color: 'white',
+        position: 'relative',
+        overflow: 'hidden',
+      }}>
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <Typography variant="h3" component="h1" gutterBottom>
+            Welcome back, {firstName}!
+          </Typography>
+          <Typography variant="h6">
+            Ready to discover your next favorite golf course?
+          </Typography>
+        </motion.div>
+      </Box>
 
-      <Grid container spacing={3}>
-        {menuItems.map((item) => (
-          <Grid item xs={12} sm={6} md={3} key={item.title}>
-            <Paper
-              sx={{
-                p: 3,
-                textAlign: 'center',
-                cursor: 'pointer',
-                height: '100%',
-                transition: 'transform 0.2s',
-                '&:hover': {
-                  transform: 'scale(1.02)',
-                  boxShadow: 3
-                }
-              }}
-              onClick={() => navigate(item.path)}
-            >
-              <Box sx={{ 
-                color: item.color,
-                mb: 2,
-                display: 'flex',
-                justifyContent: 'center'
-              }}>
-                {item.icon}
-              </Box>
-              <Typography variant="h6" gutterBottom>
-                {item.title}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {item.description}
-              </Typography>
-            </Paper>
-          </Grid>
-        ))}
+      {/* Main Actions */}
+      <Grid container spacing={4} sx={{ mb: 6 }}>
+        <Grid item xs={12} md={4}>
+          <FeatureCard
+            title="Find Clubs"
+            description="Search and filter golf clubs based on your preferences and location."
+            icon={<SearchIcon sx={{ fontSize: 48, color: 'primary.main' }} />}
+            buttonText="Search Now"
+            onClick={() => navigate('/find-club')}
+            delay={0.2}
+          />
+        </Grid>
+        <Grid item xs={12} md={4}>
+          <FeatureCard
+            title="Get Recommendations"
+            description="Receive personalized club recommendations based on your profile."
+            icon={<RecommendIcon sx={{ fontSize: 48, color: 'primary.main' }} />}
+            buttonText="View Recommendations"
+            onClick={() => navigate('/recommend-club')}
+            delay={0.4}
+          />
+        </Grid>
+        <Grid item xs={12} md={4}>
+          <FeatureCard
+            title="Your Profile"
+            description="Update your preferences and manage your golf profile."
+            icon={<PersonIcon sx={{ fontSize: 48, color: 'primary.main' }} />}
+            buttonText="View Profile"
+            onClick={() => navigate('/golfer-profile')}
+            delay={0.6}
+          />
+        </Grid>
       </Grid>
+
+      {/* Quick Stats or Recent Activity could go here */}
+      <Box sx={{ mb: 6 }}>
+        <Typography variant="h4" gutterBottom sx={{ mb: 3 }}>
+          Recent Activity
+        </Typography>
+        <Paper sx={{ p: 3, bgcolor: 'grey.50' }}>
+          <Typography variant="body1" color="text.secondary">
+            Coming soon: View your recent searches, favorite courses, and activity history.
+          </Typography>
+        </Paper>
+      </Box>
     </Container>
   );
 };
