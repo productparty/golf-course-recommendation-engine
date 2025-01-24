@@ -20,7 +20,7 @@ const PageLayout = ({ title, children }: PageLayoutProps) => {
           }}
         >
           <Typography 
-            variant="h4" 
+            variant="h5" 
             component="h1" 
             gutterBottom
             sx={{ 
