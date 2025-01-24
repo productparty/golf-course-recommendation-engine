@@ -73,7 +73,7 @@ const ClubCard: React.FC<ClubCardProps> = ({ club, showScore = false }) => {
               </Typography>
               {showScore && (
                 <Chip 
-                  label={`Score: ${club.score?.toFixed(1)}`}
+                  label={`Match %: ${club.score?.toFixed(1)}`}
                   color="primary"
                   sx={{ mt: 1 }}
                 />
