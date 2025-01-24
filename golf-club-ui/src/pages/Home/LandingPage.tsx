@@ -7,23 +7,29 @@ const LandingPage = () => {
 
   return (
     <Container maxWidth="lg">
-      {/* Hero Section */}
+      {/* Hero Section - Updated */}
       <Box sx={{ 
         textAlign: 'center', 
         py: 8,
-        backgroundImage: 'url("/golfclubheader.jpg")',
-        backgroundSize: 'cover',
+        backgroundImage: 'url("/golfclubheadertext.jpg")', // Updated image name
+        backgroundSize: 'contain',  // Changed from 'cover'
         backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
         borderRadius: 2,
         mb: 6,
-        color: 'white'
+        minHeight: '200px',  // Add minimum height
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center'
       }}>
+        {/* Remove these Typography components since they're in the image
         <Typography variant="h2" component="h1" gutterBottom>
           Find My Club
         </Typography>
         <Typography variant="h5" sx={{ mb: 4 }}>
           Personalized Golf Club Search
         </Typography>
+        */}
       </Box>
 
       {/* Auth Buttons Section */}
