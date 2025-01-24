@@ -4,21 +4,11 @@ import { Container, Typography, Box, Paper } from '@mui/material';
 interface PageLayoutProps {
   title: string;
   children: React.ReactNode;
-  headerImage?: boolean;
 }
 
-const PageLayout = ({ title, children, headerImage = true }: PageLayoutProps) => {
+const PageLayout = ({ title, children }: PageLayoutProps) => {
   return (
     <div>
-      {headerImage && (
-        <div className="top-image">
-          <img
-            src="/golfclubheader.jpg"
-            alt="Golf course header"
-            className="header-image"
-          />
-        </div>
-      )}
       <Container maxWidth="lg" sx={{ py: 4 }}>
         <Paper 
           elevation={3} 
