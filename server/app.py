@@ -212,88 +212,104 @@ def geocode_zip(zip_code: str):
 async def find_clubs(
     zip_code: str,
     radius: int = 10,
-    limit: int = 5,
+    limit: int = 25,
     offset: int = 0,
     price_tier: str | None = None,
     difficulty: str | None = None,
-    technologies: str | None = None
+    number_of_holes: str | None = None,
+    club_membership: str | None = None,
+    driving_range: bool | None = None,
+    putting_green: bool | None = None,
+    chipping_green: bool | None = None,
+    practice_bunker: bool | None = None,
+    restaurant: bool | None = None,
+    lodging_on_site: bool | None = None,
+    motor_cart: bool | None = None,
+    pull_cart: bool | None = None,
+    golf_clubs_rental: bool | None = None,
+    club_fitting: bool | None = None,
+    golf_lessons: bool | None = None
 ):
     try:
-        # Get coordinates from ZIP code
         lat, lng = get_lat_lng(zip_code)
-        logger.info(f"Geocoded coordinates: lat={lat}, lng={lng}")
-
-        # Base query with filters
-        base_query = """
-        SELECT DISTINCT
-            gc.global_id as id,
-            gc.club_name,
-            gc.address,
-            gc.city,
-            gc.state,
-            gc.zip_code,
-            gc.price_tier,
-            gc.difficulty,
-            gc.number_of_holes,
-            gc.club_membership,
-            gc.driving_range,
-            gc.putting_green,
-            gc.chipping_green,
-            gc.practice_bunker,
-            gc.restaurant,
-            gc.lodging_on_site,
-            gc.motor_cart,
-            gc.pull_cart,
-            gc.golf_clubs_rental,
-            gc.club_fitting,
-            gc.golf_lessons,
-            ST_Distance(
-                gc.geom::geography,
-                ST_SetSRID(ST_MakePoint(%s, %s), 4326)::geography
-            ) / 1609.34 as distance_miles,
-            array_agg(ti.technology_name) FILTER (WHERE ti.technology_name IS NOT NULL) as available_technologies
-        FROM golfclub gc
-        LEFT JOIN golfclub_technology gct ON gc.global_id = gct.global_id
-        LEFT JOIN technologyintegration ti ON gct.technology_id = ti.technology_id
-        WHERE ST_DWithin(
-            gc.geom::geography,
-            ST_SetSRID(ST_MakePoint(%s, %s), 4326)::geography,
-            %s * 1609.34
-        )
-        """
-        
-        # Start with base parameters
         params = [lng, lat, lng, lat, radius]
         conditions = []
 
         # Add filters if specified
         if price_tier:
-            logger.info(f"Filtering by price_tier: {price_tier}")
             conditions.append("gc.price_tier = %s")
             params.append(price_tier)
         
         if difficulty:
-            logger.info(f"Filtering by difficulty: {difficulty}")
             conditions.append("gc.difficulty = %s")
             params.append(difficulty)
 
-        # Add technology filter if specified
-        if technologies:
-            tech_list = technologies.split(',')
-            logger.info(f"Filtering by technologies: {tech_list}")
-            conditions.append("""
-                EXISTS (
-                    SELECT 1
-                    FROM golfclub_technology gct2
-                    JOIN technologyintegration ti2 ON gct2.technology_id = ti2.technology_id
-                    WHERE gct2.global_id = gc.global_id
-                    AND ti2.technology_name = ANY(%s)
-                )
-            """)
-            params.append(tech_list)
+        if number_of_holes:
+            conditions.append("gc.number_of_holes = %s")
+            params.append(number_of_holes)
+
+        if club_membership:
+            conditions.append("gc.club_membership = %s")
+            params.append(club_membership)
+
+        # Boolean filters
+        boolean_filters = {
+            'driving_range': driving_range,
+            'putting_green': putting_green,
+            'chipping_green': chipping_green,
+            'practice_bunker': practice_bunker,
+            'restaurant': restaurant,
+            'lodging_on_site': lodging_on_site,
+            'motor_cart': motor_cart,
+            'pull_cart': pull_cart,
+            'golf_clubs_rental': golf_clubs_rental,
+            'club_fitting': club_fitting,
+            'golf_lessons': golf_lessons
+        }
+
+        for field, value in boolean_filters.items():
+            if value is True:  # Only add condition if True
+                conditions.append(f"gc.{field} = TRUE")
 
         # Add conditions to base query
         if conditions:
+            base_query = """
+            SELECT DISTINCT
+                gc.global_id as id,
+                gc.club_name,
+                gc.address,
+                gc.city,
+                gc.state,
+                gc.zip_code,
+                gc.price_tier,
+                gc.difficulty,
+                gc.number_of_holes,
+                gc.club_membership,
+                gc.driving_range,
+                gc.putting_green,
+                gc.chipping_green,
+                gc.practice_bunker,
+                gc.restaurant,
+                gc.lodging_on_site,
+                gc.motor_cart,
+                gc.pull_cart,
+                gc.golf_clubs_rental,
+                gc.club_fitting,
+                gc.golf_lessons,
+                ST_Distance(
+                    gc.geom::geography,
+                    ST_SetSRID(ST_MakePoint(%s, %s), 4326)::geography
+                ) / 1609.34 as distance_miles,
+                array_agg(ti.technology_name) FILTER (WHERE ti.technology_name IS NOT NULL) as available_technologies
+            FROM golfclub gc
+            LEFT JOIN golfclub_technology gct ON gc.global_id = gct.global_id
+            LEFT JOIN technologyintegration ti ON gct.technology_id = ti.technology_id
+            WHERE ST_DWithin(
+                gc.geom::geography,
+                ST_SetSRID(ST_MakePoint(%s, %s), 4326)::geography,
+                %s * 1609.34
+            )
+            """
             base_query += " AND " + " AND ".join(conditions)
 
         # Update GROUP BY clause to include all selected fields
