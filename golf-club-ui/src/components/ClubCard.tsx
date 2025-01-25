@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { Card, CardContent, Typography, Chip, Box, Divider, Grid, CircularProgress } from '@mui/material';
+import { Card, CardContent, Typography, Chip, Box, Divider, Grid, CircularProgress, Icon } from '@mui/material';
 import GolfCourseIcon from '@mui/icons-material/GolfCourse';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import StarIcon from '@mui/icons-material/Star';
-import { getWeatherForecast, getWeatherDescription } from '../utils/weather';
+import { getWeatherForecast, getWeatherInfo } from '../utils/weather';
 import WbSunnyIcon from '@mui/icons-material/WbSunny';
 
 interface WeatherData {
@@ -102,7 +102,7 @@ const ClubCard: React.FC<ClubCardProps> = ({ club, showScore = false, userPrefer
             maxTemp: data.daily.temperature_2m_max[index],
             minTemp: data.daily.temperature_2m_min[index],
             precipitation: data.daily.precipitation_probability_max[index],
-            description: getWeatherDescription(data.daily.weathercode[index])
+            description: getWeatherInfo(data.daily.weathercode[index]).description
           }));
           
           setWeather(weatherData);
@@ -140,34 +140,55 @@ const ClubCard: React.FC<ClubCardProps> = ({ club, showScore = false, userPrefer
               {(weather.length > 0 || isLoadingWeather) && (
                 <Box sx={{ mt: 2 }}>
                   <Typography variant="subtitle2" color="textSecondary" gutterBottom>
-                    3-Day Weather Forecast
+                    Weather Forecast
                   </Typography>
-                  <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                  <Box sx={{ 
+                    display: 'flex', 
+                    gap: 1,
+                    flexWrap: 'wrap',
+                    backgroundColor: 'rgba(0,0,0,0.02)',
+                    borderRadius: 1,
+                    p: 1
+                  }}>
                     {isLoadingWeather ? (
                       <CircularProgress size={20} />
                     ) : (
                       weather.map((day, index) => (
                         <Box key={index} sx={{ 
-                          flex: 1, 
-                          minWidth: '120px',
-                          p: 1,
-                          border: '1px solid',
-                          borderColor: 'divider',
-                          borderRadius: 1,
-                          textAlign: 'center'
+                          flex: 1,
+                          minWidth: '85px',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          p: 0.5,
                         }}>
-                          <Typography variant="caption" display="block">
+                          <Typography variant="caption" sx={{ fontWeight: 'medium' }}>
                             {new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' })}
                           </Typography>
-                          <WbSunnyIcon sx={{ my: 0.5, fontSize: '1.2rem' }} />
-                          <Typography variant="caption" display="block">
-                            {day.description}
+                          <Icon sx={{ 
+                            fontSize: '1.8rem', 
+                            my: 0.5,
+                            color: 'primary.main'
+                          }}>
+                            {day.description.toLowerCase().includes('rain') ? 'rainy' : 
+                             day.description.toLowerCase().includes('cloud') ? 'cloud' :
+                             day.description.toLowerCase().includes('snow') ? 'ac_unit' :
+                             day.description.toLowerCase().includes('thunder') ? 'flash_on' :
+                             'wb_sunny'}
+                          </Icon>
+                          <Typography variant="caption" sx={{ 
+                            fontSize: '0.75rem',
+                            textAlign: 'center',
+                            minHeight: '32px'
+                          }}>
+                            {Math.round(day.maxTemp)}° | {Math.round(day.minTemp)}°
                           </Typography>
-                          <Typography variant="caption" display="block">
-                            {Math.round(day.minTemp)}°F - {Math.round(day.maxTemp)}°F
-                          </Typography>
-                          <Typography variant="caption" display="block" color="text.secondary">
-                            Rain: {day.precipitation}%
+                          <Typography 
+                            variant="caption" 
+                            color="text.secondary"
+                            sx={{ fontSize: '0.7rem' }}
+                          >
+                            {day.precipitation}% rain
                           </Typography>
                         </Box>
                       ))

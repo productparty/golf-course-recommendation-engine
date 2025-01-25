@@ -14,7 +14,9 @@ export const getWeatherForecast = async (lat: number, lon: number): Promise<Weat
       `https://api.open-meteo.com/v1/forecast?` +
       `latitude=${lat}&longitude=${lon}` +
       `&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,weathercode` +
-      `&timezone=auto`
+      `&timezone=auto` +
+      `&temperature_unit=fahrenheit` +
+      `&forecast_days=3`
     );
 
     if (!response.ok) {
@@ -28,25 +30,26 @@ export const getWeatherForecast = async (lat: number, lon: number): Promise<Weat
   }
 };
 
-export const getWeatherDescription = (code: number): string => {
-  const weatherCodes: { [key: number]: string } = {
-    0: 'Clear sky',
-    1: 'Mainly clear',
-    2: 'Partly cloudy',
-    3: 'Overcast',
-    45: 'Foggy',
-    48: 'Depositing rime fog',
-    51: 'Light drizzle',
-    53: 'Moderate drizzle',
-    55: 'Dense drizzle',
-    61: 'Slight rain',
-    63: 'Moderate rain',
-    65: 'Heavy rain',
-    71: 'Slight snow',
-    73: 'Moderate snow',
-    75: 'Heavy snow',
-    95: 'Thunderstorm',
+// Weather code mapping to icons and descriptions
+export const getWeatherInfo = (code: number): { icon: string, description: string } => {
+  const weatherMap: { [key: number]: { icon: string, description: string } } = {
+    0: { icon: 'clear_day', description: 'Clear' },
+    1: { icon: 'partly_cloudy_day', description: 'Mostly Clear' },
+    2: { icon: 'partly_cloudy_day', description: 'Partly Cloudy' },
+    3: { icon: 'cloudy', description: 'Cloudy' },
+    45: { icon: 'foggy', description: 'Foggy' },
+    48: { icon: 'foggy', description: 'Foggy' },
+    51: { icon: 'rainy_light', description: 'Light Rain' },
+    53: { icon: 'rainy', description: 'Rain' },
+    55: { icon: 'rainy_heavy', description: 'Heavy Rain' },
+    61: { icon: 'rainy_light', description: 'Light Rain' },
+    63: { icon: 'rainy', description: 'Rain' },
+    65: { icon: 'rainy_heavy', description: 'Heavy Rain' },
+    71: { icon: 'weather_snowy', description: 'Light Snow' },
+    73: { icon: 'weather_snowy', description: 'Snow' },
+    75: { icon: 'weather_snowy_heavy', description: 'Heavy Snow' },
+    95: { icon: 'thunderstorm', description: 'Thunderstorm' },
   };
-  
-  return weatherCodes[code] || 'Unknown';
+
+  return weatherMap[code] || { icon: 'question_mark', description: 'Unknown' };
 }; 

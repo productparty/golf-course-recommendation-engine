@@ -32,6 +32,8 @@ interface Club {
   golf_clubs_rental: boolean;
   club_fitting: boolean;
   golf_lessons: boolean;
+  latitude?: number;
+  longitude?: number;
 }
 
 const RecommendClubUpdated: React.FC = () => {
@@ -78,15 +80,35 @@ const RecommendClubUpdated: React.FC = () => {
       }
 
       const data = await response.json();
+      console.log('API Response:', data);
+
       if (!data.courses || !Array.isArray(data.courses)) {
         throw new Error('Invalid response format');
       }
 
-      setCourses(data.courses);
-      setTotalPages(Math.ceil(data.courses.length / ITEMS_PER_PAGE));
+      const coursesWithCoords = await Promise.all(data.courses.map(async (course: Club) => {
+        try {
+          const response = await fetch(
+            `https://api.zippopotam.us/us/${course.zip_code}`
+          );
+          const zipData = await response.json();
+          
+          return {
+            ...course,
+            latitude: Number(zipData.places[0].latitude),
+            longitude: Number(zipData.places[0].longitude)
+          };
+        } catch (error) {
+          console.error(`Failed to get coordinates for ${course.zip_code}:`, error);
+          return course;
+        }
+      }));
+
+      setCourses(coursesWithCoords);
+      setTotalPages(Math.ceil(coursesWithCoords.length / ITEMS_PER_PAGE));
       setCurrentPage(1);
 
-      if (data.courses.length === 0) {
+      if (coursesWithCoords.length === 0) {
         setError('No recommendations found for this location');
       }
     } catch (error: any) {
