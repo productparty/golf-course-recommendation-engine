@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Grid, TextField, Button, FormControl, InputLabel, Select, MenuItem, 
   Box, Alert, CircularProgress, SelectChangeEvent, Typography, Card,
@@ -16,6 +16,7 @@ import {
   Thunderstorm, 
   WbSunny 
 } from '@mui/icons-material';
+import { supabase } from '../../lib/supabase';
 
 interface Club {
   id: string;
@@ -107,6 +108,8 @@ const FindClubUpdated: React.FC = () => {
 
   const [weather, setWeather] = useState<WeatherData[]>([]);
   const [isLoadingWeather, setIsLoadingWeather] = useState(false);
+
+  const [favorites, setFavorites] = useState<string[]>([]);
 
   const handleTextChange = (name: keyof Filters) => (
     event: React.ChangeEvent<HTMLInputElement>
@@ -251,6 +254,60 @@ const FindClubUpdated: React.FC = () => {
     
     setClubs(sortedClubs);
   };
+
+  const fetchFavorites = async () => {
+    if (!session?.user?.id) return;
+    
+    const { data, error } = await supabase
+      .from('favorites')
+      .select('club_id')
+      .eq('user_id', session.user.id);
+      
+    if (error) {
+      console.error('Error fetching favorites:', error);
+      return;
+    }
+    
+    setFavorites(data.map(fav => fav.club_id));
+  };
+
+  const handleToggleFavorite = async (clubId: string) => {
+    if (!session?.user?.id) return;
+
+    const isFavorite = favorites.includes(clubId);
+    
+    if (isFavorite) {
+      const { error } = await supabase
+        .from('favorites')
+        .delete()
+        .eq('user_id', session.user.id)
+        .eq('club_id', clubId);
+        
+      if (error) {
+        console.error('Error removing favorite:', error);
+        return;
+      }
+      
+      setFavorites(prev => prev.filter(id => id !== clubId));
+    } else {
+      const { error } = await supabase
+        .from('favorites')
+        .insert([
+          { user_id: session.user.id, club_id: clubId }
+        ]);
+        
+      if (error) {
+        console.error('Error adding favorite:', error);
+        return;
+      }
+      
+      setFavorites(prev => [...prev, clubId]);
+    }
+  };
+
+  useEffect(() => {
+    fetchFavorites();
+  }, [session?.user?.id]);
 
   return (
     <PageLayout title="Find Clubs">
@@ -467,11 +524,9 @@ const FindClubUpdated: React.FC = () => {
                 {getCurrentPageClubs().map((club) => (
                   <Grid item xs={12} key={club.id}>
                     <ClubCard 
-                      club={{
-                        ...club,
-                        latitude: club.latitude,  // Make sure these are included
-                        longitude: club.longitude
-                      }} 
+                      club={club}
+                      isFavorite={favorites.includes(club.id)}
+                      onToggleFavorite={handleToggleFavorite}
                     />
                   </Grid>
                 ))}

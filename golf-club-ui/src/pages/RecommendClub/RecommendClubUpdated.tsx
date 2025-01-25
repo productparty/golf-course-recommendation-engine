@@ -7,6 +7,7 @@ import { useAuth } from '../../context/AuthContext';
 import PageLayout from '../../components/PageLayout';
 import { config } from '../../config';
 import ClubCard from '../../components/ClubCard';
+import { supabase } from '../../lib/supabase';
 
 interface Club {
   id: string;
@@ -47,6 +48,7 @@ const RecommendClubUpdated: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const ITEMS_PER_PAGE = 4;
+  const [favorites, setFavorites] = useState<string[]>([]);
 
   const handleSearch = async () => {
     if (!zipCode) {
@@ -128,6 +130,62 @@ const RecommendClubUpdated: React.FC = () => {
     setCurrentPage(Math.max(1, Math.min(newPage, totalPages)));
   };
 
+  const fetchFavorites = async () => {
+    if (!session?.user?.id) return;
+    
+    const { data, error } = await supabase
+      .from('favorites')
+      .select('club_id')
+      .eq('user_id', session.user.id);
+      
+    if (error) {
+      console.error('Error fetching favorites:', error);
+      return;
+    }
+    
+    setFavorites(data.map(fav => fav.club_id));
+  };
+
+  const handleToggleFavorite = async (clubId: string) => {
+    if (!session?.user?.id) return;
+
+    const isFavorite = favorites.includes(clubId);
+    
+    if (isFavorite) {
+      // Remove from favorites
+      const { error } = await supabase
+        .from('favorites')
+        .delete()
+        .eq('user_id', session.user.id)
+        .eq('club_id', clubId);
+        
+      if (error) {
+        console.error('Error removing favorite:', error);
+        return;
+      }
+      
+      setFavorites(prev => prev.filter(id => id !== clubId));
+    } else {
+      // Add to favorites
+      const { error } = await supabase
+        .from('favorites')
+        .insert([
+          { user_id: session.user.id, club_id: clubId }
+        ]);
+        
+      if (error) {
+        console.error('Error adding favorite:', error);
+        return;
+      }
+      
+      setFavorites(prev => [...prev, clubId]);
+    }
+  };
+
+  useEffect(() => {
+    fetchFavorites();
+  }, [session?.user?.id]);
+
   return (
     <PageLayout title="Recommended Clubs">
       <Typography 
@@ -206,7 +264,12 @@ const RecommendClubUpdated: React.FC = () => {
           <Grid container spacing={2}>
             {getCurrentPageCourses().map((course) => (
               <Grid item xs={12} key={course.id}>
-                <ClubCard club={course} showScore={true} />
+                <ClubCard 
+                  club={course} 
+                  showScore={true}
+                  isFavorite={favorites.includes(course.id)}
+                  onToggleFavorite={handleToggleFavorite}
+                />
               </Grid>
             ))}
           </Grid>

@@ -11,6 +11,9 @@ import UmbrellaIcon from '@mui/icons-material/Umbrella';
 import ThunderstormIcon from '@mui/icons-material/Thunderstorm';
 import AcUnitIcon from '@mui/icons-material/AcUnit';
 import { SvgIcon } from '@mui/material';
+import FavoriteIcon from '@mui/icons-material/Favorite';
+import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
+import IconButton from '@mui/material/IconButton';
 
 interface WeatherData {
   date: string;
@@ -50,6 +53,8 @@ interface ClubCardProps {
   };
   showScore?: boolean;
   userPreferences?: Record<string, any>;
+  isFavorite?: boolean;
+  onToggleFavorite?: (clubId: string) => void;
 }
 
 const FeatureChip: React.FC<{ label: string; isMatch?: boolean }> = ({ label, isMatch = false }) => (
@@ -68,7 +73,13 @@ const FeatureChip: React.FC<{ label: string; isMatch?: boolean }> = ({ label, is
   />
 );
 
-const ClubCard: React.FC<ClubCardProps> = ({ club, showScore = false, userPreferences }) => {
+const ClubCard: React.FC<ClubCardProps> = ({ 
+  club, 
+  showScore = false, 
+  userPreferences,
+  isFavorite = false,
+  onToggleFavorite 
+}) => {
   const [weather, setWeather] = useState<WeatherData[]>([]);
   const [isLoadingWeather, setIsLoadingWeather] = useState(false);
 
@@ -125,13 +136,24 @@ const ClubCard: React.FC<ClubCardProps> = ({ club, showScore = false, userPrefer
   return (
     <Card sx={{ mb: 2, width: '100%' }}>
       <CardContent>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <Typography variant="h6" gutterBottom>
+            {club.club_name}
+          </Typography>
+          {onToggleFavorite && (
+            <IconButton 
+              onClick={() => onToggleFavorite(club.id)}
+              color="primary"
+              size="small"
+            >
+              {isFavorite ? <FavoriteIcon /> : <FavoriteBorderIcon />}
+            </IconButton>
+          )}
+        </Box>
         <Grid container spacing={2}>
           {/* Left Column - Basic Info */}
           <Grid item xs={12} md={6}>
             <Box sx={{ mb: 2 }}>
-              <Typography variant="h6" component="div" gutterBottom>
-                {club.club_name}
-              </Typography>
               <Typography variant="body2" color="text.secondary">
                 {club.address}
               </Typography>
