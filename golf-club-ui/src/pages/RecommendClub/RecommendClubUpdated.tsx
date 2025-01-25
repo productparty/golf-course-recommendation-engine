@@ -108,7 +108,11 @@ const RecommendClubUpdated: React.FC = () => {
 
   return (
     <PageLayout title="Recommended Clubs">
-      <Typography variant="subtitle1" color="text.secondary" sx={{ mb: 4 }}>
+      <Typography 
+        variant="subtitle1" 
+        color="text.secondary" 
+        sx={{ mb: 4, textAlign: 'center' }}
+      >
         Enter your desired zip code and search radius below for club recommendations based on your profile.
       </Typography>
       <Card sx={{ 
@@ -120,27 +124,27 @@ const RecommendClubUpdated: React.FC = () => {
           <Grid container spacing={2} alignItems="flex-start">
             <Grid item xs={12} sm={6}>
               <TextField
-                fullWidth
-                label="Zip Code"
-                value={zipCode}
-                onChange={(e) => setZipCode(e.target.value)}
-                size="small"
-                sx={{ mt: 1 }}
+              fullWidth
+              label="Zip Code"
+              value={zipCode}
+              onChange={(e) => setZipCode(e.target.value)}
+              size="small"
+              sx={{ mt: 1 }}
               />
             </Grid>
             <Grid item xs={12} sm={6}>
-              <FormControl fullWidth size="small">
-                <InputLabel>Search Radius</InputLabel>
-                <Select
-                  value={radius}
-                  onChange={(e) => setRadius(e.target.value)}
-                  label="Search Radius"
-                >
-                  <MenuItem value="10">10 miles</MenuItem>
-                  <MenuItem value="25">25 miles</MenuItem>
-                  <MenuItem value="50">50 miles</MenuItem>
-                  <MenuItem value="100">100 miles</MenuItem>
-                </Select>
+              <FormControl fullWidth size="small" sx={{ mt: 1 }}>
+              <InputLabel>Search Radius</InputLabel>
+              <Select
+                value={radius}
+                onChange={(e) => setRadius(e.target.value)}
+                label="Search Radius"
+              >
+                <MenuItem value="10">10 miles</MenuItem>
+                <MenuItem value="25">25 miles</MenuItem>
+                <MenuItem value="50">50 miles</MenuItem>
+                <MenuItem value="100">100 miles</MenuItem>
+              </Select>
               </FormControl>
             </Grid>
           </Grid>

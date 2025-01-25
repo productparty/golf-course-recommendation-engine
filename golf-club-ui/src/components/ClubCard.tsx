@@ -90,10 +90,12 @@ const ClubCard: React.FC<ClubCardProps> = ({ club, showScore = false, userPrefer
 
   useEffect(() => {
     const fetchWeather = async () => {
+      console.log('Club coordinates:', { lat: club.latitude, lng: club.longitude });
       if (club.latitude && club.longitude) {
         setIsLoadingWeather(true);
         try {
           const data = await getWeatherForecast(club.latitude, club.longitude);
+          console.log('Weather data:', data);
           
           const weatherData: WeatherData[] = data.daily.time.slice(0, 3).map((date, index) => ({
             date,
@@ -134,6 +136,46 @@ const ClubCard: React.FC<ClubCardProps> = ({ club, showScore = false, userPrefer
               <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
                 Distance: {club.distance_miles.toFixed(1)} miles
               </Typography>
+              
+              {(weather.length > 0 || isLoadingWeather) && (
+                <Box sx={{ mt: 2 }}>
+                  <Typography variant="subtitle2" color="textSecondary" gutterBottom>
+                    3-Day Weather Forecast
+                  </Typography>
+                  <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                    {isLoadingWeather ? (
+                      <CircularProgress size={20} />
+                    ) : (
+                      weather.map((day, index) => (
+                        <Box key={index} sx={{ 
+                          flex: 1, 
+                          minWidth: '120px',
+                          p: 1,
+                          border: '1px solid',
+                          borderColor: 'divider',
+                          borderRadius: 1,
+                          textAlign: 'center'
+                        }}>
+                          <Typography variant="caption" display="block">
+                            {new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' })}
+                          </Typography>
+                          <WbSunnyIcon sx={{ my: 0.5, fontSize: '1.2rem' }} />
+                          <Typography variant="caption" display="block">
+                            {day.description}
+                          </Typography>
+                          <Typography variant="caption" display="block">
+                            {Math.round(day.minTemp)}°F - {Math.round(day.maxTemp)}°F
+                          </Typography>
+                          <Typography variant="caption" display="block" color="text.secondary">
+                            Rain: {day.precipitation}%
+                          </Typography>
+                        </Box>
+                      ))
+                    )}
+                  </Box>
+                </Box>
+              )}
+              
               {showScore && (
                 <Chip 
                   label={`Match %: ${club.score?.toFixed(1)}`}
@@ -203,47 +245,6 @@ const ClubCard: React.FC<ClubCardProps> = ({ club, showScore = false, userPrefer
               )}
             </Box>
           </Grid>
-
-          {/* Add Weather Section */}
-          {(weather.length > 0 || isLoadingWeather) && (
-            <Grid item xs={12}>
-              <Divider sx={{ my: 2 }} />
-              <Typography variant="subtitle2" color="textSecondary" gutterBottom>
-                3-Day Weather Forecast
-              </Typography>
-              <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-                {isLoadingWeather ? (
-                  <CircularProgress size={24} />
-                ) : (
-                  weather.map((day, index) => (
-                    <Box key={index} sx={{ 
-                      flex: 1, 
-                      minWidth: '150px',
-                      p: 1,
-                      border: '1px solid',
-                      borderColor: 'divider',
-                      borderRadius: 1,
-                      textAlign: 'center'
-                    }}>
-                      <Typography variant="body2">
-                        {new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' })}
-                      </Typography>
-                      <WbSunnyIcon sx={{ my: 1 }} />
-                      <Typography variant="body2">
-                        {day.description}
-                      </Typography>
-                      <Typography variant="body2">
-                        {Math.round(day.minTemp)}°F - {Math.round(day.maxTemp)}°F
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        Rain: {day.precipitation}%
-                      </Typography>
-                    </Box>
-                  ))
-                )}
-              </Box>
-            </Grid>
-          )}
         </Grid>
       </CardContent>
     </Card>

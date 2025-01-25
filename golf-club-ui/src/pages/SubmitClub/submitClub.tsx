@@ -74,9 +74,11 @@ const SubmitClub = () => {
 
   return (
     <PageLayout title="Submit Club">
-      <Typography variant="subtitle1" color="text.secondary" sx={{ mb: 4 }}>
-        Can't find a specific golf club? Send us a note below and we will get it added.
-      </Typography>
+      <Box display="flex" justifyContent="center" sx={{ mb: 4 }}>
+        <Typography variant="subtitle1" color="text.secondary">
+          Can't find a specific golf club? Send us a note below and we will get it added.
+        </Typography>
+      </Box>
       <Container maxWidth="sm">
         <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
           <TextField
