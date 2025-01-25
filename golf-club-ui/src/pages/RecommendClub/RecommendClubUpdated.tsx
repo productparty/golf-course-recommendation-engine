@@ -117,18 +117,19 @@ const RecommendClubUpdated: React.FC = () => {
         mx: { xs: -2, sm: 0 }
       }}>
         <CardContent>
-          <Grid container spacing={2}>
+          <Grid container spacing={2} alignItems="flex-start">
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
                 label="Zip Code"
                 value={zipCode}
                 onChange={(e) => setZipCode(e.target.value)}
-                margin="normal"
+                size="small"
+                sx={{ mt: 1 }}
               />
             </Grid>
             <Grid item xs={12} sm={6}>
-              <FormControl fullWidth>
+              <FormControl fullWidth size="small">
                 <InputLabel>Search Radius</InputLabel>
                 <Select
                   value={radius}

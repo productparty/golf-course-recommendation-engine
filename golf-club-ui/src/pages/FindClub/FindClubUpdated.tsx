@@ -390,9 +390,17 @@ const FindClubUpdated: React.FC = () => {
         </aside>
 
         <section className="results">
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+          <Box sx={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            mb: 2,
+            flexDirection: { xs: 'column', sm: 'row' },
+            gap: { xs: 2, sm: 0 }
+          }}>
             <Typography variant="h6">Search Results</Typography>
-            <FormControl sx={{ minWidth: 200 }}>
+            <FormControl sx={{ 
+              minWidth: { xs: '100%', sm: 200 }  // Full width on mobile
+            }}>
               <InputLabel>Sort By</InputLabel>
               <Select
                 value={sortBy}
