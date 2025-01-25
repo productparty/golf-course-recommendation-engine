@@ -177,7 +177,7 @@ const FindClubUpdated: React.FC = () => {
 
       const data = await response.json();
 
-      const coursesWithCoords = await Promise.all(data.clubs.map(async (course: Club) => {
+      const coursesWithCoords = await Promise.all((data.results || []).map(async (course: Club) => {
         try {
           const response = await fetch(
             `https://api.zippopotam.us/us/${course.zip_code}`
@@ -196,7 +196,7 @@ const FindClubUpdated: React.FC = () => {
       }));
 
       setClubs(coursesWithCoords);
-      setTotalPages(Math.ceil((coursesWithCoords || []).length / ITEMS_PER_PAGE));
+      setTotalPages(Math.ceil(coursesWithCoords.length / ITEMS_PER_PAGE));
       setCurrentPage(1);
 
       if (sortBy) {
