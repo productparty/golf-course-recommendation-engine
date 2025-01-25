@@ -1,9 +1,19 @@
-import React from 'react';
-import { Card, CardContent, Typography, Chip, Box, Divider, Grid } from '@mui/material';
+import React, { useEffect, useState } from 'react';
+import { Card, CardContent, Typography, Chip, Box, Divider, Grid, CircularProgress } from '@mui/material';
 import GolfCourseIcon from '@mui/icons-material/GolfCourse';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import StarIcon from '@mui/icons-material/Star';
+import { getWeatherForecast, getWeatherDescription } from '../utils/weather';
+import WbSunnyIcon from '@mui/icons-material/WbSunny';
+
+interface WeatherData {
+  date: string;
+  maxTemp: number;
+  minTemp: number;
+  precipitation: number;
+  description: string;
+}
 
 interface ClubCardProps {
   club: {
@@ -30,6 +40,8 @@ interface ClubCardProps {
     golf_clubs_rental: boolean;
     club_fitting: boolean;
     golf_lessons: boolean;
+    latitude?: number;
+    longitude?: number;
   };
   showScore?: boolean;
   userPreferences?: Record<string, any>;
@@ -52,6 +64,9 @@ const FeatureChip: React.FC<{ label: string; isMatch?: boolean }> = ({ label, is
 );
 
 const ClubCard: React.FC<ClubCardProps> = ({ club, showScore = false, userPreferences }) => {
+  const [weather, setWeather] = useState<WeatherData[]>([]);
+  const [isLoadingWeather, setIsLoadingWeather] = useState(false);
+
   const amenities = [
     { label: 'Driving Range', value: club.driving_range },
     { label: 'Putting Green', value: club.putting_green },
@@ -72,6 +87,33 @@ const ClubCard: React.FC<ClubCardProps> = ({ club, showScore = false, userPrefer
   const isMatch = (feature: string, value: any) => {
     return userPreferences?.[feature] === value;
   };
+
+  useEffect(() => {
+    const fetchWeather = async () => {
+      if (club.latitude && club.longitude) {
+        setIsLoadingWeather(true);
+        try {
+          const data = await getWeatherForecast(club.latitude, club.longitude);
+          
+          const weatherData: WeatherData[] = data.daily.time.slice(0, 3).map((date, index) => ({
+            date,
+            maxTemp: data.daily.temperature_2m_max[index],
+            minTemp: data.daily.temperature_2m_min[index],
+            precipitation: data.daily.precipitation_probability_max[index],
+            description: getWeatherDescription(data.daily.weathercode[index])
+          }));
+          
+          setWeather(weatherData);
+        } catch (error) {
+          console.error('Failed to fetch weather:', error);
+        } finally {
+          setIsLoadingWeather(false);
+        }
+      }
+    };
+
+    fetchWeather();
+  }, [club.latitude, club.longitude]);
 
   return (
     <Card sx={{ mb: 2, width: '100%' }}>
@@ -161,6 +203,47 @@ const ClubCard: React.FC<ClubCardProps> = ({ club, showScore = false, userPrefer
               )}
             </Box>
           </Grid>
+
+          {/* Add Weather Section */}
+          {(weather.length > 0 || isLoadingWeather) && (
+            <Grid item xs={12}>
+              <Divider sx={{ my: 2 }} />
+              <Typography variant="subtitle2" color="textSecondary" gutterBottom>
+                3-Day Weather Forecast
+              </Typography>
+              <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                {isLoadingWeather ? (
+                  <CircularProgress size={24} />
+                ) : (
+                  weather.map((day, index) => (
+                    <Box key={index} sx={{ 
+                      flex: 1, 
+                      minWidth: '150px',
+                      p: 1,
+                      border: '1px solid',
+                      borderColor: 'divider',
+                      borderRadius: 1,
+                      textAlign: 'center'
+                    }}>
+                      <Typography variant="body2">
+                        {new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' })}
+                      </Typography>
+                      <WbSunnyIcon sx={{ my: 1 }} />
+                      <Typography variant="body2">
+                        {day.description}
+                      </Typography>
+                      <Typography variant="body2">
+                        {Math.round(day.minTemp)}°F - {Math.round(day.maxTemp)}°F
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Rain: {day.precipitation}%
+                      </Typography>
+                    </Box>
+                  ))
+                )}
+              </Box>
+            </Grid>
+          )}
         </Grid>
       </CardContent>
     </Card>
