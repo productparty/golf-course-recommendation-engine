@@ -90,9 +90,9 @@ const Dashboard: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <Typography variant="h3" component="h1" gutterBottom>
-            Welcome back, {firstName}!
-          </Typography>
+            <Typography variant="h4" component="h1" gutterBottom>
+            Welcome back, Golfer!
+            </Typography>
           <Typography variant="h6">
             Ready to discover your next favorite golf course?
           </Typography>
@@ -113,10 +113,10 @@ const Dashboard: React.FC = () => {
         </Grid>
         <Grid item xs={12} md={4}>
           <FeatureCard
-            title="Get Recommendations"
+            title="Recommended Clubs"
             description="Receive personalized club recommendations based on your profile."
             icon={<RecommendIcon sx={{ fontSize: 48, color: 'primary.main' }} />}
-            buttonText="Recommended Clubs"
+            buttonText="Get Recommendations"
             onClick={() => navigate('/recommend-club')}
             delay={0.4}
           />
