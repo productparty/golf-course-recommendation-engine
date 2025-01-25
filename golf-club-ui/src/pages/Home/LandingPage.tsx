@@ -163,7 +163,8 @@ const LandingPage = () => {
       <Box sx={{ py: 12, textAlign: 'center' }}>
         <Typography variant="h3" gutterBottom sx={{
           fontSize: { xs: '2rem', sm: '2.5rem', md: '3rem' },
-          px: { xs: 2, sm: 0 }
+          px: { xs: 2, sm: 0 },
+          textAlign: { xs: 'center', sm: 'center' }
         }}>
           Unmatched Database
         </Typography>
@@ -202,21 +203,47 @@ const LandingPage = () => {
               <Typography variant="body1" sx={{ mb: 2 }}>
                 Find your perfect match with detailed filtering options:
               </Typography>
-              <Grid container spacing={2}>
+              <Grid container spacing={4}>
                 <Grid item xs={12} md={6}>
-                  <Typography component="ul" sx={{ pl: 2 }}>
-                    <li>Location & Contact Details</li>
-                    <li>Available Amenities</li>
-                    <li>Facility Types</li>
+                  <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 'bold' }}>
+                    Location & Contact Details
+                  </Typography>
+                  <Typography component="ul" sx={{ pl: 2, mb: 2 }}>
+                    <li>Address and Directions</li>
+                    <li>Phone Numbers</li>
                     <li>Operating Hours</li>
+                    <li>Website Links</li>
+                  </Typography>
+
+                  <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 'bold' }}>
+                    Available Amenities
+                  </Typography>
+                  <Typography component="ul" sx={{ pl: 2 }}>
+                    <li>Practice Facilities</li>
+                    <li>Pro Shop</li>
+                    <li>Restaurant/Bar</li>
+                    <li>Locker Rooms</li>
                   </Typography>
                 </Grid>
                 <Grid item xs={12} md={6}>
+                  <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 'bold' }}>
+                    Membership Options
+                  </Typography>
+                  <Typography component="ul" sx={{ pl: 2, mb: 2 }}>
+                    <li>Public/Private Status</li>
+                    <li>Membership Types</li>
+                    <li>Guest Policies</li>
+                    <li>Special Programs</li>
+                  </Typography>
+
+                  <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 'bold' }}>
+                    Course Details
+                  </Typography>
                   <Typography component="ul" sx={{ pl: 2 }}>
-                    <li>Membership Options</li>
-                    <li>Pricing Structure</li>
-                    <li>Course Difficulty</li>
+                    <li>Difficulty Levels</li>
                     <li>Course Conditions</li>
+                    <li>Price Ranges</li>
+                    <li>Peak Hours</li>
                   </Typography>
                 </Grid>
               </Grid>
@@ -232,21 +259,47 @@ const LandingPage = () => {
               <Typography variant="body1" sx={{ mb: 2 }}>
                 Access detailed course information tailored to your needs:
               </Typography>
-              <Grid container spacing={2}>
+              <Grid container spacing={4}>
                 <Grid item xs={12} md={6}>
+                  <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 'bold' }}>
+                    Course Par & Layout
+                  </Typography>
+                  <Typography component="ul" sx={{ pl: 2, mb: 2 }}>
+                    <li>Total Par</li>
+                    <li>Course Length</li>
+                    <li>Hole Details</li>
+                    <li>Course Maps</li>
+                  </Typography>
+
+                  <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 'bold' }}>
+                    Course Ratings
+                  </Typography>
                   <Typography component="ul" sx={{ pl: 2 }}>
-                    <li>Course Par & Layout</li>
-                    <li>Architect Details</li>
-                    <li>Course Rating</li>
+                    <li>USGA Rating</li>
                     <li>Slope Rating</li>
+                    <li>Difficulty Index</li>
+                    <li>Player Reviews</li>
                   </Typography>
                 </Grid>
                 <Grid item xs={12} md={6}>
-                  <Typography component="ul" sx={{ pl: 2 }}>
-                    <li>Tee Distances</li>
+                  <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 'bold' }}>
+                    Tee Information
+                  </Typography>
+                  <Typography component="ul" sx={{ pl: 2, mb: 2 }}>
+                    <li>Multiple Tee Options</li>
+                    <li>Distance Per Hole</li>
                     <li>Handicap Information</li>
-                    <li>Hole-by-Hole Data</li>
-                    <li>Practice Facilities</li>
+                    <li>Recommended Skill Level</li>
+                  </Typography>
+
+                  <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 'bold' }}>
+                    Practice Facilities
+                  </Typography>
+                  <Typography component="ul" sx={{ pl: 2 }}>
+                    <li>Driving Range</li>
+                    <li>Putting Green</li>
+                    <li>Chipping Area</li>
+                    <li>Practice Bunkers</li>
                   </Typography>
                 </Grid>
               </Grid>
@@ -295,8 +348,8 @@ const LandingPage = () => {
         borderRadius: 2,
         mb: 6 
       }}>
-        <Typography variant="h4" gutterBottom>
-          Ready to find your perfect golf club?
+        <Typography variant="h5" gutterBottom>
+          Ready to find your perfect round?
         </Typography>
         <Button 
           variant="contained" 

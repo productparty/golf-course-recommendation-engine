@@ -91,11 +91,18 @@ const Header: React.FC = () => {
       {/* Mobile Navigation */}
       <Box sx={{ display: { xs: 'block', md: 'none' } }}>
         <IconButton
-          size="large"
+          size="medium"
           edge="end"
           color="inherit"
           aria-label="menu"
           onClick={handleMenu}
+          sx={{ 
+            padding: '8px',
+            '& .MuiSvgIcon-root': {
+              width: 24,
+              height: 24
+            }
+          }}
         >
           <MenuIcon />
         </IconButton>
