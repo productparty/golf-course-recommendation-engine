@@ -196,61 +196,6 @@ const ClubCard: React.FC<ClubCardProps> = ({ club, showScore = false, userPrefer
                 </Box>
               )}
 
-              {/* Weather section moved here */}
-              {(weather.length > 0 || isLoadingWeather) && (
-                <Box>
-                  <Typography variant="subtitle2" color="textSecondary" gutterBottom>
-                    Weather Forecast
-                  </Typography>
-                  <Box sx={{ 
-                    display: 'flex', 
-                    gap: 1,
-                    flexWrap: 'wrap',
-                    backgroundColor: 'rgba(0,0,0,0.02)',
-                    borderRadius: 1,
-                    p: 0.75,
-                    width: '100%'
-                  }}>
-                    {isLoadingWeather ? (
-                      <CircularProgress size={20} />
-                    ) : (
-                      weather.map((day, index) => (
-                        <Box key={index} sx={{ 
-                          flex: 1,
-                          minWidth: '80px',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          alignItems: 'center',
-                          p: 0.25,
-                        }}>
-                          <Typography variant="caption" sx={{ fontWeight: 'medium' }}>
-                            {new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' })}
-                          </Typography>
-                          {(() => {
-                            const desc = day.description.toLowerCase();
-                            if (desc.includes('rain')) return <UmbrellaIcon sx={{ fontSize: '1.2rem', color: 'primary.main' }} />;
-                            if (desc.includes('cloud')) return <CloudIcon sx={{ fontSize: '1.2rem', color: 'primary.main' }} />;
-                            if (desc.includes('snow')) return <AcUnitIcon sx={{ fontSize: '1.2rem', color: 'primary.main' }} />;
-                            if (desc.includes('thunder')) return <ThunderstormIcon sx={{ fontSize: '1.2rem', color: 'primary.main' }} />;
-                            return <WbSunnyIcon sx={{ fontSize: '1.2rem', color: 'primary.main' }} />;
-                          })()}
-                          <Typography variant="caption" sx={{ fontSize: '0.75rem' }}>
-                            {Math.round(day.maxTemp)}° | {Math.round(day.minTemp)}°
-                          </Typography>
-                          <Typography 
-                            variant="caption" 
-                            color="text.secondary"
-                            sx={{ fontSize: '0.65rem' }}
-                          >
-                            {day.precipitation}% rain
-                          </Typography>
-                        </Box>
-                      ))
-                    )}
-                  </Box>
-                </Box>
-              )}
-
               {/* Services */}
               {services.length > 0 && (
                 <Box>
@@ -266,6 +211,62 @@ const ClubCard: React.FC<ClubCardProps> = ({ club, showScore = false, userPrefer
               )}
             </Box>
           </Grid>
+
+          {/* Weather section moved outside the columns */}
+          {(weather.length > 0 || isLoadingWeather) && (
+            <Grid item xs={12}>
+              <Divider sx={{ my: 2 }} />
+              <Typography variant="subtitle2" color="textSecondary" gutterBottom>
+                Weather Forecast
+              </Typography>
+              <Box sx={{ 
+                display: 'flex', 
+                gap: 1,
+                flexWrap: 'wrap',
+                backgroundColor: 'rgba(0,0,0,0.02)',
+                borderRadius: 1,
+                p: 0.75,
+                width: '100%'
+              }}>
+                {isLoadingWeather ? (
+                  <CircularProgress size={20} />
+                ) : (
+                  weather.map((day, index) => (
+                    <Box key={index} sx={{ 
+                      flex: 1,
+                      minWidth: '80px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      p: 0.25,
+                    }}>
+                      <Typography variant="caption" sx={{ fontWeight: 'medium' }}>
+                        {new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' })}
+                      </Typography>
+                      {(() => {
+                        const desc = day.description.toLowerCase();
+                        if (desc.includes('rain')) return <UmbrellaIcon sx={{ fontSize: '1.2rem', color: 'primary.main' }} />;
+                        if (desc.includes('cloud')) return <CloudIcon sx={{ fontSize: '1.2rem', color: 'primary.main' }} />;
+                        if (desc.includes('snow')) return <AcUnitIcon sx={{ fontSize: '1.2rem', color: 'primary.main' }} />;
+                        if (desc.includes('thunder')) return <ThunderstormIcon sx={{ fontSize: '1.2rem', color: 'primary.main' }} />;
+                        return <WbSunnyIcon sx={{ fontSize: '1.2rem', color: 'primary.main' }} />;
+                      })()}
+                      <Typography variant="caption" sx={{ fontSize: '0.75rem' }}>
+                        {Math.round(day.maxTemp)}° | {Math.round(day.minTemp)}°
+                      </Typography>
+                      <Typography 
+                        variant="caption" 
+                        color="text.secondary"
+                        sx={{ fontSize: '0.65rem' }}
+                      >
+                        {day.precipitation}% rain
+                      </Typography>
+                    </Box>
+                  ))
+                )}
+              </Box>
+            </Grid>
+          )}
         </Grid>
       </CardContent>
     </Card>

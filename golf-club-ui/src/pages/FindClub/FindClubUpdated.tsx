@@ -40,6 +40,8 @@ interface Club {
   golf_clubs_rental: boolean;
   club_fitting: boolean;
   golf_lessons: boolean;
+  latitude?: number;
+  longitude?: number;
 }
 
 interface Filters {
@@ -174,8 +176,27 @@ const FindClubUpdated: React.FC = () => {
       }
 
       const data = await response.json();
-      setClubs(data.results || []);
-      setTotalPages(Math.ceil((data.results || []).length / ITEMS_PER_PAGE));
+
+      const coursesWithCoords = await Promise.all(data.clubs.map(async (course: Club) => {
+        try {
+          const response = await fetch(
+            `https://api.zippopotam.us/us/${course.zip_code}`
+          );
+          const zipData = await response.json();
+          
+          return {
+            ...course,
+            latitude: Number(zipData.places[0].latitude),
+            longitude: Number(zipData.places[0].longitude)
+          };
+        } catch (error) {
+          console.error(`Failed to get coordinates for ${course.zip_code}:`, error);
+          return course;
+        }
+      }));
+
+      setClubs(coursesWithCoords);
+      setTotalPages(Math.ceil((coursesWithCoords || []).length / ITEMS_PER_PAGE));
       setCurrentPage(1);
 
       if (sortBy) {
@@ -445,70 +466,13 @@ const FindClubUpdated: React.FC = () => {
               <Grid container spacing={2}>
                 {getCurrentPageClubs().map((club) => (
                   <Grid item xs={12} key={club.id}>
-                    <Card sx={{ mb: 2 }}>
-                      <CardContent>
-                        <Grid container spacing={2}>
-                          <Grid item xs={12} sm={6}>
-                            <Typography variant="h6" gutterBottom>
-                              {club.club_name}
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                              {club.address}
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                              {club.city}, {club.state} {club.zip_code}
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                              Distance: {club.distance_miles.toFixed(1)} miles
-                            </Typography>
-                            
-                            {/* Compact Weather Display */}
-                            {(weather.length > 0 || isLoadingWeather) && (
-                              <Box sx={{ 
-                                mt: 1,
-                                display: 'flex',
-                                gap: 1,
-                                flexWrap: 'wrap',
-                                backgroundColor: 'rgba(0,0,0,0.02)',
-                                borderRadius: 1,
-                                p: 0.5,
-                                maxWidth: { xs: '100%', sm: '300px' }
-                              }}>
-                                {isLoadingWeather ? (
-                                  <CircularProgress size={16} />
-                                ) : (
-                                  weather.map((day, index) => (
-                                    <Box key={index} sx={{ 
-                                      display: 'flex',
-                                      alignItems: 'center',
-                                      gap: 0.5,
-                                      fontSize: '0.75rem'
-                                    }}>
-                                      <Typography variant="caption" sx={{ fontWeight: 'medium' }}>
-                                        {new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' })}:
-                                      </Typography>
-                                      {(() => {
-                                        const desc = day.description.toLowerCase();
-                                        if (desc.includes('rain')) return <Umbrella sx={{ fontSize: '1rem' }} />;
-                                        if (desc.includes('cloud')) return <Cloud sx={{ fontSize: '1rem' }} />;
-                                        if (desc.includes('snow')) return <AcUnit sx={{ fontSize: '1rem' }} />;
-                                        if (desc.includes('thunder')) return <Thunderstorm sx={{ fontSize: '1rem' }} />;
-                                        return <WbSunny sx={{ fontSize: '1rem' }} />;
-                                      })()}
-                                      <Typography variant="caption">
-                                        {Math.round(day.maxTemp)}°
-                                      </Typography>
-                                    </Box>
-                                  ))
-                                )}
-                              </Box>
-                            )}
-                          </Grid>
-                          
-                          {/* Rest of the card content */}
-                        </Grid>
-                      </CardContent>
-                    </Card>
+                    <ClubCard 
+                      club={{
+                        ...club,
+                        latitude: club.latitude,  // Make sure these are included
+                        longitude: club.longitude
+                      }} 
+                    />
                   </Grid>
                 ))}
               </Grid>
