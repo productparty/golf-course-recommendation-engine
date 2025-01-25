@@ -6,6 +6,11 @@ import LocationOnIcon from '@mui/icons-material/LocationOn';
 import StarIcon from '@mui/icons-material/Star';
 import { getWeatherForecast, getWeatherInfo } from '../utils/weather';
 import WbSunnyIcon from '@mui/icons-material/WbSunny';
+import CloudIcon from '@mui/icons-material/Cloud';
+import UmbrellaIcon from '@mui/icons-material/Umbrella';
+import ThunderstormIcon from '@mui/icons-material/Thunderstorm';
+import AcUnitIcon from '@mui/icons-material/AcUnit';
+import { SvgIcon } from '@mui/material';
 
 interface WeatherData {
   date: string;
@@ -138,7 +143,7 @@ const ClubCard: React.FC<ClubCardProps> = ({ club, showScore = false, userPrefer
               </Typography>
               
               {(weather.length > 0 || isLoadingWeather) && (
-                <Box sx={{ mt: 2 }}>
+                <Box sx={{ mt: 1.5 }}>
                   <Typography variant="subtitle2" color="textSecondary" gutterBottom>
                     Weather Forecast
                   </Typography>
@@ -148,7 +153,7 @@ const ClubCard: React.FC<ClubCardProps> = ({ club, showScore = false, userPrefer
                     flexWrap: 'wrap',
                     backgroundColor: 'rgba(0,0,0,0.02)',
                     borderRadius: 1,
-                    p: 1
+                    p: 0.75
                   }}>
                     {isLoadingWeather ? (
                       <CircularProgress size={20} />
@@ -156,37 +161,30 @@ const ClubCard: React.FC<ClubCardProps> = ({ club, showScore = false, userPrefer
                       weather.map((day, index) => (
                         <Box key={index} sx={{ 
                           flex: 1,
-                          minWidth: '85px',
+                          minWidth: '80px',
                           display: 'flex',
                           flexDirection: 'column',
                           alignItems: 'center',
-                          p: 0.5,
+                          p: 0.25,
                         }}>
                           <Typography variant="caption" sx={{ fontWeight: 'medium' }}>
                             {new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' })}
                           </Typography>
-                          <Icon sx={{ 
-                            fontSize: '1.8rem', 
-                            my: 0.5,
-                            color: 'primary.main'
-                          }}>
-                            {day.description.toLowerCase().includes('rain') ? 'rainy' : 
-                             day.description.toLowerCase().includes('cloud') ? 'cloud' :
-                             day.description.toLowerCase().includes('snow') ? 'ac_unit' :
-                             day.description.toLowerCase().includes('thunder') ? 'flash_on' :
-                             'wb_sunny'}
-                          </Icon>
-                          <Typography variant="caption" sx={{ 
-                            fontSize: '0.75rem',
-                            textAlign: 'center',
-                            minHeight: '32px'
-                          }}>
+                          {(() => {
+                            const desc = day.description.toLowerCase();
+                            if (desc.includes('rain')) return <UmbrellaIcon sx={{ fontSize: '1.2rem', color: 'primary.main' }} />;
+                            if (desc.includes('cloud')) return <CloudIcon sx={{ fontSize: '1.2rem', color: 'primary.main' }} />;
+                            if (desc.includes('snow')) return <AcUnitIcon sx={{ fontSize: '1.2rem', color: 'primary.main' }} />;
+                            if (desc.includes('thunder')) return <ThunderstormIcon sx={{ fontSize: '1.2rem', color: 'primary.main' }} />;
+                            return <WbSunnyIcon sx={{ fontSize: '1.2rem', color: 'primary.main' }} />;
+                          })()}
+                          <Typography variant="caption" sx={{ fontSize: '0.75rem' }}>
                             {Math.round(day.maxTemp)}° | {Math.round(day.minTemp)}°
                           </Typography>
                           <Typography 
                             variant="caption" 
                             color="text.secondary"
-                            sx={{ fontSize: '0.7rem' }}
+                            sx={{ fontSize: '0.65rem' }}
                           >
                             {day.precipitation}% rain
                           </Typography>
