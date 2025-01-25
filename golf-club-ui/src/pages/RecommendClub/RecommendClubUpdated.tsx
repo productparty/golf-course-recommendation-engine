@@ -124,6 +124,7 @@ const RecommendClubUpdated: React.FC = () => {
                 label="Zip Code"
                 value={zipCode}
                 onChange={(e) => setZipCode(e.target.value)}
+                margin="normal"
               />
             </Grid>
             <Grid item xs={12} sm={6}>
