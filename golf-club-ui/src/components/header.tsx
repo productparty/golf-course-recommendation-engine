@@ -99,7 +99,7 @@ const Header: React.FC = () => {
           sx={{ 
             padding: '8px',
             '& .MuiSvgIcon-root': {
-              width: 24,
+              width: 30,
               height: 24
             }
           }}

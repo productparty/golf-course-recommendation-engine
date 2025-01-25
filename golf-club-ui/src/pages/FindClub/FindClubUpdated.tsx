@@ -222,35 +222,29 @@ const FindClubUpdated: React.FC = () => {
         <aside className="filters">
           <Typography variant="h6" gutterBottom>Filters</Typography>
           <Box sx={{ width: '100%' }}>
-            <Card sx={{ p: 3, mb: 3 }}>
-              <Grid container spacing={2} alignItems="center">
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    label="Zip Code"
-                    value={filters.zipCode}
-                    onChange={handleTextChange('zipCode')}
-                    size="small"
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <FormControl fullWidth size="small">
-                    <InputLabel>Search Radius</InputLabel>
-                    <Select
-                      value={filters.radius}
-                      onChange={handleSelectChange('radius')}
-                      label="Search Radius"
-                    >
-                      <MenuItem value="10">10 miles</MenuItem>
-                      <MenuItem value="25">25 miles</MenuItem>
-                      <MenuItem value="50">50 miles</MenuItem>
-                      <MenuItem value="100">100 miles</MenuItem>
-                    </Select>
-                  </FormControl>
-                </Grid>
-              </Grid>
-            </Card>
+            {/* Basic Search */}
+            <TextField
+              fullWidth
+              label="Zip Code"
+              value={filters.zipCode}
+              onChange={handleTextChange('zipCode')}
+              margin="normal"
+            />
             
+            <FormControl fullWidth margin="normal">
+              <InputLabel>Search Radius</InputLabel>
+              <Select
+                value={filters.radius}
+                onChange={handleSelectChange('radius')}
+                label="Search Radius"
+              >
+                <MenuItem value="10">10 miles</MenuItem>
+                <MenuItem value="25">25 miles</MenuItem>
+                <MenuItem value="50">50 miles</MenuItem>
+                <MenuItem value="100">100 miles</MenuItem>
+              </Select>
+            </FormControl>
+
             <Divider sx={{ my: 2 }} />
             
             {/* Course Info */}
