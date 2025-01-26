@@ -1,94 +1,139 @@
 // components/InteractiveMap.tsx
-import { useState, useEffect } from 'react';
-import { useMap } from './hooks/useMap';
+import React, { useEffect, useRef, useState } from 'react';
+import mapboxgl from 'mapbox-gl';
+import { Box } from '@mui/material';
 
 interface Club {
-    id: number;
-    name: string;
+    id: string;
+    club_name: string;
     address: string;
-    latitude: number;
-    longitude: number;
+    latitude?: number;
+    longitude?: number;
 }
 
 interface InteractiveMapProps {
-    clubs?: Club[];
-    center: [number, number];
+    clubs: Club[];
+    center?: [number, number];
     radius?: number;
+    onMapClick?: (longitude: number, latitude: number) => void;
+    onMarkerClick?: (clubId: string) => void;
 }
 
-export const InteractiveMap = ({ clubs, center, radius }: InteractiveMapProps) => {
-    const { mapContainer, map } = useMap({ center, radius });
+export const InteractiveMap: React.FC<InteractiveMapProps> = ({ clubs, center, radius, onMapClick, onMarkerClick }) => {
+    const mapContainer = useRef<HTMLDivElement>(null);
+    const map = useRef<mapboxgl.Map | null>(null);
 
     useEffect(() => {
-        if (!map || !clubs) return;
+        if (!mapContainer.current) return;
 
-        // Add markers for each club
-        clubs.forEach((club) => {
-            const marker = new mapboxgl.Marker()
-                .setLngLat([club.longitude, club.latitude])
-                .setPopup(
-                    new mapboxgl.Popup().setHTML(`
-                        <h3 class="popup-title">${club.name}</h3>
-                        <p class="popup-content">${club.address}</p>
-                    `)
-                )
-                .addTo(map);
+        // Initialize map
+        mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
+        
+        map.current = new mapboxgl.Map({
+            container: mapContainer.current,
+            style: 'mapbox://styles/mapbox/streets-v12',
+            center: center || [-98.5795, 39.8283], // Default to US center
+            zoom: 4
         });
 
-        // Add radius circle (if applicable)
-        if (radius) {
-            const circleSource = map.getSource('search-radius') as mapboxgl.GeoJSONSource;
-            if (!circleSource) {
-                const circle = {
-                    type: 'FeatureCollection',
-                    features: [{
-                        type: 'Feature',
-                        geometry: {
-                            type: 'Circle',
-                            coordinates: center,
-                            radius: radius * 1000, // Convert to meters
-                        },
-                    }],
-                };
+        // Cleanup
+        return () => {
+            map.current?.remove();
+        };
+    }, []);
 
-                map.addLayer({
-                    id: 'radius-layer',
-                    type: 'circle',
-                    source: 'search-radius',
-                    geometry: ['get', 'geometry'],
-                    properties: {},
-                    layout: {
-                        'visibility': 'visible',
-                    },
-                    paint: {
-                        'circle-color': '#3498db',
-                        'circle-radius': [ 'interpolate', [ 'linear' ], [ 'literal', 1 ], 0, 500, 500 ]
+    // Add markers when clubs change
+    useEffect(() => {
+        if (!map.current || !clubs) return;
+
+        // Clear existing markers
+        const markers = document.getElementsByClassName('mapboxgl-marker');
+        while (markers[0]) {
+            markers[0].remove();
+        }
+
+        // Add new markers
+        clubs.forEach((club) => {
+            if (club.latitude && club.longitude) {
+                const marker = new mapboxgl.Marker({
+                    element: createMarkerElement(club),
+                    anchor: 'bottom'
+                })
+                    .setLngLat([club.longitude, club.latitude])
+                    .setPopup(
+                        new mapboxgl.Popup({
+                            closeButton: false,
+                            maxWidth: '300px'
+                        }).setHTML(`
+                            <div style="cursor: pointer" onclick="window.dispatchEvent(new CustomEvent('markerClick', { detail: '${club.id}' }))">
+                                <h3 style="margin: 0 0 8px 0">${club.club_name}</h3>
+                                <p style="margin: 0">${club.address}</p>
+                            </div>
+                        `)
+                    )
+                    .addTo(map.current!);
+
+                // Add click handler to marker element
+                const markerElement = marker.getElement();
+                markerElement.addEventListener('click', () => {
+                    if (onMarkerClick) {
+                        onMarkerClick(club.id);
                     }
                 });
-            } else {
-                // Update the circle source
-                map.getSource('search-radius').setData(circle);
             }
-        }
-    }, [map, clubs, center, radius]);
+        });
+
+        // Add window event listener for popup clicks
+        const handleMarkerClick = (e: CustomEvent) => {
+            if (onMarkerClick) {
+                onMarkerClick(e.detail);
+            }
+        };
+        window.addEventListener('markerClick', handleMarkerClick as EventListener);
+
+        return () => {
+            window.removeEventListener('markerClick', handleMarkerClick as EventListener);
+        };
+    }, [clubs, onMarkerClick]);
+
+    useEffect(() => {
+        if (!map.current) return;
+
+        // Add click handler
+        const handleClick = (e: mapboxgl.MapMouseEvent) => {
+            if (onMapClick) {
+                onMapClick(e.lngLat.lng, e.lngLat.lat);
+            }
+        };
+
+        map.current.on('click', handleClick);
+
+        return () => {
+            map.current?.off('click', handleClick);
+        };
+    }, [onMapClick]);
+
+    // Add this function to create custom marker elements
+    const createMarkerElement = (club: Club) => {
+        const el = document.createElement('div');
+        el.className = 'marker';
+        el.innerHTML = '📍'; // You can use any icon or text here
+        return el;
+    };
 
     return (
-        <>
-            {mapContainer}
-            <div className="search-form">
-                <input
-                    type="text"
-                    placeholder="Enter location..."
-                    // Add your search logic here
-                />
-                <input
-                    type="range"
-                    min="5000"  // Minimum radius in meters (5km)
-                    max="20000" // Maximum radius in meters (20km)
-                    step="1000"
-                    value={radius || 10000}
-                />
-            </div>
-        </>
+        <Box
+            ref={mapContainer}
+            sx={{
+                height: '60vh',
+                width: '100%',
+                borderRadius: 1,
+                overflow: 'hidden',
+                position: 'relative',
+                '& .mapboxgl-canvas': {
+                    borderRadius: 1
+                }
+            }}
+        />
     );
 };

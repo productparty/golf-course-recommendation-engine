@@ -82,3 +82,113 @@ button:focus-visible {
 .MuiContainer-root {
   min-height: calc(100vh - 64px - 200px);
 }
+
+.mapboxgl-popup {
+  max-width: 300px;
+}
+
+.mapboxgl-popup-content {
+  padding: 15px;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #333;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.mapboxgl-popup-close-button {
+  font-size: 16px;
+  padding: 5px 8px;
+  color: #666;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.mapboxgl-popup-close-button:hover {
+  color: #333;
+}
+
+.map-container {
+  height: 60vh;
+  width: 100%;
+  margin: 20px 0;
+}
+
+.search-form {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  z-index: 1000;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 10px;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.search-form input {
+  width: 200px;
+  margin-right: 10px;
+  padding: 5px;
+}
+
+.search-form input[type="range"] {
+  width: 200px;
+  margin-left: 10px;
+}
+
+.club-info {
+  margin-top: 20px;
+  padding: 20px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.marker {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #3498db;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  transition: transform 0.2s;
+}
+
+.marker:hover {
+  transform: scale(1.2);
+  cursor: pointer;
+}
+
+#radius-layer circle {
+  stroke-linejoin: round;
+  stroke-width: 2px;
+  stroke: #3498db;
+  fill: rgba(52, 152, 219, 0.2);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .map-container {
+    height: 50vh;
+  }
+
+  .search-form {
+    top: 10px;
+    left: 10px;
+    width: calc(100% - 40px); /* Account for padding */
+    max-width: 300px;
+  }
+
+  .mapboxgl-popup-content {
+    font-size: 12px;
+    padding: 10px;
+  }
+
+  .mapboxgl-popup {
+    max-width: 250px;
+  }
+}

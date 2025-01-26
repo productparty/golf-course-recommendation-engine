@@ -17,7 +17,7 @@ from datetime import datetime
 import json
 import socket
 import asyncio
-from typing import Optional
+from typing import Optional, List
 from contextlib import contextmanager
 
 # Configure logging
@@ -964,6 +964,45 @@ async def test_connection(request: Request):
         "allowed_origins": origins,
         "timestamp": datetime.now().isoformat()
     }
+
+@api_router.get("/clubs/search", tags=["Clubs"])
+async def search_clubs(
+    center: str = Query(default='[0.0, 0.0]'),
+    radius: int = Query(default=10000)
+):
+    try:
+        # Parse center coordinates
+        center_coords = json.loads(center)
+        longitude, latitude = center_coords
+
+        # Use your existing database connection
+        with get_db_connection() as conn:
+            with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+                query = """
+                SELECT 
+                    id, club_name, address, latitude, longitude,
+                    ST_Distance(
+                        ST_SetSRID(ST_MakePoint(%s, %s), 4326)::geography,
+                        ST_SetSRID(ST_MakePoint(longitude, latitude), 4326)::geography
+                    ) / 1609.34 as distance_miles
+                FROM golfclub
+                WHERE ST_Distance(
+                    ST_SetSRID(ST_MakePoint(%s, %s), 4326)::geography,
+                    ST_SetSRID(ST_MakePoint(longitude, latitude), 4326)::geography
+                ) <= %s * 1609.34
+                ORDER BY distance_miles ASC
+                """
+                cursor.execute(query, (longitude, latitude, longitude, latitude, radius))
+                clubs = cursor.fetchall()
+
+        return {
+            "clubs": clubs
+        }
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=400, detail="Invalid center coordinates format")
+    except Exception as e:
+        logger.error(f"Error in search_clubs: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
     import uvicorn

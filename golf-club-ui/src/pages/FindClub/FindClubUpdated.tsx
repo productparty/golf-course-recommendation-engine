@@ -17,6 +17,8 @@ import {
   WbSunny 
 } from '@mui/icons-material';
 import { supabase } from '../../lib/supabase';
+import { InteractiveMap } from '../../components/InteractiveMap';
+import { useNavigate } from 'react-router-dom';
 
 interface Club {
   id: string;
@@ -117,6 +119,8 @@ const FindClubUpdated: React.FC<Props> = ({ className, ...rest }) => {
   const [favorites, setFavorites] = useState<string[]>([]);
 
   const [showOnlyFavorites, setShowOnlyFavorites] = useState(false);
+
+  const navigate = useNavigate();
 
   const handleTextChange = (name: keyof Filters) => (
     event: React.ChangeEvent<HTMLInputElement>
@@ -334,6 +338,10 @@ const FindClubUpdated: React.FC<Props> = ({ className, ...rest }) => {
       
       setFavorites(prev => [...prev, clubId]);
     }
+  };
+
+  const handleMarkerClick = (clubId: string) => {
+    navigate(`/clubs/${clubId}`);
   };
 
   useEffect(() => {
@@ -586,6 +594,13 @@ const FindClubUpdated: React.FC<Props> = ({ className, ...rest }) => {
 
             {clubs.length > 0 && (
               <>
+                <Box sx={{ mb: 3 }}>
+                  <InteractiveMap 
+                    clubs={getCurrentPageClubs()} 
+                    radius={Number(filters.radius)}
+                    onMarkerClick={handleMarkerClick}
+                  />
+                </Box>
                 <Grid container spacing={2}>
                   {getCurrentPageClubs().map((club) => (
                     <Grid item xs={12} key={club.id}>

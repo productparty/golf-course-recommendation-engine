@@ -13,6 +13,7 @@ import Header from './components/Header';
 import Footer from './components/Footer';
 import Home from './pages/Home/home';
 import FindClubUpdated from './pages/FindClub/FindClubUpdated';
+import FindClubUpdatedv3 from './pages/FindClub/FindClubUpdatedv3';
 import RecommendClubUpdated from './pages/RecommendClub/RecommendClubUpdated';
 import SignUp from './pages/SignUp/signUp';
 import SubmitClub from './pages/SubmitClub/submitClub';
@@ -26,6 +27,7 @@ import PasswordResetConfirm from './pages/PasswordResetConfirm/PasswordResetConf
 import ErrorBoundary from './components/ErrorBoundary';
 import theme from './theme';
 import Favorites from './pages/Favorites/Favorites';
+import { ClubDetail } from './pages/ClubDetail/ClubDetail';
 
 // Import styles
 import './App.css';
@@ -64,10 +66,12 @@ const App: React.FC = () => {
                       {/* Protected routes */}
                       <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
                       <Route path="/find-club" element={<ProtectedRoute><FindClubUpdated /></ProtectedRoute>} />
+                      <Route path="/find-club-v3" element={<ProtectedRoute><FindClubUpdatedv3 /></ProtectedRoute>} />
                       <Route path="/recommend-club" element={<ProtectedRoute><RecommendClubUpdated /></ProtectedRoute>} />
                       <Route path="/submit-club" element={<ProtectedRoute><SubmitClub /></ProtectedRoute>} />
                       <Route path="/golfer-profile" element={<ProtectedRoute><GolferProfileUpdated /></ProtectedRoute>} />
                       <Route path="/favorites" element={<ProtectedRoute><Favorites /></ProtectedRoute>} />
+                      <Route path="/clubs/:id" element={<ClubDetail />} />
 
                       {/* Catch all route */}
                       <Route path="*" element={<Navigate to="/" replace />} />
