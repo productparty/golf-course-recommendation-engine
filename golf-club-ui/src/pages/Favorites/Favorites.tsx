@@ -55,31 +55,7 @@ const Favorites: React.FC = () => {
       .select(`
         id,
         golfclub_id,
-        golfclub:golfclub!inner(
-          id,
-          club_name,
-          address,
-          city,
-          state,
-          zip_code,
-          price_tier,
-          difficulty,
-          number_of_holes,
-          club_membership,
-          driving_range,
-          putting_green,
-          chipping_green,
-          practice_bunker,
-          restaurant,
-          lodging_on_site,
-          motor_cart,
-          pull_cart,
-          golf_clubs_rental,
-          club_fitting,
-          golf_lessons,
-          latitude,
-          longitude
-        )
+        golfclub:golfclubs(*)
       `)
       .eq('profile_id', session.user.id);
       
@@ -91,7 +67,7 @@ const Favorites: React.FC = () => {
     const transformedData: FavoriteItem[] = data.map((item: any) => ({
       id: item.id,
       golfclub_id: item.golfclub_id,
-      golfclub: item.golfclub
+      golfclub: item.golfclub[0] // Access first element since it returns an array
     }));
     
     setFavorites(transformedData);
