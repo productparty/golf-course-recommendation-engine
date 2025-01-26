@@ -6,6 +6,7 @@ import { IconButton, Menu, MenuItem, Box, AppBar, Toolbar, Typography, Button, D
 import MenuIcon from '@mui/icons-material/Menu';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import { supabase } from '../lib/supabase';
+import { useFavorites } from '../context/FavoritesContext';
 
 interface GolfClub {
   club_name: string;
@@ -21,9 +22,9 @@ interface Favorite {
 const Header: React.FC = () => {
   const { session, signOut } = useAuth();
   const navigate = useNavigate();
-  const [favorites, setFavorites] = useState<Favorite[]>([]);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [mobileMenuAnchor, setMobileMenuAnchor] = useState<null | HTMLElement>(null);
+  const { favorites } = useFavorites();
 
   useEffect(() => {
     fetchFavorites();
@@ -66,7 +67,8 @@ const Header: React.FC = () => {
   };
 
   const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget);
+    navigate('/favorites');
+    setAnchorEl(null);
   };
 
   const handleClose = () => {

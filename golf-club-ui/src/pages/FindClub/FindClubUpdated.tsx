@@ -116,6 +116,8 @@ const FindClubUpdated: React.FC<Props> = ({ className, ...rest }) => {
 
   const [favorites, setFavorites] = useState<string[]>([]);
 
+  const [showOnlyFavorites, setShowOnlyFavorites] = useState(false);
+
   const handleTextChange = (name: keyof Filters) => (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
@@ -219,8 +221,29 @@ const FindClubUpdated: React.FC<Props> = ({ className, ...rest }) => {
   };
 
   const getCurrentPageClubs = () => {
+    let filteredClubs = [...clubs];
+    
+    if (showOnlyFavorites) {
+      filteredClubs = filteredClubs.filter(club => favorites.includes(club.id));
+    }
+
+    if (sortBy) {
+      filteredClubs.sort((a, b) => {
+        switch (sortBy) {
+          case 'distance':
+            return a.distance_miles - b.distance_miles;
+          case 'price':
+            return a.price_tier.localeCompare(b.price_tier);
+          case 'difficulty':
+            return a.difficulty.localeCompare(b.difficulty);
+          default:
+            return 0;
+        }
+      });
+    }
+
     const start = (currentPage - 1) * ITEMS_PER_PAGE;
-    return clubs.slice(start, start + ITEMS_PER_PAGE);
+    return filteredClubs.slice(start, start + ITEMS_PER_PAGE);
   };
 
   const handlePageChange = (newPage: number) => {
@@ -316,6 +339,14 @@ const FindClubUpdated: React.FC<Props> = ({ className, ...rest }) => {
   useEffect(() => {
     fetchFavorites();
   }, [session?.user?.id]);
+
+  useEffect(() => {
+    let filteredClubs = [...clubs];
+    if (showOnlyFavorites) {
+      filteredClubs = filteredClubs.filter(club => favorites.includes(club.id));
+    }
+    setTotalPages(Math.ceil(filteredClubs.length / ITEMS_PER_PAGE));
+  }, [clubs, showOnlyFavorites, favorites]);
 
   return (
     <PageLayout title="Find Club">
@@ -478,6 +509,20 @@ const FindClubUpdated: React.FC<Props> = ({ className, ...rest }) => {
                   label={label}
                 />
               ))}
+
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={showOnlyFavorites}
+                    onChange={(e) => {
+                      setShowOnlyFavorites(e.target.checked);
+                      setCurrentPage(1);
+                    }}
+                  />
+                }
+                label="Show Only Favorites"
+                sx={{ mb: 2 }}
+              />
 
               <Box sx={{ 
                 mt: 'auto',

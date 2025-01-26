@@ -6,6 +6,7 @@ import { CircularProgress } from '@mui/material';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { supabase } from './lib/supabase'; // Update path if needed
 import { Analytics } from "@vercel/analytics/react";
+import { FavoritesProvider } from './context/FavoritesContext';
 
 // Component imports
 import Header from './components/Header';
@@ -43,39 +44,41 @@ const App: React.FC = () => {
       <ThemeProvider theme={theme}>
         <CssBaseline />
         <AuthProvider>
-          <BrowserRouter>
-            <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-              <Header />
-              <main style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                <div className="container" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                  <Routes>
-                    {/* Public routes */}
-                    <Route path="/" element={<Home />} />
-                    <Route path="/login" element={<LogIn />} />
-                    <Route path="/create-account" element={<CreateAccount />} />
-                    <Route path="/create-account-submitted" element={<CreateAccountSubmitted />} />
-                    <Route path="/verify-email" element={<CreateAccountSuccessful />} />
-                    <Route path="/password-reset" element={<PasswordResetRequest />} />
-                    <Route path="/password-reset-confirm" element={<PasswordResetConfirm />} />
-                    <Route path="/sign-up" element={<SignUp />} />
+          <FavoritesProvider>
+            <BrowserRouter>
+              <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+                <Header />
+                <main style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                  <div className="container" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                    <Routes>
+                      {/* Public routes */}
+                      <Route path="/" element={<Home />} />
+                      <Route path="/login" element={<LogIn />} />
+                      <Route path="/create-account" element={<CreateAccount />} />
+                      <Route path="/create-account-submitted" element={<CreateAccountSubmitted />} />
+                      <Route path="/verify-email" element={<CreateAccountSuccessful />} />
+                      <Route path="/password-reset" element={<PasswordResetRequest />} />
+                      <Route path="/password-reset-confirm" element={<PasswordResetConfirm />} />
+                      <Route path="/sign-up" element={<SignUp />} />
 
-                    {/* Protected routes */}
-                    <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
-                    <Route path="/find-club" element={<ProtectedRoute><FindClubUpdated /></ProtectedRoute>} />
-                    <Route path="/recommend-club" element={<ProtectedRoute><RecommendClubUpdated /></ProtectedRoute>} />
-                    <Route path="/submit-club" element={<ProtectedRoute><SubmitClub /></ProtectedRoute>} />
-                    <Route path="/golfer-profile" element={<ProtectedRoute><GolferProfileUpdated /></ProtectedRoute>} />
-                    <Route path="/favorites" element={<ProtectedRoute><Favorites /></ProtectedRoute>} />
+                      {/* Protected routes */}
+                      <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+                      <Route path="/find-club" element={<ProtectedRoute><FindClubUpdated /></ProtectedRoute>} />
+                      <Route path="/recommend-club" element={<ProtectedRoute><RecommendClubUpdated /></ProtectedRoute>} />
+                      <Route path="/submit-club" element={<ProtectedRoute><SubmitClub /></ProtectedRoute>} />
+                      <Route path="/golfer-profile" element={<ProtectedRoute><GolferProfileUpdated /></ProtectedRoute>} />
+                      <Route path="/favorites" element={<ProtectedRoute><Favorites /></ProtectedRoute>} />
 
-                    {/* Catch all route */}
-                    <Route path="*" element={<Navigate to="/" replace />} />
-                  </Routes>
-                </div>
-              </main>
-              <Footer />
-              <Analytics />
-            </div>
-          </BrowserRouter>
+                      {/* Catch all route */}
+                      <Route path="*" element={<Navigate to="/" replace />} />
+                    </Routes>
+                  </div>
+                </main>
+                <Footer />
+                <Analytics />
+              </div>
+            </BrowserRouter>
+          </FavoritesProvider>
         </AuthProvider>
       </ThemeProvider>
     </ErrorBoundary>
