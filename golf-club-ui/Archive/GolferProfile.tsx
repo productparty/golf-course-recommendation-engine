@@ -13,11 +13,11 @@ import {
   Snackbar,
   CircularProgress
 } from '@mui/material';
-import { useAuth } from '../../context/AuthContext';
-import PageLayout from '../../components/PageLayout';
-import { config } from '../../config';
+import { useAuth } from '../src/context/AuthContext';
+import PageLayout from '../src/components/PageLayout';
+import { config } from '../src/config';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '../../lib/supabase';
+import { supabase } from '../src/lib/supabase';
 
 interface GolferProfile {
   id: string;

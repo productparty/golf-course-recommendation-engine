@@ -7,12 +7,15 @@ import MenuIcon from '@mui/icons-material/Menu';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import { supabase } from '../lib/supabase';
 
+interface GolfClub {
+  club_name: string;
+  // Add other club properties as needed
+}
+
 interface Favorite {
   id: string;
   club_id: string;
-  clubs: {
-    club_name: string;
-  } | null;
+  golfclub: GolfClub;  // Changed from clubs to golfclub
 }
 
 const Header: React.FC = () => {
@@ -33,10 +36,10 @@ const Header: React.FC = () => {
       .from('favorites')
       .select(`
         id,
-        club_id,
-        clubs:clubs!inner(club_name)
+        golfclub_id,
+        golfclub:golfclub(*)
       `)
-      .eq('user_id', session.user.id);
+      .eq('profile_id', session.user.id);
 
     if (error) {
       console.error('Error fetching favorites:', error);
@@ -45,10 +48,8 @@ const Header: React.FC = () => {
 
     const transformedData: Favorite[] = data?.map(item => ({
       id: item.id,
-      club_id: item.club_id,
-      clubs: {
-        club_name: item.clubs[0].club_name
-      }
+      club_id: item.golfclub_id,
+      golfclub: item.golfclub as unknown as GolfClub
     })) || [];
 
     setFavorites(transformedData);
