@@ -8,6 +8,7 @@ import PageLayout from '../../components/PageLayout';
 import { config } from '../../config';
 import ClubCard from '../../components/ClubCard';
 import { supabase } from '../../lib/supabase';
+import { InteractiveMap } from '../../components/InteractiveMap';
 
 interface Club {
   id: string;
@@ -48,8 +49,9 @@ const RecommendClubUpdated: React.FC = () => {
   const [hasSearched, setHasSearched] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const ITEMS_PER_PAGE = 4;
+  const ITEMS_PER_PAGE = 5;
   const [favorites, setFavorites] = useState<string[]>([]);
+  const [mapCenter, setMapCenter] = useState<[number, number]>([-98.5795, 39.8283]);
 
   const handleSearch = async () => {
     if (!zipCode) {
@@ -263,29 +265,46 @@ const RecommendClubUpdated: React.FC = () => {
 
       {courses.length > 0 && (
         <>
+          <Box sx={{ mb: 4, mt: 2 }}>
+            <InteractiveMap 
+              clubs={courses}
+              center={mapCenter}
+              radius={Number(radius)}
+              onMarkerClick={(clubId) => {
+                const club = courses.find(c => c.id === clubId);
+                if (club?.latitude && club?.longitude) {
+                  setMapCenter([club.longitude, club.latitude]);
+                }
+              }}
+            />
+          </Box>
+
           <Grid container spacing={2}>
-            {getCurrentPageCourses().map((course) => (
-              <Grid item xs={12} key={course.id}>
-                <Box
-                  sx={{
-                    backgroundColor: course.score >= 80 ? 'rgba(46, 90, 39, 0.05)' : 'transparent',
-                    borderRadius: 1,
-                    transition: 'background-color 0.2s ease',
-                    '&:hover': {
-                      backgroundColor: course.score >= 80 ? 'rgba(46, 90, 39, 0.08)' : 'rgba(0, 0, 0, 0.02)'
-                    }
-                  }}
-                >
-                  <ClubCard 
-                    club={course}
-                    showScore={true}
-                    isFavorite={favorites.includes(course.id)}
-                    onToggleFavorite={handleToggleFavorite}
-                    showToggle={true}
-                  />
-                </Box>
-              </Grid>
-            ))}
+            {courses
+              .slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
+              .map((club) => (
+                <Grid item xs={12} key={club.id}>
+                  <Box
+                    sx={{
+                      backgroundColor: club.score >= 80 ? 'rgba(46, 90, 39, 0.05)' : 'transparent',
+                      borderRadius: 1,
+                      transition: 'background-color 0.2s ease',
+                      '&:hover': {
+                        backgroundColor: club.score >= 80 ? 'rgba(46, 90, 39, 0.08)' : 'rgba(0, 0, 0, 0.02)'
+                      }
+                    }}
+                  >
+                    <ClubCard 
+                      club={club}
+                      showScore={true}
+                      isFavorite={favorites.includes(club.id)}
+                      onToggleFavorite={handleToggleFavorite}
+                      showToggle={true}
+                    />
+                  </Box>
+                </Grid>
+              ))
+            }
           </Grid>
 
           {/* Pagination Controls */}

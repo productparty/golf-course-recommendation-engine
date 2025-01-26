@@ -1042,29 +1042,17 @@ async def search_clubs(
         logger.error(f"Error in search_clubs: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/api/clubs/details/")
-async def get_club_details(
-    state: str,
-    zip_code: str,
-    name: str,
+@app.get("/api/clubs/{club_id}")
+async def get_club_by_id(
+    club_id: str,
     request: Request,
     current_user: Dict[str, Any] = Depends(get_current_user)
 ):
     try:
-        # Normalize the search parameters
-        state = state.upper()
-        name = name.lower()
-
-        # Query the database using regular psycopg2
         with get_db_connection() as conn:
             with conn.cursor(cursor_factory=RealDictCursor) as cursor:
-                query = """
-                    SELECT * FROM golfclub 
-                    WHERE LOWER(state) = LOWER(%s) 
-                    AND zip_code = %s 
-                    AND LOWER(club_name) = LOWER(%s)
-                """
-                cursor.execute(query, (state, zip_code, name))
+                query = "SELECT * FROM golfclub WHERE id = %s"
+                cursor.execute(query, (club_id,))
                 result = cursor.fetchone()
 
                 if not result:

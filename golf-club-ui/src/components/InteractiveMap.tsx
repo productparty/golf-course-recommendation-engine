@@ -24,6 +24,7 @@ interface InteractiveMapProps {
 export const InteractiveMap: React.FC<InteractiveMapProps> = ({ clubs, center, radius, onMapClick, onMarkerClick }) => {
     const mapContainer = useRef<HTMLDivElement>(null);
     const map = useRef<mapboxgl.Map | null>(null);
+    const markersRef = useRef<mapboxgl.Marker[]>([]);  // Add this to track markers
 
     useEffect(() => {
         if (!mapContainer.current) return;
@@ -44,58 +45,59 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({ clubs, center, r
         };
     }, []);
 
+    // Clear markers helper
+    const clearMarkers = () => {
+        markersRef.current.forEach(marker => marker.remove());
+        markersRef.current = [];
+    };
+
     // Add markers when clubs change
     useEffect(() => {
         if (!map.current || !clubs) return;
 
-        // Clear existing markers
-        const markers = document.getElementsByClassName('mapboxgl-marker');
-        while (markers[0]) {
-            markers[0].remove();
-        }
+        clearMarkers();
 
-        // Add new markers
         clubs.forEach((club) => {
             if (club.latitude && club.longitude) {
                 const marker = new mapboxgl.Marker({
                     element: createMarkerElement(club),
                     anchor: 'bottom'
                 })
-                    .setLngLat([club.longitude, club.latitude])
-                    .setPopup(
-                        new mapboxgl.Popup({
-                            closeButton: false,
-                            maxWidth: '300px'
-                        }).setHTML(`
-                            <div style="cursor: pointer" onclick="window.dispatchEvent(new CustomEvent('markerClick', { detail: '${club.state.toLowerCase()}_${club.zip_code}_${club.club_name.toLowerCase().replace(/\s+/g, '-')}' }))">
-                                <h3 style="margin: 0 0 8px 0">${club.club_name}</h3>
-                                <p style="margin: 0">${club.address}</p>
-                            </div>
-                        `)
-                    )
-                    .addTo(map.current!);
+                .setLngLat([club.longitude, club.latitude])
+                .setPopup(
+                    new mapboxgl.Popup({
+                        closeButton: false,
+                        maxWidth: '300px'
+                    }).setHTML(`
+                        <div style="cursor: pointer">
+                            <h3 style="margin: 0 0 8px 0">${club.club_name}</h3>
+                            <p style="margin: 0">${club.address}</p>
+                        </div>
+                    `)
+                )
+                .addTo(map.current!);
 
-                // Add click handler to marker element
-                const markerElement = marker.getElement();
-                markerElement.addEventListener('click', () => {
+                // Add click handler directly to marker
+                marker.getElement().addEventListener('click', () => {
                     if (onMarkerClick) {
                         onMarkerClick(club.id);
                     }
                 });
+
+                markersRef.current.push(marker);
             }
         });
 
-        // Add window event listener for popup clicks
-        const handleMarkerClick = (event: CustomEvent) => {
-            if (onMarkerClick) {
-                onMarkerClick(event.detail);
-            }
-        };
-        window.addEventListener('markerClick', handleMarkerClick as EventListener);
-
-        return () => {
-            window.removeEventListener('markerClick', handleMarkerClick as EventListener);
-        };
+        // Fit bounds if we have clubs
+        if (clubs.length > 0) {
+            const bounds = new mapboxgl.LngLatBounds();
+            clubs.forEach((club) => {
+                if (club.latitude && club.longitude) {
+                    bounds.extend([club.longitude, club.latitude]);
+                }
+            });
+            map.current.fitBounds(bounds, { padding: 50 });
+        }
     }, [clubs, onMarkerClick]);
 
     useEffect(() => {
@@ -123,26 +125,13 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({ clubs, center, r
         return el;
     };
 
-    // Add this effect to fit bounds when clubs change
+    // Cleanup
     useEffect(() => {
-        if (!map.current || !clubs || clubs.length === 0) return;
-
-        // Create bounds object
-        const bounds = new mapboxgl.LngLatBounds();
-
-        // Extend bounds with each club location
-        clubs.forEach((club) => {
-            if (club.latitude && club.longitude) {
-                bounds.extend([club.longitude, club.latitude]);
-            }
-        });
-
-        // Fit map to bounds with padding
-        map.current.fitBounds(bounds, {
-            padding: { top: 50, bottom: 50, left: 50, right: 50 },
-            maxZoom: 15 // Prevent zooming in too close
-        });
-    }, [clubs]);
+        return () => {
+            clearMarkers();
+            map.current?.remove();
+        };
+    }, []);
 
     return (
         <Box

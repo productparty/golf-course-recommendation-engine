@@ -1,44 +1,34 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Box, Typography, Button, CircularProgress, Paper, Grid, Alert } from '@mui/material';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import CancelIcon from '@mui/icons-material/Cancel';
+import { Box, Button, Typography, Paper, CircularProgress, Alert } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import { InteractiveMap } from '../../components/InteractiveMap';
 import PageLayout from '../../components/PageLayout';
-import { Club } from 'types/Club';
+import { InteractiveMap } from '../../components/InteractiveMap';
 import { config } from '../../config';
 import { useAuth } from '../../context/AuthContext';
-
-type ClubDetail = Club;
+import type { Club } from '../../types/Club';
 
 export const ClubDetail: React.FC = () => {
-    const { slug } = useParams<{ slug: string }>();
+    const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
-    const [club, setClub] = useState<ClubDetail | null>(null);
+    const { session } = useAuth();
+    const [club, setClub] = useState<Club | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const { session } = useAuth();
 
     useEffect(() => {
         const fetchClubDetails = async () => {
+            if (!id || !session?.access_token) return;
+            
             try {
                 setLoading(true);
                 setError(null);
 
-                // Parse the slug to get state, zip, and name
-                const [state, zip, ...nameParts] = slug?.split('_') || [];
-                const clubName = nameParts.join('_').replace(/-/g, ' ');
-
-                if (!state || !zip || !clubName) {
-                    throw new Error('Invalid URL format');
-                }
-
                 const response = await fetch(
-                    `${config.API_URL}/api/clubs/details/?state=${state}&zip=${zip}&name=${encodeURIComponent(clubName)}`,
+                    `${config.API_URL}/api/clubs/${id}`,
                     {
                         headers: {
-                            'Authorization': `Bearer ${session?.access_token}`
+                            'Authorization': `Bearer ${session.access_token}`
                         }
                     }
                 );
@@ -50,17 +40,15 @@ export const ClubDetail: React.FC = () => {
                 const data = await response.json();
                 setClub(data);
             } catch (err) {
-                setError(err instanceof Error ? err.message : 'An error occurred');
                 console.error('Error fetching club details:', err);
+                setError(err instanceof Error ? err.message : 'An error occurred');
             } finally {
                 setLoading(false);
             }
         };
 
-        if (slug) {
-            fetchClubDetails();
-        }
-    }, [slug, session]);
+        fetchClubDetails();
+    }, [id, session]);
 
     if (loading) {
         return (
@@ -76,10 +64,14 @@ export const ClubDetail: React.FC = () => {
         return (
             <PageLayout title="Error">
                 <Box sx={{ p: 3 }}>
-                    <Button startIcon={<ArrowBackIcon />} onClick={() => navigate(-1)} sx={{ mb: 3 }}>
+                    <Button 
+                        startIcon={<ArrowBackIcon />} 
+                        onClick={() => navigate(-1)}
+                        sx={{ mb: 3 }}
+                    >
                         Back to Search
                     </Button>
-                    <Alert severity="error" sx={{ mt: 2 }}>
+                    <Alert severity="error">
                         {error || 'Failed to load club details'}
                     </Alert>
                 </Box>
@@ -117,35 +109,6 @@ export const ClubDetail: React.FC = () => {
                     <Typography><strong>Price Tier:</strong> {club.price_tier}</Typography>
                     <Typography><strong>Difficulty:</strong> {club.difficulty}</Typography>
                     <Typography><strong>Number of Holes:</strong> {club.number_of_holes}</Typography>
-                </Paper>
-
-                <Paper sx={{ p: 3 }}>
-                    <Typography variant="h6" gutterBottom>Amenities</Typography>
-                    <Grid container spacing={2}>
-                        {[
-                            { label: 'Driving Range', value: club.driving_range },
-                            { label: 'Putting Green', value: club.putting_green },
-                            { label: 'Chipping Green', value: club.chipping_green },
-                            { label: 'Practice Bunker', value: club.practice_bunker },
-                            { label: 'Restaurant', value: club.restaurant },
-                            { label: 'Lodging', value: club.lodging_on_site },
-                            { label: 'Motor Cart', value: club.motor_cart },
-                            { label: 'Pull Cart', value: club.pull_cart },
-                            { label: 'Club Rental', value: club.golf_clubs_rental },
-                            { label: 'Club Fitting', value: club.club_fitting },
-                            { label: 'Golf Lessons', value: club.golf_lessons },
-                        ].map(({ label, value }) => (
-                            <Grid item xs={6} sm={4} key={label}>
-                                <Box display="flex" alignItems="center">
-                                    {value ? 
-                                        <CheckCircleIcon color="success" sx={{ mr: 1 }} /> : 
-                                        <CancelIcon color="error" sx={{ mr: 1 }} />
-                                    }
-                                    <Typography>{label}</Typography>
-                                </Box>
-                            </Grid>
-                        ))}
-                    </Grid>
                 </Paper>
             </Box>
         </PageLayout>

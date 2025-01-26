@@ -89,7 +89,7 @@ const FindClubUpdated: React.FC<Props> = ({ className, ...rest }) => {
   const [error, setError] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const ITEMS_PER_PAGE = 4;
+  const ITEMS_PER_PAGE = 5;
   
   const [sortBy, setSortBy] = useState<SortOption>('');
   
@@ -121,6 +121,8 @@ const FindClubUpdated: React.FC<Props> = ({ className, ...rest }) => {
   const [showOnlyFavorites, setShowOnlyFavorites] = useState(false);
 
   const navigate = useNavigate();
+
+  const [mapCenter, setMapCenter] = useState<[number, number]>([-98.5795, 39.8283]);
 
   const handleTextChange = (name: keyof Filters) => (
     event: React.ChangeEvent<HTMLInputElement>
@@ -248,8 +250,13 @@ const FindClubUpdated: React.FC<Props> = ({ className, ...rest }) => {
       });
     }
 
-    const start = (currentPage - 1) * ITEMS_PER_PAGE;
-    return filteredClubs.slice(start, start + ITEMS_PER_PAGE);
+    return filteredClubs;
+  };
+
+  const getPaginatedClubs = () => {
+    const allClubs = getCurrentPageClubs();
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    return allClubs.slice(startIndex, startIndex + ITEMS_PER_PAGE);
   };
 
   const handlePageChange = (newPage: number) => {
@@ -596,22 +603,26 @@ const FindClubUpdated: React.FC<Props> = ({ className, ...rest }) => {
 
             {clubs.length > 0 && (
               <>
-                <Box sx={{ mb: 3 }}>
+                <Box sx={{ mb: 4, mt: 2 }}>
                   <InteractiveMap 
-                    clubs={getCurrentPageClubs()} 
+                    clubs={getCurrentPageClubs()}
+                    center={mapCenter}
                     radius={Number(filters.radius)}
-                    onMarkerClick={handleMarkerClick}
+                    onMarkerClick={(clubId) => {
+                      const club = clubs.find(c => c.id === clubId);
+                      if (club?.latitude && club?.longitude) {
+                        setMapCenter([club.longitude, club.latitude]);
+                      }
+                    }}
                   />
                 </Box>
                 <Grid container spacing={2}>
-                  {getCurrentPageClubs().map((club) => (
+                  {getPaginatedClubs().map((club) => (
                     <Grid item xs={12} key={club.id}>
                       <ClubCard 
                         club={club}
-                        showScore={false}
                         isFavorite={favorites.includes(club.id)}
                         onToggleFavorite={handleToggleFavorite}
-                        showToggle={true}
                       />
                     </Grid>
                   ))}
