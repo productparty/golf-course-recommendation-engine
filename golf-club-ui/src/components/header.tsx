@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import styles from '../builderio/navigation/Navigation.module.css';
-import { IconButton, Menu, MenuItem, Box, AppBar, Toolbar, Typography } from '@mui/material';
+import { IconButton, Menu, MenuItem, Box, AppBar, Toolbar, Typography, Button, Divider } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import { supabase } from '../lib/supabase';
@@ -86,40 +86,89 @@ const Header: React.FC = () => {
   return (
     <AppBar position="static">
       <Toolbar>
-        <Typography variant="h6" sx={{ flexGrow: 1 }}>
+        <Typography 
+          variant="h6" 
+          component={Link} 
+          to="/"
+          sx={{ 
+            flexGrow: 0, 
+            textDecoration: 'none', 
+            color: 'inherit',
+            mr: 4
+          }}
+        >
           Golf Club Finder
         </Typography>
-        
+
         {session && (
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <IconButton
-              color="inherit"
-              onClick={handleMenu}
-              sx={{ mr: 2 }}
-            >
-              <FavoriteIcon />
-              {favorites.length > 0 && (
-                <Typography
-                  variant="caption"
-                  sx={{
-                    position: 'absolute',
-                    top: -8,
-                    right: -8,
-                    backgroundColor: 'error.main',
-                    borderRadius: '50%',
-                    padding: '2px 6px',
-                  }}
+          <>
+            <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
+              {navItems.map((item) => (
+                <Button
+                  key={item.label}
+                  onClick={() => handleNavigate(item.path)}
+                  sx={{ color: 'white', mx: 1 }}
                 >
-                  {favorites.length}
-                </Typography>
-              )}
-            </IconButton>
-            
+                  {item.label}
+                </Button>
+              ))}
+            </Box>
+
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <IconButton
+                color="inherit"
+                onClick={handleMenu}
+                sx={{ mr: 2 }}
+              >
+                <FavoriteIcon />
+                {favorites.length > 0 && (
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      position: 'absolute',
+                      top: -8,
+                      right: -8,
+                      backgroundColor: 'error.main',
+                      borderRadius: '50%',
+                      padding: '2px 6px',
+                    }}
+                  >
+                    {favorites.length}
+                  </Typography>
+                )}
+              </IconButton>
+
+              <IconButton
+                color="inherit"
+                edge="end"
+                onClick={handleMenu}
+                sx={{ display: { md: 'none' } }}
+              >
+                <MenuIcon />
+              </IconButton>
+            </Box>
+
             <Menu
               anchorEl={anchorEl}
               open={Boolean(anchorEl)}
               onClose={handleClose}
             >
+              {/* Mobile navigation menu */}
+              {window.innerWidth < 900 && navItems.map((item) => (
+                <MenuItem 
+                  key={item.label}
+                  onClick={() => handleNavigate(item.path)}
+                >
+                  {item.label}
+                </MenuItem>
+              ))}
+              
+              <Divider />
+              
+              {/* Favorites section */}
+              <Typography variant="subtitle2" sx={{ px: 2, py: 1, color: 'text.secondary' }}>
+                Favorites
+              </Typography>
               {favorites.length === 0 ? (
                 <MenuItem disabled>No favorites yet</MenuItem>
               ) : (
@@ -135,8 +184,12 @@ const Header: React.FC = () => {
                   </MenuItem>
                 ))
               )}
+              
+              <Divider />
+              
+              <MenuItem onClick={handleSignOut}>Sign Out</MenuItem>
             </Menu>
-          </Box>
+          </>
         )}
       </Toolbar>
     </AppBar>
