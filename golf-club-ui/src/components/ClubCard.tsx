@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, Typography, Chip, Box, Divider, Grid, CircularProgress, Icon } from '@mui/material';
 import GolfCourseIcon from '@mui/icons-material/GolfCourse';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
@@ -86,6 +86,32 @@ const FeatureChip: React.FC<{ label: string; isMatch?: boolean }> = ({ label, is
     variant="outlined"
   />
 );
+
+const getWeatherIcon = (weatherCode: number) => {
+  switch (weatherCode) {
+    case 0: // Clear sky
+      return <WbSunnyIcon sx={{ color: '#FFB300' }} />;
+    case 1:
+    case 2:
+    case 3: // Cloudy
+      return <CloudIcon sx={{ color: '#78909C' }} />;
+    case 51:
+    case 53:
+    case 55:
+    case 61:
+    case 63:
+    case 65: // Rain
+      return <UmbrellaIcon sx={{ color: '#42A5F5' }} />;
+    case 71:
+    case 73:
+    case 75: // Snow
+      return <AcUnitIcon sx={{ color: '#90CAF9' }} />;
+    case 95: // Thunderstorm
+      return <ThunderstormIcon sx={{ color: '#5C6BC0' }} />;
+    default:
+      return <CloudIcon sx={{ color: '#78909C' }} />;
+  }
+};
 
 const ClubCard: React.FC<ClubCardProps> = ({
   club,
@@ -205,14 +231,14 @@ const ClubCard: React.FC<ClubCardProps> = ({
               Weather Forecast:
             </Typography>
             <Box sx={{ display: 'flex', gap: 2, overflowX: 'auto', pb: 1 }}>
-              {weather.slice(0, 3).map((day) => (
+              {weather.slice(0, 3).map((day: WeatherData) => (
                 <Box key={day.date} sx={{ textAlign: 'center', minWidth: '80px' }}>
                   <Typography variant="caption" display="block">
                     {new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' })}
                   </Typography>
-                  {getWeatherInfo(parseInt(day.description, 10)).icon}
+                  {getWeatherIcon(parseInt(day.description, 10))}
                   <Typography variant="caption" display="block">
-                    {day.maxTemp}°F
+                    {Math.round(day.maxTemp)}°F
                   </Typography>
                 </Box>
               ))}
