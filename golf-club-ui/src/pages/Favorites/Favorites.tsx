@@ -55,7 +55,7 @@ const Favorites: React.FC = () => {
       .select(`
         id,
         golfclub_id,
-        golfclub:golfclubs(*)
+        golfclub:golfclub(*)
       `)
       .eq('profile_id', session.user.id);
       
@@ -67,7 +67,7 @@ const Favorites: React.FC = () => {
     const transformedData: FavoriteItem[] = data.map((item: any) => ({
       id: item.id,
       golfclub_id: item.golfclub_id,
-      golfclub: item.golfclub[0] // Access first element since it returns an array
+      golfclub: item.golfclub // No need to access [0] since it's a single object
     }));
     
     setFavorites(transformedData);
