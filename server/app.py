@@ -4,7 +4,7 @@ import sys
 from dotenv import load_dotenv
 import logging
 from pathlib import Path
-from fastapi import FastAPI, Query, HTTPException, Request, Depends, APIRouter
+from fastapi import FastAPI, Query, HTTPException, Request, Depends, APIRouter, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
@@ -17,8 +17,9 @@ from datetime import datetime
 import json
 import socket
 import asyncio
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 from contextlib import contextmanager
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -53,6 +54,27 @@ app = FastAPI(
     title="Golf Course API",
     version="1.0.0",
     description="API for managing golf clubs, courses, reviews, and more.",
+)
+
+# Get CORS origins from environment variable
+CORS_ORIGINS = os.getenv(
+    "CORS_ORIGINS",
+    "https://golf-club-ui-lac.vercel.app,http://localhost:5173"
+).split(",")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=CORS_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=[
+        "Content-Type",
+        "Authorization",
+        "Access-Control-Allow-Origin",
+        "Access-Control-Allow-Methods",
+        "Access-Control-Allow-Headers",
+        "Access-Control-Allow-Credentials"
+    ],
 )
 
 # Create API router without prefix
@@ -435,6 +457,22 @@ class UpdateGolferProfileResponse(BaseModel):
     play_frequency: str
     club_id: str | None  # Allow club_id to be None
     preferred_tees: str | None  # Allow preferred_tees to be None
+
+# Add these near your other imports
+security = HTTPBearer()
+
+# Add this function to handle auth
+async def get_current_user(
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+) -> Dict[str, Any]:
+    try:
+        user = supabase.auth.get_user(credentials.credentials)
+        return user.user
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid authentication credentials"
+        )
 
 @api_router.get("/profiles/current", tags=["Profiles"])
 async def get_current_profile(request: Request):
@@ -1010,31 +1048,41 @@ async def get_club_details(
     zip_code: str,
     name: str,
     request: Request,
-    current_user: User = Depends(get_current_user)
+    current_user: Dict[str, Any] = Depends(get_current_user)
 ):
     try:
         # Normalize the search parameters
         state = state.upper()
         name = name.lower()
 
-        # Query the database
-        async with get_db_connection() as conn:
-            query = """
-                SELECT * FROM golfclub 
-                WHERE LOWER(state) = LOWER($1) 
-                AND zip_code = $2 
-                AND LOWER(club_name) = LOWER($3)
-            """
-            result = await conn.fetchrow(query, state, zip_code, name)
+        # Query the database using regular psycopg2
+        with get_db_connection() as conn:
+            with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+                query = """
+                    SELECT * FROM golfclub 
+                    WHERE LOWER(state) = LOWER(%s) 
+                    AND zip_code = %s 
+                    AND LOWER(club_name) = LOWER(%s)
+                """
+                cursor.execute(query, (state, zip_code, name))
+                result = cursor.fetchone()
 
-            if not result:
-                raise HTTPException(status_code=404, detail="Club not found")
+                if not result:
+                    raise HTTPException(
+                        status_code=status.HTTP_404_NOT_FOUND,
+                        detail="Club not found"
+                    )
 
-            return dict(result)
+                return result
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error fetching club details: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to fetch club details")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to fetch club details"
+        )
 
 if __name__ == "__main__":
     import uvicorn

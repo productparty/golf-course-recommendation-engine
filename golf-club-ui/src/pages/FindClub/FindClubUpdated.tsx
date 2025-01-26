@@ -179,8 +179,10 @@ const FindClubUpdated: React.FC<Props> = ({ className, ...rest }) => {
         `${config.API_URL}/api/find_clubs/?${queryParams}`,
         {
           headers: {
-            'Authorization': `Bearer ${session?.access_token}`
-          }
+            'Authorization': `Bearer ${session?.access_token}`,
+            'Content-Type': 'application/json'
+          },
+          credentials: 'include'
         }
       );
 
