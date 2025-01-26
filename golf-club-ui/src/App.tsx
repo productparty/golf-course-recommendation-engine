@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import CreateAccount from './pages/CreateAccount/CreateAccount';
 import './App.css';
-import Header from './components/Header';
+import Header from './components/header';
 import Footer from './components/footer';
 import Home from './pages/Home/home';
 import FindClub from './pages/FindClub/FindClub';

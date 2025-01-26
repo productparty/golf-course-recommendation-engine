@@ -23,40 +23,42 @@ interface WeatherData {
   description: string;
 }
 
+interface Club {
+  id: string;
+  club_name: string;
+  address: string;
+  city: string;
+  state: string;
+  zip_code: string;
+  distance_miles: number;
+  score?: number;
+  price_tier: string;
+  difficulty: string;
+  number_of_holes: string;
+  club_membership: string;
+  driving_range: boolean;
+  putting_green: boolean;
+  chipping_green: boolean;
+  practice_bunker: boolean;
+  restaurant: boolean;
+  lodging_on_site: boolean;
+  motor_cart: boolean;
+  pull_cart: boolean;
+  golf_clubs_rental: boolean;
+  club_fitting: boolean;
+  golf_lessons: boolean;
+  latitude?: number;
+  longitude?: number;
+  match_percentage: number; // Assuming this is the match percentage
+}
+
 interface ClubCardProps {
-  club: {
-    id: string;
-    club_name: string;
-    address: string;
-    city: string;
-    state: string;
-    zip_code: string;
-    distance_miles: number;
-    price_tier: string;
-    difficulty: string;
-    score?: number;
-    number_of_holes: string;
-    club_membership: string;
-    driving_range: boolean;
-    putting_green: boolean;
-    chipping_green: boolean;
-    practice_bunker: boolean;
-    restaurant: boolean;
-    lodging_on_site: boolean;
-    motor_cart: boolean;
-    pull_cart: boolean;
-    golf_clubs_rental: boolean;
-    club_fitting: boolean;
-    golf_lessons: boolean;
-    latitude?: number;
-    longitude?: number;
-    match_percentage: number; // Assuming this is the match percentage
-  };
+  club: Club;
   showScore?: boolean;
   userPreferences?: Record<string, any>;
   isFavorite?: boolean;
-  onToggleFavorite?: (clubId: string) => Promise<void>;
   showToggle?: boolean;
+  onToggleFavorite?: (clubId: string) => void;
 }
 
 const FeatureChip: React.FC<{ label: string; isMatch?: boolean }> = ({ label, isMatch = false }) => (
@@ -75,13 +77,13 @@ const FeatureChip: React.FC<{ label: string; isMatch?: boolean }> = ({ label, is
   />
 );
 
-const ClubCard: React.FC<ClubCardProps> = ({ 
-  club, 
-  showScore = false, 
+const ClubCard: React.FC<ClubCardProps> = ({
+  club,
+  showScore = false,
   userPreferences,
   isFavorite = false,
-  onToggleFavorite,
-  showToggle = false
+  showToggle = false,
+  onToggleFavorite
 }) => {
   const [weather, setWeather] = useState<WeatherData[]>([]);
   const [isLoadingWeather, setIsLoadingWeather] = useState(false);
@@ -137,34 +139,27 @@ const ClubCard: React.FC<ClubCardProps> = ({
     fetchWeather();
   }, [club.latitude, club.longitude]);
 
-  const handleFavoriteClick = async () => {
-    if (!onToggleFavorite) return;
-    setIsLoading(true);
-    try {
-      await onToggleFavorite(club.id);
-    } finally {
-      setIsLoading(false);
+  const handleFavoriteClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (onToggleFavorite) {
+      onToggleFavorite(club.id);
     }
   };
 
   return (
     <Card sx={{ mb: 2, position: 'relative' }}>
       <CardContent>
-        <Typography variant="h6" component="h2">
-          {club.club_name}
-        </Typography>
-        
-        {/* Show score only for RecommendClub */}
-        {club.score !== undefined && (
-          <Typography variant="body2" sx={{ mt: 1, color: 'primary.main' }}>
-            Match: {club.score.toFixed(1)}%
-          </Typography>
-        )}
-
-        <Grid container spacing={2}>
-          {/* Left Column - Basic Info */}
-          <Grid item xs={12} md={6}>
-            <Box sx={{ mb: 2 }}>
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'space-between',
+          alignItems: 'flex-start'
+        }}>
+          {/* Club Info */}
+          <Box sx={{ flex: 1 }}>
+            <Typography variant="h6" component="h2">
+              {club.club_name}
+            </Typography>
+            <Box sx={{ mt: 1 }}>
               <Typography variant="body2" color="text.secondary">
                 {club.address}
               </Typography>
@@ -175,155 +170,62 @@ const ClubCard: React.FC<ClubCardProps> = ({
                 Distance: {club.distance_miles.toFixed(1)} miles
               </Typography>
               
-              {showToggle && onToggleFavorite && (
-                <Box sx={{ 
-                  display: { xs: 'block', md: 'none' },
-                  mt: 1 
-                }}>
-                  <IconButton 
-                    onClick={handleFavoriteClick}
-                    color="primary"
-                    disabled={isLoading}
-                    sx={{ 
-                      padding: '8px',
-                      height: '36px',
-                      width: '36px',
-                      '& .MuiSvgIcon-root': {
-                        fontSize: '20px'
-                      }
-                    }}
-                  >
-                    {isFavorite ? <FavoriteIcon color="error" /> : <FavoriteBorderIcon />}
-                  </IconButton>
-                </Box>
+              {showScore && club.score !== undefined && (
+                <Typography variant="body2" sx={{ mt: 1, color: 'primary.main' }}>
+                  Match: {club.score.toFixed(1)}%
+                </Typography>
               )}
-              
-              {showScore && (
-                <Chip 
-                  label={`Match %: ${club.score?.toFixed(1)}`}
-                  color="primary"
-                  sx={{ mt: 1 }}
+            </Box>
+          </Box>
+
+          {/* Heart Icon */}
+          {showToggle && onToggleFavorite && (
+            <IconButton
+              onClick={handleFavoriteClick}
+              className="heart-button"
+              sx={{
+                display: 'flex',
+                alignSelf: 'center',
+                padding: '8px',
+                ml: 2,
+                '& .MuiSvgIcon-root': {
+                  fontSize: '24px'
+                },
+                '&:hover': {
+                  color: isFavorite ? '#ff4081' : '#2196F3',
+                  backgroundColor: 'rgba(0, 0, 0, 0.04)'
+                },
+                transition: 'all 0.2s ease-in-out',
+                '@media (min-width: 0px)': {
+                  display: 'flex'  // Ensure visibility on all screen sizes
+                }
+              }}
+            >
+              {isFavorite ? (
+                <FavoriteIcon 
+                  color="error" 
+                  sx={{ 
+                    transform: 'scale(1)',
+                    transition: 'transform 0.2s ease-in-out',
+                    '&:hover': {
+                      transform: 'scale(1.1)'
+                    }
+                  }} 
+                />
+              ) : (
+                <FavoriteBorderIcon 
+                  sx={{
+                    transform: 'scale(1)',
+                    transition: 'transform 0.2s ease-in-out',
+                    '&:hover': {
+                      transform: 'scale(1.1)'
+                    }
+                  }}
                 />
               )}
-            </Box>
-          </Grid>
-
-          {/* Right Column - Details */}
-          <Grid item xs={12} md={6}>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-              {/* Course Info */}
-              <Box sx={{ mb: 1 }}>
-                <Typography variant="subtitle2" color="textSecondary" gutterBottom>
-                  Course Info
-                </Typography>
-                <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                  <FeatureChip 
-                    label={club.price_tier} 
-                    isMatch={isMatch('preferred_price_range', club.price_tier)}
-                  />
-                  <FeatureChip 
-                    label={club.difficulty} 
-                    isMatch={isMatch('preferred_difficulty', club.difficulty)}
-                  />
-                  <Chip
-                    label={`${club.number_of_holes} Holes`}
-                    size="small"
-                    variant="outlined"
-                  />
-                  <Chip
-                    label={club.club_membership}
-                    size="small"
-                    variant="outlined"
-                  />
-                </Box>
-              </Box>
-
-              {/* Amenities */}
-              {amenities.length > 0 && (
-                <Box>
-                  <Typography variant="subtitle2" color="textSecondary" gutterBottom>
-                    Amenities & Facilities
-                  </Typography>
-                  <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                    {amenities.map(({ label }) => (
-                      <FeatureChip key={label} label={label} isMatch={isMatch('preferred_amenities', label)} />
-                    ))}
-                  </Box>
-                </Box>
-              )}
-
-              {/* Services */}
-              {services.length > 0 && (
-                <Box>
-                  <Typography variant="subtitle2" color="textSecondary" gutterBottom>
-                    Equipment & Services
-                  </Typography>
-                  <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                    {services.map(({ label }) => (
-                      <FeatureChip key={label} label={label} isMatch={isMatch('preferred_services', label)} />
-                    ))}
-                  </Box>
-                </Box>
-              )}
-            </Box>
-          </Grid>
-
-          {/* Weather section moved outside the columns */}
-          {(weather.length > 0 || isLoadingWeather) && (
-            <Grid item xs={12}>
-              <Divider sx={{ my: 2 }} />
-              <Typography variant="subtitle2" color="textSecondary" gutterBottom>
-                Weather Forecast
-              </Typography>
-              <Box sx={{ 
-                display: 'flex', 
-                gap: 1,
-                flexWrap: 'wrap',
-                backgroundColor: 'rgba(0,0,0,0.02)',
-                borderRadius: 1,
-                p: 0.75,
-                width: '100%'
-              }}>
-                {isLoadingWeather ? (
-                  <CircularProgress size={20} />
-                ) : (
-                  weather.map((day, index) => (
-                    <Box key={index} sx={{ 
-                      flex: 1,
-                      minWidth: '80px',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      p: 0.25,
-                    }}>
-                      <Typography variant="caption" sx={{ fontWeight: 'medium' }}>
-                        {new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' })}
-                      </Typography>
-                      {(() => {
-                        const desc = day.description.toLowerCase();
-                        if (desc.includes('rain')) return <UmbrellaIcon sx={{ fontSize: '1.2rem', color: 'primary.main' }} />;
-                        if (desc.includes('cloud')) return <CloudIcon sx={{ fontSize: '1.2rem', color: 'primary.main' }} />;
-                        if (desc.includes('snow')) return <AcUnitIcon sx={{ fontSize: '1.2rem', color: 'primary.main' }} />;
-                        if (desc.includes('thunder')) return <ThunderstormIcon sx={{ fontSize: '1.2rem', color: 'primary.main' }} />;
-                        return <WbSunnyIcon sx={{ fontSize: '1.2rem', color: 'primary.main' }} />;
-                      })()}
-                      <Typography variant="caption" sx={{ fontSize: '0.75rem' }}>
-                        {Math.round(day.maxTemp)}° | {Math.round(day.minTemp)}°
-                      </Typography>
-                      <Typography 
-                        variant="caption" 
-                        color="text.secondary"
-                        sx={{ fontSize: '0.65rem' }}
-                      >
-                        {day.precipitation}% rain
-                      </Typography>
-                    </Box>
-                  ))
-                )}
-              </Box>
-            </Grid>
+            </IconButton>
           )}
-        </Grid>
+        </Box>
       </CardContent>
     </Card>
   );

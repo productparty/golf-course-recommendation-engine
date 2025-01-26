@@ -43,6 +43,7 @@ interface Club {
   golf_lessons: boolean;
   latitude?: number;
   longitude?: number;
+  match_percentage: number;
 }
 
 interface Filters {
@@ -542,6 +543,7 @@ const FindClubUpdated: React.FC<Props> = ({ className, ...rest }) => {
                     <Grid item xs={12} key={club.id}>
                       <ClubCard 
                         club={club}
+                        showScore={false}
                         isFavorite={favorites.includes(club.id)}
                         onToggleFavorite={handleToggleFavorite}
                         showToggle={true}

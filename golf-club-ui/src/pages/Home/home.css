@@ -1,58 +1,45 @@
-.home-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 20px;
-}
-
-.top-image {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  margin-bottom: 10px;
-}
-
-.header-image {
-  max-width: 100%;
-  height: auto;
-  max-height: 100%;
-}
-
-.links-container {
-  margin-top: 10px; /* Move closer to the top image */
-  width: 100%;
-  max-width: 1200px; /* Match the width of the header image */
-}
-
-.section {
-  width: 100%;
-  max-width: 1200px;
-  margin-top: 0; /* Remove additional margin-top */
-}
-
-.zip-code-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-  max-width: 400px;
-  margin-top: 2rem;
-}
-
-.zip-code-input {
-  padding: 1rem;
-  border-radius: 5px;
-  border: 1px solid #ccc;
-  width: 100%;
-}
-
-.highlighted {
-  background-color: rgba(0, 128, 0, 0.3);
-  border-radius: 5px;
-}
-
-/* Add conditional highlighting based on preferences */
-.preference-match {
+.header-container {
   background-color: #006400; /* Dark green */
-  color: white;
+  padding: 1rem;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.nav-links {
+  display: flex;
+  gap: 2rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.nav-link {
+  color: white !important;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+/* For mobile hamburger menu */
+.mobile-menu-trigger {
+  display: none;
+  cursor: pointer;
+}
+
+@media (max-width: 768px) {
+  .mobile-menu-trigger {
+    display: block;
+  }
+  
+  .hamburger-menu {
+    position: fixed;
+    right: -100%;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 300px;
+    height: 40vh;
+    background-color: rgba(0, 100, 0, 0.9);
+    overflow-y: auto;
+    transition: right 0.3s ease-out;
+  }
 }

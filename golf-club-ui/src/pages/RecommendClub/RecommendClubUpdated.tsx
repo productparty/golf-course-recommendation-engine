@@ -35,6 +35,7 @@ interface Club {
   golf_lessons: boolean;
   latitude?: number;
   longitude?: number;
+  match_percentage: number;
 }
 
 const RecommendClubUpdated: React.FC = () => {
