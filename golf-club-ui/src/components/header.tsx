@@ -26,36 +26,6 @@ const Header: React.FC = () => {
   const [mobileMenuAnchor, setMobileMenuAnchor] = useState<null | HTMLElement>(null);
   const { favorites } = useFavorites();
 
-  useEffect(() => {
-    fetchFavorites();
-  }, [session?.user?.id]);
-
-  const fetchFavorites = async () => {
-    if (!session?.user?.id) return;
-
-    const { data, error } = await supabase
-      .from('favorites')
-      .select(`
-        id,
-        golfclub_id,
-        golfclub:golfclub(*)
-      `)
-      .eq('profile_id', session.user.id);
-
-    if (error) {
-      console.error('Error fetching favorites:', error);
-      return;
-    }
-
-    const transformedData: Favorite[] = data?.map(item => ({
-      id: item.id,
-      club_id: item.golfclub_id,
-      golfclub: item.golfclub as unknown as GolfClub
-    })) || [];
-
-    setFavorites(transformedData);
-  };
-
   const handleImageError = (event: React.SyntheticEvent<HTMLImageElement, Event>) => {
     event.currentTarget.src = 'path/to/fallback-image.png'; // Provide a path to your fallback image
   };
@@ -95,6 +65,8 @@ const Header: React.FC = () => {
     { label: 'Submit Club', path: '/submit-club' },
     { label: 'My Profile', path: '/golfer-profile' },
   ];
+
+  const favoritesCount = Array.isArray(favorites) ? favorites.length : 0;
 
   return (
     <AppBar 
@@ -158,7 +130,7 @@ const Header: React.FC = () => {
                 }}
               >
                 <FavoriteIcon sx={{ fontSize: '20px' }} />
-                Favorites {favorites.length > 0 && `(${favorites.length})`}
+                Favorites {favoritesCount > 0 && `(${favoritesCount})`}
               </Typography>
 
               <Typography
@@ -223,7 +195,7 @@ const Header: React.FC = () => {
                 }}
               >
                 <FavoriteIcon sx={{ mr: 2, fontSize: '20px' }} />
-                Favorites {favorites.length > 0 && `(${favorites.length})`}
+                Favorites {favoritesCount > 0 && `(${favoritesCount})`}
               </MenuItem>
               <Divider />
               <MenuItem onClick={handleSignOut}>Sign Out</MenuItem>
