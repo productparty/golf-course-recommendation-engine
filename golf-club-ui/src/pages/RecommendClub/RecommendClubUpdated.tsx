@@ -136,15 +136,15 @@ const RecommendClubUpdated: React.FC = () => {
     
     const { data, error } = await supabase
       .from('favorites')
-      .select('club_id')
-      .eq('user_id', session.user.id);
+      .select('golfclub_id')
+      .eq('profile_id', session.user.id);
       
     if (error) {
       console.error('Error fetching favorites:', error);
       return;
     }
     
-    setFavorites(data.map(fav => fav.club_id));
+    setFavorites(data.map(fav => fav.golfclub_id));
   };
 
   const handleToggleFavorite = async (clubId: string) => {
@@ -153,12 +153,11 @@ const RecommendClubUpdated: React.FC = () => {
     const isFavorite = favorites.includes(clubId);
     
     if (isFavorite) {
-      // Remove from favorites
       const { error } = await supabase
         .from('favorites')
         .delete()
-        .eq('user_id', session.user.id)
-        .eq('club_id', clubId);
+        .eq('profile_id', session.user.id)
+        .eq('golfclub_id', clubId);
         
       if (error) {
         console.error('Error removing favorite:', error);
@@ -167,11 +166,13 @@ const RecommendClubUpdated: React.FC = () => {
       
       setFavorites(prev => prev.filter(id => id !== clubId));
     } else {
-      // Add to favorites
       const { error } = await supabase
         .from('favorites')
         .insert([
-          { user_id: session.user.id, club_id: clubId }
+          { 
+            profile_id: session.user.id,
+            golfclub_id: clubId
+          }
         ]);
         
       if (error) {
