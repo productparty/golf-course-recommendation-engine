@@ -319,7 +319,11 @@ const FindClubUpdated: React.FC<Props> = ({ className, ...rest }) => {
         component="div" 
         sx={{ className: `find-club ${className || ''}` }}
       >
-        <Typography variant="subtitle1" color="text.secondary" sx={{ mb: 4 }}>
+        <Typography 
+          variant="subtitle1" 
+          color="text.secondary" 
+          sx={{ mb: 4, textAlign: 'center' }}
+        >
           Search and filter golf clubs based on your preferences and location.
         </Typography>
 

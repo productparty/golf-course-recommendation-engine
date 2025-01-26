@@ -86,8 +86,9 @@ const Header: React.FC = () => {
   };
 
   const navItems = [
-    { label: 'Find Clubs', path: '/find-club' },
-    { label: 'Recommended Clubs', path: '/recommend-club' },
+    { label: 'Home', path: '/' },
+    { label: 'Find Club', path: '/find-club' },
+    { label: 'Recommend Club', path: '/recommend-club' },
     { label: 'Submit Club', path: '/submit-club' },
     { label: 'My Profile', path: '/golfer-profile' },
   ];

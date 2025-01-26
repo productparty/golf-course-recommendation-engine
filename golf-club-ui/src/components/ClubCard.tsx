@@ -147,35 +147,47 @@ const ClubCard: React.FC<ClubCardProps> = ({
   };
 
   return (
-    <Card sx={{ mb: 2, width: '100%' }}>
+    <Card sx={{ mb: 2, position: 'relative' }}>
       <CardContent>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <Typography variant="h6" gutterBottom>
-            {club.club_name}
+        <Typography variant="h6" component="h2">
+          {club.club_name}
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          {club.address}
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          {club.city}, {club.state} {club.zip_code}
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+          Distance: {club.distance_miles.toFixed(1)} miles
+        </Typography>
+        
+        {/* Show score only for RecommendClub */}
+        {club.score !== undefined && (
+          <Typography variant="body2" sx={{ mt: 1, color: 'primary.main' }}>
+            Match: {club.score.toFixed(1)}%
           </Typography>
-          {showToggle && onToggleFavorite && (
-            <Box sx={{ 
-              display: { xs: 'block', md: 'none' },
-              mt: 1 
-            }}>
-              <IconButton 
-                onClick={handleFavoriteClick}
-                color="primary"
-                disabled={isLoading}
-                sx={{ 
-                  padding: '8px',
-                  height: '36px',
-                  width: '36px',
-                  '& .MuiSvgIcon-root': {
-                    fontSize: '20px'
-                  }
-                }}
-              >
-                {isFavorite ? <FavoriteIcon color="error" /> : <FavoriteBorderIcon />}
-              </IconButton>
-            </Box>
-          )}
-        </Box>
+        )}
+
+        {/* Single favorite heart location */}
+        {showToggle && onToggleFavorite && (
+          <Box sx={{ mt: 1 }}>
+            <IconButton
+              onClick={handleFavoriteClick}
+              color="primary"
+              disabled={isLoading}
+              sx={{
+                padding: '4px',
+                '& .MuiSvgIcon-root': {
+                  fontSize: '20px'
+                }
+              }}
+            >
+              {isFavorite ? <FavoriteIcon color="error" /> : <FavoriteBorderIcon />}
+            </IconButton>
+          </Box>
+        )}
+
         <Grid container spacing={2}>
           {/* Left Column - Basic Info */}
           <Grid item xs={12} md={6}>
