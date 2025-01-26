@@ -33,9 +33,7 @@ const Header: React.FC = () => {
       .select(`
         id,
         club_id,
-        clubs:clubs!inner(
-          club_name
-        )
+        clubs:clubs!inner(club_name)
       `)
       .eq('user_id', session.user.id);
 
@@ -44,12 +42,11 @@ const Header: React.FC = () => {
       return;
     }
 
-    // Transform the data to match our interface
     const transformedData: Favorite[] = data?.map(item => ({
       id: item.id,
       club_id: item.club_id,
       clubs: {
-        club_name: item.clubs.club_name
+        club_name: item.clubs[0].club_name
       }
     })) || [];
 
