@@ -154,22 +154,26 @@ const ClubCard: React.FC<ClubCardProps> = ({
             {club.club_name}
           </Typography>
           {showToggle && onToggleFavorite && (
-            <IconButton 
-              onClick={handleFavoriteClick}
-              color="primary"
-              disabled={isLoading}
-              sx={{ 
-                padding: '8px',
-                '& .MuiSvgIcon-root': {
-                  fontSize: '24px'
-                },
-                '&:hover': {
-                  backgroundColor: 'rgba(0, 0, 0, 0.04)'
-                }
-              }}
-            >
-              {isFavorite ? <FavoriteIcon color="error" /> : <FavoriteBorderIcon />}
-            </IconButton>
+            <Box sx={{ 
+              display: { xs: 'block', md: 'none' },
+              mt: 1 
+            }}>
+              <IconButton 
+                onClick={handleFavoriteClick}
+                color="primary"
+                disabled={isLoading}
+                sx={{ 
+                  padding: '8px',
+                  height: '36px',
+                  width: '36px',
+                  '& .MuiSvgIcon-root': {
+                    fontSize: '20px'
+                  }
+                }}
+              >
+                {isFavorite ? <FavoriteIcon color="error" /> : <FavoriteBorderIcon />}
+              </IconButton>
+            </Box>
           )}
         </Box>
         <Grid container spacing={2}>
@@ -182,9 +186,32 @@ const ClubCard: React.FC<ClubCardProps> = ({
               <Typography variant="body2" color="text.secondary">
                 {club.city}, {club.state} {club.zip_code}
               </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 1, mb: 1 }}>
                 Distance: {club.distance_miles.toFixed(1)} miles
               </Typography>
+              
+              {showToggle && onToggleFavorite && (
+                <Box sx={{ 
+                  display: { xs: 'block', md: 'none' },
+                  mt: 1 
+                }}>
+                  <IconButton 
+                    onClick={handleFavoriteClick}
+                    color="primary"
+                    disabled={isLoading}
+                    sx={{ 
+                      padding: '8px',
+                      height: '36px',
+                      width: '36px',
+                      '& .MuiSvgIcon-root': {
+                        fontSize: '20px'
+                      }
+                    }}
+                  >
+                    {isFavorite ? <FavoriteIcon color="error" /> : <FavoriteBorderIcon />}
+                  </IconButton>
+                </Box>
+              )}
               
               {showScore && (
                 <Chip 

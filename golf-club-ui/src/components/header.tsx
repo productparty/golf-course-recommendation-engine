@@ -102,10 +102,11 @@ const Header: React.FC = () => {
           sx={{
             textDecoration: 'none',
             color: 'inherit',
-            flexGrow: 1
+            flexGrow: 1,
+            fontSize: { xs: '1.1rem', sm: '1.25rem' }
           }}
         >
-          GolfMatch
+          Find My Club
         </Typography>
 
         {session && (
@@ -168,7 +169,9 @@ const Header: React.FC = () => {
               onClick={handleMobileMenuOpen}
               sx={{ 
                 display: { xs: 'flex', md: 'none' },
-                padding: '12px',
+                padding: '8px',
+                height: '40px',
+                width: '40px',
                 '& .MuiSvgIcon-root': {
                   fontSize: '24px'
                 }
