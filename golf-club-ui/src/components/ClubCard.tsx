@@ -30,7 +30,7 @@ interface Club {
   city: string;
   state: string;
   zip_code: string;
-  distance_miles: number;
+  distance_miles?: number;
   score?: number;
   price_tier: string;
   difficulty: string;
@@ -174,7 +174,7 @@ const ClubCard: React.FC<ClubCardProps> = ({
               {club.city}, {club.state} {club.zip_code}
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-              Distance: {club.distance_miles.toFixed(1)} miles
+              Distance: {typeof club.distance_miles === 'number' ? club.distance_miles.toFixed(1) : 'N/A'} miles
             </Typography>
           </Box>
 

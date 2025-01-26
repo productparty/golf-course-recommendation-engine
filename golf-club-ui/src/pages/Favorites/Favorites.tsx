@@ -12,7 +12,7 @@ interface GolfClub {
   city: string;
   state: string;
   zip_code: string;
-  distance_miles: number;
+  distance_miles?: number;
   price_tier: string;
   difficulty: string;
   number_of_holes: string;
@@ -61,7 +61,17 @@ const Favorites: React.FC = () => {
       return;
     }
     
-    setFavorites(data);
+    // Transform the data to match FavoriteItem type
+    const transformedData: FavoriteItem[] = data.map((item: any) => ({
+      id: item.id,
+      golfclub_id: item.golfclub_id,
+      golfclub: {
+        ...item.golfclub[0],
+        distance_miles: item.golfclub[0]?.distance_miles || 0
+      }
+    }));
+    
+    setFavorites(transformedData);
     setIsLoading(false);
   };
 
