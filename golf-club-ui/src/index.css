@@ -110,7 +110,7 @@ button:focus-visible {
 }
 
 .map-container {
-  height: 60vh;
+  height: 30vh;
   width: 100%;
   margin: 20px 0;
 }
@@ -173,7 +173,7 @@ button:focus-visible {
 /* Responsive design */
 @media (max-width: 768px) {
   .map-container {
-    height: 50vh;
+    height: 25vh;
   }
 
   .search-form {

@@ -121,11 +121,32 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({ clubs, center, r
         return el;
     };
 
+    // Add this effect to fit bounds when clubs change
+    useEffect(() => {
+        if (!map.current || !clubs || clubs.length === 0) return;
+
+        // Create bounds object
+        const bounds = new mapboxgl.LngLatBounds();
+
+        // Extend bounds with each club location
+        clubs.forEach((club) => {
+            if (club.latitude && club.longitude) {
+                bounds.extend([club.longitude, club.latitude]);
+            }
+        });
+
+        // Fit map to bounds with padding
+        map.current.fitBounds(bounds, {
+            padding: { top: 50, bottom: 50, left: 50, right: 50 },
+            maxZoom: 15 // Prevent zooming in too close
+        });
+    }, [clubs]);
+
     return (
         <Box
             ref={mapContainer}
             sx={{
-                height: '60vh',
+                height: '30vh',
                 width: '100%',
                 borderRadius: 1,
                 overflow: 'hidden',
