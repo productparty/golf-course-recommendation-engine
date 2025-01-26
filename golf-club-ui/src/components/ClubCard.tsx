@@ -52,6 +52,16 @@ interface Club {
   match_percentage: number; // Assuming this is the match percentage
 }
 
+interface WeatherResponse {
+  daily: {
+    time: string[];
+    temperature_2m_max: number[];
+    temperature_2m_min: number[];
+    precipitation_probability_max: number[];
+    weathercode: number[];
+  };
+}
+
 interface ClubCardProps {
   club: Club;
   showScore?: boolean;
@@ -87,145 +97,141 @@ const ClubCard: React.FC<ClubCardProps> = ({
 }) => {
   const [weather, setWeather] = useState<WeatherData[]>([]);
   const [isLoadingWeather, setIsLoadingWeather] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-
-  const amenities = [
-    { label: 'Driving Range', value: club.driving_range },
-    { label: 'Putting Green', value: club.putting_green },
-    { label: 'Chipping Green', value: club.chipping_green },
-    { label: 'Practice Bunker', value: club.practice_bunker },
-    { label: 'Restaurant', value: club.restaurant },
-    { label: 'Lodging', value: club.lodging_on_site },
-  ].filter(({ value }) => value);
-
-  const services = [
-    { label: 'Motor Cart', value: club.motor_cart },
-    { label: 'Pull Cart', value: club.pull_cart },
-    { label: 'Club Rental', value: club.golf_clubs_rental },
-    { label: 'Club Fitting', value: club.club_fitting },
-    { label: 'Golf Lessons', value: club.golf_lessons },
-  ].filter(({ value }) => value);
-
-  const isMatch = (feature: string, value: any) => {
-    return userPreferences?.[feature] === value;
-  };
 
   useEffect(() => {
     const fetchWeather = async () => {
-      console.log('Club coordinates:', { lat: club.latitude, lng: club.longitude });
       if (club.latitude && club.longitude) {
         setIsLoadingWeather(true);
         try {
-          const data = await getWeatherForecast(club.latitude, club.longitude);
-          console.log('Weather data:', data);
-          
-          const weatherData: WeatherData[] = data.daily.time.slice(0, 3).map((date, index) => ({
-            date,
-            maxTemp: data.daily.temperature_2m_max[index],
-            minTemp: data.daily.temperature_2m_min[index],
-            precipitation: data.daily.precipitation_probability_max[index],
-            description: getWeatherInfo(data.daily.weathercode[index]).description
+          const response = await getWeatherForecast(club.latitude, club.longitude);
+          const formattedWeather: WeatherData[] = response.daily.time.map((time, index) => ({
+            date: time,
+            maxTemp: response.daily.temperature_2m_max[index],
+            minTemp: response.daily.temperature_2m_min[index],
+            precipitation: response.daily.precipitation_probability_max[index],
+            description: response.daily.weathercode[index].toString()
           }));
-          
-          setWeather(weatherData);
+          setWeather(formattedWeather);
         } catch (error) {
-          console.error('Failed to fetch weather:', error);
-        } finally {
-          setIsLoadingWeather(false);
+          console.error('Error fetching weather:', error);
         }
+        setIsLoadingWeather(false);
       }
     };
 
     fetchWeather();
   }, [club.latitude, club.longitude]);
 
-  const handleFavoriteClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    if (onToggleFavorite) {
-      onToggleFavorite(club.id);
-    }
-  };
-
   return (
     <Card sx={{ mb: 2, position: 'relative' }}>
       <CardContent>
+        {/* Top Section: Name, Address, Heart */}
         <Box sx={{ 
           display: 'flex', 
           justifyContent: 'space-between',
-          alignItems: 'flex-start'
+          alignItems: 'flex-start',
+          mb: 2
         }}>
-          {/* Club Info */}
           <Box sx={{ flex: 1 }}>
             <Typography variant="h6" component="h2">
               {club.club_name}
             </Typography>
-            <Box sx={{ mt: 1 }}>
-              <Typography variant="body2" color="text.secondary">
-                {club.address}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {club.city}, {club.state} {club.zip_code}
-              </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 1, mb: 1 }}>
-                Distance: {club.distance_miles.toFixed(1)} miles
-              </Typography>
-              
-              {showScore && club.score !== undefined && (
-                <Typography variant="body2" sx={{ mt: 1, color: 'primary.main' }}>
-                  Match: {club.score.toFixed(1)}%
-                </Typography>
-              )}
-            </Box>
+            <Typography variant="body2" color="text.secondary">
+              {club.address}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {club.city}, {club.state} {club.zip_code}
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+              Distance: {club.distance_miles.toFixed(1)} miles
+            </Typography>
           </Box>
 
-          {/* Heart Icon */}
           {showToggle && onToggleFavorite && (
             <IconButton
-              onClick={handleFavoriteClick}
+              onClick={(e) => {
+                e.preventDefault();
+                onToggleFavorite(club.id);
+              }}
               className="heart-button"
               sx={{
-                display: 'flex',
-                alignSelf: 'center',
                 padding: '8px',
                 ml: 2,
-                '& .MuiSvgIcon-root': {
-                  fontSize: '24px'
-                },
-                '&:hover': {
-                  color: isFavorite ? '#ff4081' : '#2196F3',
-                  backgroundColor: 'rgba(0, 0, 0, 0.04)'
-                },
-                transition: 'all 0.2s ease-in-out',
-                '@media (min-width: 0px)': {
-                  display: 'flex'  // Ensure visibility on all screen sizes
-                }
+                '& .MuiSvgIcon-root': { fontSize: '24px' }
               }}
             >
-              {isFavorite ? (
-                <FavoriteIcon 
-                  color="error" 
-                  sx={{ 
-                    transform: 'scale(1)',
-                    transition: 'transform 0.2s ease-in-out',
-                    '&:hover': {
-                      transform: 'scale(1.1)'
-                    }
-                  }} 
-                />
-              ) : (
-                <FavoriteBorderIcon 
-                  sx={{
-                    transform: 'scale(1)',
-                    transition: 'transform 0.2s ease-in-out',
-                    '&:hover': {
-                      transform: 'scale(1.1)'
-                    }
-                  }}
-                />
-              )}
+              {isFavorite ? <FavoriteIcon color="error" /> : <FavoriteBorderIcon />}
             </IconButton>
           )}
         </Box>
+
+        {/* Club Attributes Section */}
+        <Box sx={{ mb: 2 }}>
+          <Grid container spacing={1}>
+            <Grid item xs={12} sm={6}>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                <AttachMoneyIcon sx={{ mr: 1, color: 'text.secondary' }} />
+                <Typography variant="body2">Price: {club.price_tier}</Typography>
+              </Box>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                <GolfCourseIcon sx={{ mr: 1, color: 'text.secondary' }} />
+                <Typography variant="body2">Difficulty: {club.difficulty}</Typography>
+              </Box>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <StarIcon sx={{ mr: 1, color: 'text.secondary' }} />
+                <Typography variant="body2">Holes: {club.number_of_holes}</Typography>
+              </Box>
+            </Grid>
+
+            {/* Features Grid */}
+            <Grid item xs={12} sm={6}>
+              <Typography variant="body2" sx={{ mb: 1, fontWeight: 'medium' }}>Features:</Typography>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                {club.driving_range && <FeatureChip label="Driving Range" />}
+                {club.putting_green && <FeatureChip label="Putting Green" />}
+                {club.practice_bunker && <FeatureChip label="Practice Bunker" />}
+                {club.golf_lessons && <FeatureChip label="Lessons" />}
+                {club.club_fitting && <FeatureChip label="Club Fitting" />}
+                {club.restaurant && <FeatureChip label="Restaurant" />}
+              </Box>
+            </Grid>
+          </Grid>
+        </Box>
+
+        {/* Weather Section */}
+        {weather.length > 0 && (
+          <Box sx={{ mt: 2 }}>
+            <Typography variant="body2" sx={{ mb: 1, fontWeight: 'medium' }}>
+              Weather Forecast:
+            </Typography>
+            <Box sx={{ display: 'flex', gap: 2, overflowX: 'auto', pb: 1 }}>
+              {weather.slice(0, 3).map((day) => (
+                <Box key={day.date} sx={{ textAlign: 'center', minWidth: '80px' }}>
+                  <Typography variant="caption" display="block">
+                    {new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' })}
+                  </Typography>
+                  {getWeatherInfo(parseInt(day.description, 10)).icon}
+                  <Typography variant="caption" display="block">
+                    {day.maxTemp}°F
+                  </Typography>
+                </Box>
+              ))}
+            </Box>
+          </Box>
+        )}
+
+        {showScore && club.score !== undefined && (
+          <Typography 
+            variant="body2" 
+            sx={{ 
+              mt: 2, 
+              color: club.score >= 80 ? '#2E5A27' : 'primary.main',
+              fontWeight: 'medium'
+            }}
+          >
+            Match: {club.score.toFixed(1)}%
+          </Typography>
+        )}
       </CardContent>
     </Card>
   );
