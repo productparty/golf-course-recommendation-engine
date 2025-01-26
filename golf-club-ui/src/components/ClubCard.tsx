@@ -50,6 +50,7 @@ interface ClubCardProps {
     golf_lessons: boolean;
     latitude?: number;
     longitude?: number;
+    match_percentage: number; // Assuming this is the match percentage
   };
   showScore?: boolean;
   userPreferences?: Record<string, any>;
@@ -328,4 +329,4 @@ const ClubCard: React.FC<ClubCardProps> = ({
   );
 };
 
-export default ClubCard; 
+export default ClubCard;
