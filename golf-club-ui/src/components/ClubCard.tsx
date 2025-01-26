@@ -54,7 +54,7 @@ interface ClubCardProps {
   showScore?: boolean;
   userPreferences?: Record<string, any>;
   isFavorite?: boolean;
-  onToggleFavorite?: (clubId: string) => void;
+  onToggleFavorite?: (clubId: string) => Promise<void>;
 }
 
 const FeatureChip: React.FC<{ label: string; isMatch?: boolean }> = ({ label, isMatch = false }) => (
@@ -82,6 +82,7 @@ const ClubCard: React.FC<ClubCardProps> = ({
 }) => {
   const [weather, setWeather] = useState<WeatherData[]>([]);
   const [isLoadingWeather, setIsLoadingWeather] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const amenities = [
     { label: 'Driving Range', value: club.driving_range },
@@ -133,6 +134,16 @@ const ClubCard: React.FC<ClubCardProps> = ({
     fetchWeather();
   }, [club.latitude, club.longitude]);
 
+  const handleFavoriteClick = async () => {
+    if (!onToggleFavorite) return;
+    setIsLoading(true);
+    try {
+      await onToggleFavorite(club.id);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <Card sx={{ mb: 2, width: '100%' }}>
       <CardContent>
@@ -142,11 +153,11 @@ const ClubCard: React.FC<ClubCardProps> = ({
           </Typography>
           {onToggleFavorite && (
             <IconButton 
-              onClick={() => onToggleFavorite(club.id)}
+              onClick={handleFavoriteClick}
               color="primary"
-              size="small"
+              disabled={isLoading}
             >
-              {isFavorite ? <FavoriteIcon /> : <FavoriteBorderIcon />}
+              {isFavorite ? <FavoriteIcon color="error" /> : <FavoriteBorderIcon />}
             </IconButton>
           )}
         </Box>

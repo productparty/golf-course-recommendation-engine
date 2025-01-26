@@ -1,15 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
+import { config } from '../config';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables');
-}
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    persistSession: true,
-    storageKey: 'golf-app-storage-key',
-  }
-}); 
+export const supabase = createClient(
+  config.SUPABASE_URL,
+  config.SUPABASE_ANON_KEY
+); 

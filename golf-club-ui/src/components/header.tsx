@@ -1,14 +1,60 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import styles from '../builderio/navigation/Navigation.module.css';
-import { IconButton, Menu, MenuItem, Box } from '@mui/material';
+import { IconButton, Menu, MenuItem, Box, AppBar, Toolbar, Typography } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
+import FavoriteIcon from '@mui/icons-material/Favorite';
+import { supabase } from '../lib/supabase';
+
+interface Favorite {
+  id: string;
+  club_id: string;
+  clubs: {
+    club_name: string;
+  } | null;
+}
 
 const Header: React.FC = () => {
   const { session, signOut } = useAuth();
   const navigate = useNavigate();
+  const [favorites, setFavorites] = useState<Favorite[]>([]);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+
+  useEffect(() => {
+    fetchFavorites();
+  }, [session?.user?.id]);
+
+  const fetchFavorites = async () => {
+    if (!session?.user?.id) return;
+
+    const { data, error } = await supabase
+      .from('favorites')
+      .select(`
+        id,
+        club_id,
+        clubs:clubs!inner(
+          club_name
+        )
+      `)
+      .eq('user_id', session.user.id);
+
+    if (error) {
+      console.error('Error fetching favorites:', error);
+      return;
+    }
+
+    // Transform the data to match our interface
+    const transformedData: Favorite[] = data?.map(item => ({
+      id: item.id,
+      club_id: item.club_id,
+      clubs: {
+        club_name: item.clubs.club_name
+      }
+    })) || [];
+
+    setFavorites(transformedData);
+  };
 
   const handleImageError = (event: React.SyntheticEvent<HTMLImageElement, Event>) => {
     event.currentTarget.src = 'path/to/fallback-image.png'; // Provide a path to your fallback image
@@ -41,102 +87,62 @@ const Header: React.FC = () => {
   ];
 
   return (
-    <header
-      style={{
-        padding: '1rem',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        backgroundColor: '#f0f0f0',
-        flexWrap: 'wrap',
-      }}
-    >
-      <div className={styles.brandSection} style={{ display: 'flex', alignItems: 'center' }}>
-        <img
-          loading="lazy"
-          src="https://cdn.builder.io/api/v1/image/assets/TEMP/77a24dc57639d26939b3ee58a9557092803bbb4e29fc613a6e982727f846cf6d?placeholderIfAbsent=true&apiKey=9e1847323d5241858d1db34992e94222"
-          alt="Find My Club Logo"
-          className={styles.brandLogo}
-          style={{ maxWidth: '100px', height: 'auto' }}
-          onError={handleImageError}
-        />
-        <h1 className={styles.brandName} style={{ fontSize: '1.5rem', marginLeft: '10px' }}>Find My Club</h1>
-      </div>
-
-      {/* Desktop Navigation */}
-      <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 2 }}>
-        <Link to="/" className={styles.navLink}>Home</Link>
-        {session ? (
-          <>
-            <Link to="/find-club" className={styles.navLink}>Find Clubs</Link>
-            <Link to="/recommend-club" className={styles.navLink}>Recommended Clubs</Link>
-            <Link to="/submit-club" className={styles.navLink}>Submit Club</Link>
-            <Link to="/golfer-profile" className={styles.navLink}>My Profile</Link>
-            <button 
-              onClick={handleSignOut} 
-              className={styles.navLink} 
-              style={{ background: 'none', border: 'none', cursor: 'pointer' }}
+    <AppBar position="static">
+      <Toolbar>
+        <Typography variant="h6" sx={{ flexGrow: 1 }}>
+          Golf Club Finder
+        </Typography>
+        
+        {session && (
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <IconButton
+              color="inherit"
+              onClick={handleMenu}
+              sx={{ mr: 2 }}
             >
-              Sign Out
-            </button>
-          </>
-        ) : (
-          <>
-            <Link to="/create-account" className={styles.navLink}>Create Account</Link>
-            <Link to="/login" className={styles.navLink}>Login</Link>
-          </>
+              <FavoriteIcon />
+              {favorites.length > 0 && (
+                <Typography
+                  variant="caption"
+                  sx={{
+                    position: 'absolute',
+                    top: -8,
+                    right: -8,
+                    backgroundColor: 'error.main',
+                    borderRadius: '50%',
+                    padding: '2px 6px',
+                  }}
+                >
+                  {favorites.length}
+                </Typography>
+              )}
+            </IconButton>
+            
+            <Menu
+              anchorEl={anchorEl}
+              open={Boolean(anchorEl)}
+              onClose={handleClose}
+            >
+              {favorites.length === 0 ? (
+                <MenuItem disabled>No favorites yet</MenuItem>
+              ) : (
+                favorites.map((favorite) => (
+                  <MenuItem 
+                    key={favorite.id}
+                    onClick={() => {
+                      navigate(`/club/${favorite.club_id}`);
+                      handleClose();
+                    }}
+                  >
+                    {favorite.clubs?.club_name || 'Unknown Club'}
+                  </MenuItem>
+                ))
+              )}
+            </Menu>
+          </Box>
         )}
-      </Box>
-
-      {/* Mobile Navigation */}
-      <Box sx={{ display: { xs: 'block', md: 'none' } }}>
-        <IconButton
-          size="medium"
-          edge="end"
-          color="inherit"
-          aria-label="menu"
-          onClick={handleMenu}
-          sx={{ 
-            padding: '8px',
-            '& .MuiSvgIcon-root': {
-              width: 30,
-              height: 24
-            }
-          }}
-        >
-          <MenuIcon />
-        </IconButton>
-        <Menu
-          anchorEl={anchorEl}
-          open={Boolean(anchorEl)}
-          onClose={handleClose}
-          anchorOrigin={{
-            vertical: 'top',
-            horizontal: 'right',
-          }}
-          transformOrigin={{
-            vertical: 'top',
-            horizontal: 'right',
-          }}
-        >
-          <MenuItem onClick={() => handleNavigate('/')}>Home</MenuItem>
-          {session ? (
-            <>
-              <MenuItem onClick={() => handleNavigate('/find-club')}>Find Clubs</MenuItem>
-              <MenuItem onClick={() => handleNavigate('/recommend-club')}>Recommended Clubs</MenuItem>
-              <MenuItem onClick={() => handleNavigate('/submit-club')}>Submit Club</MenuItem>
-              <MenuItem onClick={() => handleNavigate('/golfer-profile')}>My Profile</MenuItem>
-              <MenuItem onClick={handleSignOut}>Sign Out</MenuItem>
-            </>
-          ) : (
-            <>
-              <MenuItem onClick={() => handleNavigate('/create-account')}>Create Account</MenuItem>
-              <MenuItem onClick={() => handleNavigate('/login')}>Login</MenuItem>
-            </>
-          )}
-        </Menu>
-      </Box>
-    </header>
+      </Toolbar>
+    </AppBar>
   );
 };
 
