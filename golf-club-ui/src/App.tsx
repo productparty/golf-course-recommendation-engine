@@ -8,8 +8,8 @@ import { supabase } from './lib/supabase'; // Update path if needed
 import { Analytics } from "@vercel/analytics/react";
 
 // Component imports
-import Header from './components/header';
-import Footer from './components/footer';
+import Header from './components/Header';
+import Footer from './components/Footer';
 import Home from './pages/Home/home';
 import FindClubUpdated from './pages/FindClub/FindClubUpdated';
 import RecommendClubUpdated from './pages/RecommendClub/RecommendClubUpdated';
