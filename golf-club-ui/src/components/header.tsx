@@ -20,6 +20,7 @@ const Header: React.FC = () => {
   const navigate = useNavigate();
   const [favorites, setFavorites] = useState<Favorite[]>([]);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [mobileMenuAnchor, setMobileMenuAnchor] = useState<null | HTMLElement>(null);
 
   useEffect(() => {
     fetchFavorites();
@@ -76,6 +77,14 @@ const Header: React.FC = () => {
     handleClose();
   };
 
+  const handleMobileMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setMobileMenuAnchor(event.currentTarget);
+  };
+
+  const handleMobileMenuClose = () => {
+    setMobileMenuAnchor(null);
+  };
+
   const navItems = [
     { label: 'Find Clubs', path: '/find-club' },
     { label: 'Recommended Clubs', path: '/recommend-club' },
@@ -84,88 +93,112 @@ const Header: React.FC = () => {
   ];
 
   return (
-    <AppBar position="static">
-      <Toolbar>
+    <AppBar 
+      position="static" 
+      sx={{
+        backgroundColor: 'primary.main',
+        boxShadow: 2
+      }}
+    >
+      <Toolbar sx={{ justifyContent: 'space-between' }}>
         <Typography 
           variant="h6" 
           component={Link} 
           to="/"
           sx={{ 
-            flexGrow: 0, 
             textDecoration: 'none', 
             color: 'inherit',
-            mr: 4
+            fontWeight: 600,
+            '&:hover': {
+              opacity: 0.9
+            }
           }}
         >
           Golf Club Finder
         </Typography>
 
         {session && (
-          <>
-            <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            {/* Desktop Navigation */}
+            <Box sx={{ 
+              display: { xs: 'none', md: 'flex' }, 
+              gap: 2 
+            }}>
               {navItems.map((item) => (
                 <Button
                   key={item.label}
                   onClick={() => handleNavigate(item.path)}
-                  sx={{ color: 'white', mx: 1 }}
+                  sx={{
+                    color: 'white',
+                    textTransform: 'none',
+                    fontSize: '1rem',
+                    '&:hover': {
+                      backgroundColor: 'rgba(255, 255, 255, 0.1)'
+                    }
+                  }}
                 >
                   {item.label}
                 </Button>
               ))}
             </Box>
 
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <IconButton
-                color="inherit"
-                onClick={handleMenu}
-                sx={{ mr: 2 }}
-              >
-                <FavoriteIcon />
-                {favorites.length > 0 && (
-                  <Typography
-                    variant="caption"
-                    sx={{
-                      position: 'absolute',
-                      top: -8,
-                      right: -8,
-                      backgroundColor: 'error.main',
-                      borderRadius: '50%',
-                      padding: '2px 6px',
-                    }}
-                  >
-                    {favorites.length}
-                  </Typography>
-                )}
-              </IconButton>
+            {/* Favorites Icon */}
+            <IconButton
+              color="inherit"
+              onClick={handleMenu}
+              sx={{ 
+                position: 'relative',
+                '&:hover': {
+                  backgroundColor: 'rgba(255, 255, 255, 0.1)'
+                }
+              }}
+            >
+              <FavoriteIcon />
+              {favorites.length > 0 && (
+                <Typography
+                  variant="caption"
+                  sx={{
+                    position: 'absolute',
+                    top: -8,
+                    right: -8,
+                    backgroundColor: 'error.main',
+                    borderRadius: '50%',
+                    padding: '2px 6px',
+                    minWidth: '20px',
+                    fontSize: '0.75rem'
+                  }}
+                >
+                  {favorites.length}
+                </Typography>
+              )}
+            </IconButton>
 
-              <IconButton
-                color="inherit"
-                edge="end"
-                onClick={handleMenu}
-                sx={{ display: { md: 'none' } }}
-              >
-                <MenuIcon />
-              </IconButton>
-            </Box>
+            {/* Mobile Menu Icon */}
+            <IconButton
+              color="inherit"
+              edge="end"
+              onClick={handleMobileMenuOpen}
+              sx={{ 
+                display: { xs: 'flex', md: 'none' },
+                ml: 1
+              }}
+            >
+              <MenuIcon />
+            </IconButton>
 
+            {/* Favorites Menu */}
             <Menu
               anchorEl={anchorEl}
               open={Boolean(anchorEl)}
               onClose={handleClose}
+              PaperProps={{
+                sx: {
+                  mt: 2,
+                  width: 250,
+                  maxHeight: 400
+                }
+              }}
             >
-              {/* Mobile navigation menu */}
-              {window.innerWidth < 900 && navItems.map((item) => (
-                <MenuItem 
-                  key={item.label}
-                  onClick={() => handleNavigate(item.path)}
-                >
-                  {item.label}
-                </MenuItem>
-              ))}
-              
-              <Divider />
-              
-              {/* Favorites section */}
               <Typography variant="subtitle2" sx={{ px: 2, py: 1, color: 'text.secondary' }}>
                 Favorites
               </Typography>
@@ -184,12 +217,35 @@ const Header: React.FC = () => {
                   </MenuItem>
                 ))
               )}
-              
+            </Menu>
+
+            {/* Mobile Navigation Menu */}
+            <Menu
+              anchorEl={mobileMenuAnchor}
+              open={Boolean(mobileMenuAnchor)}
+              onClose={handleMobileMenuClose}
+              PaperProps={{
+                sx: {
+                  mt: 2,
+                  width: 250
+                }
+              }}
+            >
+              {navItems.map((item) => (
+                <MenuItem 
+                  key={item.label}
+                  onClick={() => {
+                    handleNavigate(item.path);
+                    handleMobileMenuClose();
+                  }}
+                >
+                  {item.label}
+                </MenuItem>
+              ))}
               <Divider />
-              
               <MenuItem onClick={handleSignOut}>Sign Out</MenuItem>
             </Menu>
-          </>
+          </Box>
         )}
       </Toolbar>
     </AppBar>

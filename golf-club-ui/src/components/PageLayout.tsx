@@ -1,6 +1,6 @@
 import React from 'react';
 import { Container, Typography, Box, Paper } from '@mui/material';
-import Header from './header';
+import Header from './Header';
 
 interface PageLayoutProps {
   title: string;
