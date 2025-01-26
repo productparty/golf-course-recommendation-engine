@@ -93,7 +93,12 @@ const Header: React.FC = () => {
   ];
 
   return (
-    <AppBar position="static">
+    <AppBar 
+      position="static" 
+      sx={{ 
+        backgroundColor: '#2E5A27' // Matching landing page green
+      }}
+    >
       <Toolbar>
         <Typography
           variant="h6"
@@ -115,54 +120,58 @@ const Header: React.FC = () => {
             <Box sx={{ 
               display: { xs: 'none', md: 'flex' },
               alignItems: 'center',
-              gap: 2
+              gap: 3
             }}>
               {navItems.map((item) => (
-                <Button
+                <Typography
                   key={item.label}
-                  onClick={() => handleNavigate(item.path)}
+                  component={Link}
+                  to={item.path}
                   sx={{
                     color: 'white',
-                    textTransform: 'none',
+                    textDecoration: 'none',
                     fontSize: '1rem',
                     '&:hover': {
-                      backgroundColor: 'rgba(255, 255, 255, 0.1)'
+                      textDecoration: 'underline'
                     }
                   }}
                 >
                   {item.label}
-                </Button>
+                </Typography>
               ))}
               
-              <Button
-                color="inherit"
+              <Typography
                 onClick={handleMenu}
-                startIcon={<FavoriteIcon />}
                 sx={{
-                  textTransform: 'none',
+                  color: 'white',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1,
+                  cursor: 'pointer',
                   '&:hover': {
-                    backgroundColor: 'rgba(255, 255, 255, 0.1)'
+                    textDecoration: 'underline'
                   }
                 }}
               >
+                <FavoriteIcon sx={{ fontSize: '20px' }} />
                 Favorites {favorites.length > 0 && `(${favorites.length})`}
-              </Button>
+              </Typography>
 
-              <Button
-                color="inherit"
+              <Typography
                 onClick={handleSignOut}
                 sx={{
-                  textTransform: 'none',
+                  color: 'white',
+                  cursor: 'pointer',
                   '&:hover': {
-                    backgroundColor: 'rgba(255, 255, 255, 0.1)'
+                    textDecoration: 'underline'
                   }
                 }}
               >
                 Sign Out
-              </Button>
+              </Typography>
             </Box>
 
-            {/* Mobile Menu Icon */}
+            {/* Mobile Menu Icon - Keep as is but update color */}
             <IconButton
               color="inherit"
               edge="end"
@@ -170,8 +179,8 @@ const Header: React.FC = () => {
               sx={{ 
                 display: { xs: 'flex', md: 'none' },
                 padding: '8px',
-                height: '40px',
-                width: '40px',
+                height: '36px', // Slightly reduced
+                width: '36px',  // Slightly reduced
                 '& .MuiSvgIcon-root': {
                   fontSize: '24px'
                 }
@@ -180,7 +189,7 @@ const Header: React.FC = () => {
               <MenuIcon />
             </IconButton>
 
-            {/* Mobile Navigation Menu */}
+            {/* Mobile Menu - Keep existing structure but update styling */}
             <Menu
               anchorEl={mobileMenuAnchor}
               open={Boolean(mobileMenuAnchor)}

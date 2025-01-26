@@ -314,7 +314,7 @@ const FindClubUpdated: React.FC<Props> = ({ className, ...rest }) => {
   }, [session?.user?.id]);
 
   return (
-    <PageLayout title="Find a Club">
+    <PageLayout title="Find Club">
       <Box 
         component="div" 
         sx={{ className: `find-club ${className || ''}` }}
