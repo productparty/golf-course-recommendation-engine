@@ -93,52 +93,29 @@ const Header: React.FC = () => {
   ];
 
   return (
-    <AppBar 
-      position="static" 
-      sx={{
-        backgroundColor: 'primary.main',
-        boxShadow: 2
-      }}
-    >
-      <Toolbar sx={{ justifyContent: 'space-between' }}>
-        {/* Logo/Title */}
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          {session && (
-            <IconButton
-              color="inherit"
-              edge="start"
-              onClick={handleMobileMenuOpen}
-              sx={{ 
-                display: { xs: 'flex', md: 'none' },
-                mr: 2
-              }}
-            >
-              <MenuIcon />
-            </IconButton>
-          )}
-          <Typography 
-            variant="h6" 
-            component={Link} 
-            to="/"
-            sx={{ 
-              textDecoration: 'none', 
-              color: 'inherit',
-              fontWeight: 600,
-              '&:hover': {
-                opacity: 0.9
-              }
-            }}
-          >
-            Golf Club Finder
-          </Typography>
-        </Box>
+    <AppBar position="static">
+      <Toolbar>
+        {/* Logo/Brand - Always visible */}
+        <Typography
+          variant="h6"
+          component={Link}
+          to="/"
+          sx={{
+            textDecoration: 'none',
+            color: 'inherit',
+            flexGrow: 1
+          }}
+        >
+          GolfMatch
+        </Typography>
 
         {session && (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Box>
             {/* Desktop Navigation */}
             <Box sx={{ 
-              display: { xs: 'none', md: 'flex' }, 
-              gap: 2 
+              display: { xs: 'none', md: 'flex' },
+              alignItems: 'center',
+              gap: 2
             }}>
               {navItems.map((item) => (
                 <Button
@@ -156,37 +133,37 @@ const Header: React.FC = () => {
                   {item.label}
                 </Button>
               ))}
+              
+              {/* Desktop Favorites Button */}
+              <Button
+                color="inherit"
+                onClick={handleMenu}
+                startIcon={<FavoriteIcon />}
+                sx={{
+                  textTransform: 'none',
+                  '&:hover': {
+                    backgroundColor: 'rgba(255, 255, 255, 0.1)'
+                  }
+                }}
+              >
+                Favorites {favorites.length > 0 && `(${favorites.length})`}
+              </Button>
             </Box>
 
-            {/* Favorites Icon */}
+            {/* Mobile Menu Icon */}
             <IconButton
               color="inherit"
-              onClick={handleMenu}
+              edge="end"
+              onClick={handleMobileMenuOpen}
               sx={{ 
-                position: 'relative',
-                '&:hover': {
-                  backgroundColor: 'rgba(255, 255, 255, 0.1)'
+                display: { xs: 'flex', md: 'none' },
+                padding: '12px',
+                '& .MuiSvgIcon-root': {
+                  fontSize: '24px'
                 }
               }}
             >
-              <FavoriteIcon />
-              {favorites.length > 0 && (
-                <Typography
-                  variant="caption"
-                  sx={{
-                    position: 'absolute',
-                    top: -8,
-                    right: -8,
-                    backgroundColor: 'error.main',
-                    borderRadius: '50%',
-                    padding: '2px 6px',
-                    minWidth: '20px',
-                    fontSize: '0.75rem'
-                  }}
-                >
-                  {favorites.length}
-                </Typography>
-              )}
+              <MenuIcon />
             </IconButton>
 
             {/* Mobile Navigation Menu */}
@@ -212,6 +189,15 @@ const Header: React.FC = () => {
                   {item.label}
                 </MenuItem>
               ))}
+              <MenuItem 
+                onClick={(event) => {
+                  handleMenu(event);
+                  handleMobileMenuClose();
+                }}
+              >
+                <FavoriteIcon sx={{ mr: 2, fontSize: '20px' }} />
+                Favorites {favorites.length > 0 && `(${favorites.length})`}
+              </MenuItem>
               <Divider />
               <MenuItem onClick={handleSignOut}>Sign Out</MenuItem>
             </Menu>

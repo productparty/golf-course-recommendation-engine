@@ -159,10 +159,9 @@ const ClubCard: React.FC<ClubCardProps> = ({
               color="primary"
               disabled={isLoading}
               sx={{ 
-                position: 'relative',
-                padding: { xs: '4px', sm: '8px' },
-                '& svg': {
-                  fontSize: { xs: '1.2rem', sm: '1.5rem' }
+                padding: '8px',
+                '& .MuiSvgIcon-root': {
+                  fontSize: '24px'
                 },
                 '&:hover': {
                   backgroundColor: 'rgba(0, 0, 0, 0.04)'
