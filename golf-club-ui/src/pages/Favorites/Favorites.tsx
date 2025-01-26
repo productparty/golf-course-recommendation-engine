@@ -5,9 +5,43 @@ import { supabase } from '../../lib/supabase';
 import ClubCard from '../../components/ClubCard';
 import PageLayout from '../../components/PageLayout';
 
+interface GolfClub {
+  id: string;
+  club_name: string;
+  address: string;
+  city: string;
+  state: string;
+  zip_code: string;
+  distance_miles: number;
+  price_tier: string;
+  difficulty: string;
+  number_of_holes: string;
+  club_membership: string;
+  driving_range: boolean;
+  putting_green: boolean;
+  chipping_green: boolean;
+  practice_bunker: boolean;
+  restaurant: boolean;
+  lodging_on_site: boolean;
+  motor_cart: boolean;
+  pull_cart: boolean;
+  golf_clubs_rental: boolean;
+  club_fitting: boolean;
+  golf_lessons: boolean;
+  latitude?: number;
+  longitude?: number;
+  match_percentage: number;
+}
+
+interface FavoriteItem {
+  id: string;
+  golfclub_id: string;
+  golfclub: GolfClub;
+}
+
 const Favorites: React.FC = () => {
   const { session } = useAuth();
-  const [favorites, setFavorites] = useState<any[]>([]);
+  const [favorites, setFavorites] = useState<FavoriteItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchFavorites = async () => {
@@ -60,10 +94,14 @@ const Favorites: React.FC = () => {
             {favorites.map((favorite) => (
               <Grid item xs={12} key={favorite.id}>
                 <ClubCard
-                  club={favorite.golfclub}
+                  club={{
+                    ...favorite.golfclub,
+                    score: undefined // Explicitly set score as undefined for favorites
+                  }}
                   isFavorite={true}
                   showToggle={true}
                   onToggleFavorite={handleToggleFavorite}
+                  showScore={false} // Don't show score in favorites
                 />
               </Grid>
             ))}

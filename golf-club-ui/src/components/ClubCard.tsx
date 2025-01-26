@@ -257,16 +257,16 @@ const ClubCard: React.FC<ClubCardProps> = ({
           </Box>
         )}
 
-        {showScore && club.score !== undefined && (
+        {showScore && typeof club.score === 'number' && (
           <Typography 
             variant="body2" 
             sx={{ 
               mt: 2, 
-              color: (club.score || 0) >= 80 ? '#2E5A27' : 'primary.main',
+              color: club.score >= 80 ? '#2E5A27' : 'primary.main',
               fontWeight: 'medium'
             }}
           >
-            Match: {(club.score || 0).toFixed(1)}%
+            Match: {club.score.toFixed(1)}%
           </Typography>
         )}
       </CardContent>
