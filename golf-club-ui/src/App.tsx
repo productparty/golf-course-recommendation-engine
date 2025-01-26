@@ -1,33 +1,32 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
-import CreateAccount from './pages/CreateAccount/CreateAccount';
-import './App.css';
+import { ThemeProvider } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
+import { CircularProgress } from '@mui/material';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { supabase } from './lib/supabase'; // Update path if needed
+import { Analytics } from "@vercel/analytics/react";
+
+// Component imports
 import Header from './components/header';
 import Footer from './components/footer';
 import Home from './pages/Home/home';
-import FindClub from './pages/FindClub/FindClub';
-import RecommendClub from './pages/RecommendClub/RecommendClub';
-import SignUp from './pages/SignUp/signUp';
-import SubmitClub from './pages/SubmitClub/submitClub';
-import { ThemeProvider } from '@mui/material/styles';
-import CssBaseline from '@mui/material/CssBaseline';
-import LogIn from './pages/LogIn/LogIn';
-import GolferProfile from './pages/GolferProfile/GolferProfile';
-import NotFound from './pages/NotFound/NotFound';
-import CreateAccountSubmitted from './pages/CreateAccount/CreateAccountSubmitted';
-import PasswordResetRequest from './pages/PasswordResetRequest/PasswordResetRequest';
-import PasswordResetConfirm from './pages/PasswordResetConfirm/PasswordResetConfirm';
-import VerifyEmail from './pages/VerifyEmail/VerifyEmail';
-import { AuthProvider, useAuth } from './context/AuthContext';
-import { supabase } from './supabaseClient';
-import CreateAccountSuccessful from './pages/CreateAccount/CreateAccountSuccessful';
-import { Analytics } from "@vercel/analytics/react"
-import GolferProfileUpdated from './pages/GolferProfile/GolferProfileUpdated';
-import { CircularProgress } from '@mui/material';
-import ErrorBoundary from './components/ErrorBoundary';
 import FindClubUpdated from './pages/FindClub/FindClubUpdated';
 import RecommendClubUpdated from './pages/RecommendClub/RecommendClubUpdated';
+import SignUp from './pages/SignUp/signUp';
+import SubmitClub from './pages/SubmitClub/submitClub';
+import LogIn from './pages/LogIn/LogIn';
+import GolferProfileUpdated from './pages/GolferProfile/GolferProfileUpdated';
+import CreateAccount from './pages/CreateAccount/CreateAccount';
+import CreateAccountSubmitted from './pages/CreateAccount/CreateAccountSubmitted';
+import CreateAccountSuccessful from './pages/CreateAccount/CreateAccountSuccessful';
+import PasswordResetRequest from './pages/PasswordResetRequest/PasswordResetRequest';
+import PasswordResetConfirm from './pages/PasswordResetConfirm/PasswordResetConfirm';
+import ErrorBoundary from './components/ErrorBoundary';
 import theme from './theme';
+
+// Import styles
+import './App.css';
 
 const App: React.FC = () => {
   useEffect(() => {
@@ -39,43 +38,49 @@ const App: React.FC = () => {
   }, []);
 
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <AuthProvider>
-        <BrowserRouter>
-          <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-            <Header />
-            <main style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-              <div className="container" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                <Routes>
-                  <Route path="/" element={<Home />} />
-                  <Route path="/login" element={<LogIn />} />
-                  <Route path="/create-account" element={<CreateAccount />} />
-                  <Route path="/create-account-submitted" element={<CreateAccountSubmitted />} />
-                  <Route path="/verify-email" element={<CreateAccountSuccessful />} />
-                  <Route path="/password-reset" element={<PasswordResetRequest />} />
-                  <Route path="/password-reset-confirm" element={<PasswordResetConfirm />} />
-                  <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
-                  <Route path="/find-club" element={<ProtectedRoute><FindClubUpdated /></ProtectedRoute>} />
-                  <Route path="/recommend-club" element={<ProtectedRoute><RecommendClubUpdated /></ProtectedRoute>} />
-                  <Route path="/sign-up" element={<SignUp />} />
-                  <Route path="/submit-club" element={<ProtectedRoute><SubmitClub /></ProtectedRoute>} />
-                  <Route path="/golfer-profile" element={<ProtectedRoute><GolferProfileUpdated /></ProtectedRoute>} />
-                  <Route path="/reset-password" element={<PasswordResetRequest />} />
-                  <Route path="/reset-password/confirm" element={<PasswordResetConfirm />} />
-                  <Route path="*" element={<Navigate to="/" replace />} />
-                </Routes>
-              </div>
-            </main>
-            <Footer />
-            <Analytics />
-          </div>
-        </BrowserRouter>
-      </AuthProvider>
-    </ThemeProvider>
+    <ErrorBoundary>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <AuthProvider>
+          <BrowserRouter>
+            <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+              <Header />
+              <main style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                <div className="container" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                  <Routes>
+                    {/* Public routes */}
+                    <Route path="/" element={<Home />} />
+                    <Route path="/login" element={<LogIn />} />
+                    <Route path="/create-account" element={<CreateAccount />} />
+                    <Route path="/create-account-submitted" element={<CreateAccountSubmitted />} />
+                    <Route path="/verify-email" element={<CreateAccountSuccessful />} />
+                    <Route path="/password-reset" element={<PasswordResetRequest />} />
+                    <Route path="/password-reset-confirm" element={<PasswordResetConfirm />} />
+                    <Route path="/sign-up" element={<SignUp />} />
+
+                    {/* Protected routes */}
+                    <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+                    <Route path="/find-club" element={<ProtectedRoute><FindClubUpdated /></ProtectedRoute>} />
+                    <Route path="/recommend-club" element={<ProtectedRoute><RecommendClubUpdated /></ProtectedRoute>} />
+                    <Route path="/submit-club" element={<ProtectedRoute><SubmitClub /></ProtectedRoute>} />
+                    <Route path="/golfer-profile" element={<ProtectedRoute><GolferProfileUpdated /></ProtectedRoute>} />
+
+                    {/* Catch all route */}
+                    <Route path="*" element={<Navigate to="/" replace />} />
+                  </Routes>
+                </div>
+              </main>
+              <Footer />
+              <Analytics />
+            </div>
+          </BrowserRouter>
+        </AuthProvider>
+      </ThemeProvider>
+    </ErrorBoundary>
   );
 };
 
+// Protected Route Component
 const ProtectedRoute: React.FC<{ children: JSX.Element }> = ({ children }) => {
   const { session } = useAuth();
   
@@ -84,20 +89,6 @@ const ProtectedRoute: React.FC<{ children: JSX.Element }> = ({ children }) => {
   }
 
   return <>{children}</>;
-};
-
-const ProtectedProfileRoute = ({ children }: { children: React.ReactNode }) => {
-  const { session, loading } = useAuth();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (!loading && !session) {
-      navigate('/login');
-    }
-  }, [session, loading, navigate]);
-
-  if (loading) return <CircularProgress />;
-  return session ? <>{children}</> : null;
 };
 
 export default App;
