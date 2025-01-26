@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, Typography, Chip, Box, Divider, Grid, CircularProgress, Icon } from '@mui/material';
+import { Card, CardContent, Typography, Chip, Box, Divider, Grid, CircularProgress, Icon, FormControl, Select } from '@mui/material';
 import GolfCourseIcon from '@mui/icons-material/GolfCourse';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
@@ -156,10 +156,14 @@ const ClubCard: React.FC<ClubCardProps> = ({
           display: 'flex', 
           flexDirection: { xs: 'column-reverse', sm: 'row' },
           justifyContent: 'space-between',
-          alignItems: { xs: 'flex-end', sm: 'flex-start' },
+          alignItems: { xs: 'center', sm: 'flex-start' },
           mb: 2
         }}>
-          <Box sx={{ flex: 1, width: '100%' }}>
+          <Box sx={{ 
+            flex: 1, 
+            width: '100%',
+            textAlign: { xs: 'center', sm: 'left' }
+          }}>
             <Typography variant="h6" component="h2">
               {club.club_name}
             </Typography>
@@ -185,7 +189,12 @@ const ClubCard: React.FC<ClubCardProps> = ({
                 padding: '8px',
                 ml: { sm: 2 },
                 mb: { xs: 1, sm: 0 },
-                '& .MuiSvgIcon-root': { fontSize: '24px' }
+                width: 'fit-content',
+                minWidth: 'auto',
+                '& .MuiSvgIcon-root': { 
+                  fontSize: '24px',
+                  display: 'block'
+                }
               }}
             >
               {isFavorite ? <FavoriteIcon color="error" /> : <FavoriteBorderIcon />}
