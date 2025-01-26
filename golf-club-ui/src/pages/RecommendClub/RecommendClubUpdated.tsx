@@ -264,13 +264,24 @@ const RecommendClubUpdated: React.FC = () => {
           <Grid container spacing={2}>
             {getCurrentPageCourses().map((course) => (
               <Grid item xs={12} key={course.id}>
-                <ClubCard 
-                  club={course}
-                  showScore={true}
-                  isFavorite={favorites.includes(course.id)}
-                  onToggleFavorite={handleToggleFavorite}
-                  showToggle={true}
-                />
+                <Box
+                  sx={{
+                    backgroundColor: course.score >= 80 ? 'rgba(46, 90, 39, 0.05)' : 'transparent',
+                    borderRadius: 1,
+                    transition: 'background-color 0.2s ease',
+                    '&:hover': {
+                      backgroundColor: course.score >= 80 ? 'rgba(46, 90, 39, 0.08)' : 'rgba(0, 0, 0, 0.02)'
+                    }
+                  }}
+                >
+                  <ClubCard 
+                    club={course}
+                    showScore={true}
+                    isFavorite={favorites.includes(course.id)}
+                    onToggleFavorite={handleToggleFavorite}
+                    showToggle={true}
+                  />
+                </Box>
               </Grid>
             ))}
           </Grid>

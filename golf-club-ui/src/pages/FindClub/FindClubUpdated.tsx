@@ -344,7 +344,6 @@ const FindClubUpdated: React.FC<Props> = ({ className, ...rest }) => {
                       }
                     }
                   }}
-                  className="w-full rounded-lg focus:outline-none focus:border-blue-500"
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
@@ -373,31 +372,6 @@ const FindClubUpdated: React.FC<Props> = ({ className, ...rest }) => {
           <aside className="filters">
             <Typography variant="h6" gutterBottom>Filters</Typography>
             <Box sx={{ width: '100%' }}>
-              {/* Basic Search */}
-              <TextField
-                fullWidth
-                label="Zip Code"
-                value={filters.zipCode}
-                onChange={handleTextChange('zipCode')}
-                margin="normal"
-              />
-              
-              <FormControl fullWidth margin="normal">
-                <InputLabel>Search Radius</InputLabel>
-                <Select
-                  value={filters.radius}
-                  onChange={handleSelectChange('radius')}
-                  label="Search Radius"
-                >
-                  <MenuItem value="10">10 miles</MenuItem>
-                  <MenuItem value="25">25 miles</MenuItem>
-                  <MenuItem value="50">50 miles</MenuItem>
-                  <MenuItem value="100">100 miles</MenuItem>
-                </Select>
-              </FormControl>
-
-              <Divider sx={{ my: 2 }} />
-              
               {/* Course Info */}
               <Typography variant="subtitle1" gutterBottom>Course Info</Typography>
               <FormControl fullWidth margin="normal">

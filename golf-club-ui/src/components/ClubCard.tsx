@@ -158,6 +158,16 @@ const ClubCard: React.FC<ClubCardProps> = ({
               onClick={handleFavoriteClick}
               color="primary"
               disabled={isLoading}
+              sx={{ 
+                position: 'relative',
+                padding: { xs: '4px', sm: '8px' },
+                '& svg': {
+                  fontSize: { xs: '1.2rem', sm: '1.5rem' }
+                },
+                '&:hover': {
+                  backgroundColor: 'rgba(0, 0, 0, 0.04)'
+                }
+              }}
             >
               {isFavorite ? <FavoriteIcon color="error" /> : <FavoriteBorderIcon />}
             </IconButton>

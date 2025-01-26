@@ -101,21 +101,37 @@ const Header: React.FC = () => {
       }}
     >
       <Toolbar sx={{ justifyContent: 'space-between' }}>
-        <Typography 
-          variant="h6" 
-          component={Link} 
-          to="/"
-          sx={{ 
-            textDecoration: 'none', 
-            color: 'inherit',
-            fontWeight: 600,
-            '&:hover': {
-              opacity: 0.9
-            }
-          }}
-        >
-          Golf Club Finder
-        </Typography>
+        {/* Logo/Title */}
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          {session && (
+            <IconButton
+              color="inherit"
+              edge="start"
+              onClick={handleMobileMenuOpen}
+              sx={{ 
+                display: { xs: 'flex', md: 'none' },
+                mr: 2
+              }}
+            >
+              <MenuIcon />
+            </IconButton>
+          )}
+          <Typography 
+            variant="h6" 
+            component={Link} 
+            to="/"
+            sx={{ 
+              textDecoration: 'none', 
+              color: 'inherit',
+              fontWeight: 600,
+              '&:hover': {
+                opacity: 0.9
+              }
+            }}
+          >
+            Golf Club Finder
+          </Typography>
+        </Box>
 
         {session && (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -172,52 +188,6 @@ const Header: React.FC = () => {
                 </Typography>
               )}
             </IconButton>
-
-            {/* Mobile Menu Icon */}
-            <IconButton
-              color="inherit"
-              edge="end"
-              onClick={handleMobileMenuOpen}
-              sx={{ 
-                display: { xs: 'flex', md: 'none' },
-                ml: 1
-              }}
-            >
-              <MenuIcon />
-            </IconButton>
-
-            {/* Favorites Menu */}
-            <Menu
-              anchorEl={anchorEl}
-              open={Boolean(anchorEl)}
-              onClose={handleClose}
-              PaperProps={{
-                sx: {
-                  mt: 2,
-                  width: 250,
-                  maxHeight: 400
-                }
-              }}
-            >
-              <Typography variant="subtitle2" sx={{ px: 2, py: 1, color: 'text.secondary' }}>
-                Favorites
-              </Typography>
-              {favorites.length === 0 ? (
-                <MenuItem disabled>No favorites yet</MenuItem>
-              ) : (
-                favorites.map((favorite) => (
-                  <MenuItem 
-                    key={favorite.id}
-                    onClick={() => {
-                      navigate(`/club/${favorite.club_id}`);
-                      handleClose();
-                    }}
-                  >
-                    {favorite.clubs?.club_name || 'Unknown Club'}
-                  </MenuItem>
-                ))
-              )}
-            </Menu>
 
             {/* Mobile Navigation Menu */}
             <Menu
