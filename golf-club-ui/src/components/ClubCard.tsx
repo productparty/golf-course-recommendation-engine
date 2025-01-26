@@ -154,11 +154,12 @@ const ClubCard: React.FC<ClubCardProps> = ({
         {/* Top Section: Name, Address, Heart */}
         <Box sx={{ 
           display: 'flex', 
+          flexDirection: { xs: 'column-reverse', sm: 'row' },
           justifyContent: 'space-between',
-          alignItems: 'flex-start',
+          alignItems: { xs: 'flex-end', sm: 'flex-start' },
           mb: 2
         }}>
-          <Box sx={{ flex: 1 }}>
+          <Box sx={{ flex: 1, width: '100%' }}>
             <Typography variant="h6" component="h2">
               {club.club_name}
             </Typography>
@@ -182,7 +183,8 @@ const ClubCard: React.FC<ClubCardProps> = ({
               className="heart-button"
               sx={{
                 padding: '8px',
-                ml: 2,
+                ml: { sm: 2 },
+                mb: { xs: 1, sm: 0 },
                 '& .MuiSvgIcon-root': { fontSize: '24px' }
               }}
             >
