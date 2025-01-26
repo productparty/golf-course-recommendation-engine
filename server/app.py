@@ -1004,6 +1004,38 @@ async def search_clubs(
         logger.error(f"Error in search_clubs: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.get("/api/clubs/details/")
+async def get_club_details(
+    state: str,
+    zip_code: str,
+    name: str,
+    request: Request,
+    current_user: User = Depends(get_current_user)
+):
+    try:
+        # Normalize the search parameters
+        state = state.upper()
+        name = name.lower()
+
+        # Query the database
+        async with get_db_connection() as conn:
+            query = """
+                SELECT * FROM golfclub 
+                WHERE LOWER(state) = LOWER($1) 
+                AND zip_code = $2 
+                AND LOWER(club_name) = LOWER($3)
+            """
+            result = await conn.fetchrow(query, state, zip_code, name)
+
+            if not result:
+                raise HTTPException(status_code=404, detail="Club not found")
+
+            return dict(result)
+
+    except Exception as e:
+        logger.error(f"Error fetching club details: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch club details")
+
 if __name__ == "__main__":
     import uvicorn
     

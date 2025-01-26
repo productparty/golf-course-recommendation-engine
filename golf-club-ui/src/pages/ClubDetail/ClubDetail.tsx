@@ -1,45 +1,66 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Box, Typography, Button, CircularProgress, Paper, Grid } from '@mui/material';
+import { Box, Typography, Button, CircularProgress, Paper, Grid, Alert } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import { supabase } from '../../lib/supabase';
 import { InteractiveMap } from '../../components/InteractiveMap';
 import PageLayout from '../../components/PageLayout';
 import { Club } from 'types/Club';
+import { config } from '../../config';
+import { useAuth } from '../../context/AuthContext';
 
 type ClubDetail = Club;
 
 export const ClubDetail: React.FC = () => {
-    const { id } = useParams<{ id: string }>();
+    const { slug } = useParams<{ slug: string }>();
     const navigate = useNavigate();
     const [club, setClub] = useState<ClubDetail | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const { session } = useAuth();
 
     useEffect(() => {
         const fetchClubDetails = async () => {
-            if (!id) return;
-
             try {
-                const { data, error } = await supabase
-                    .from('golfclub')
-                    .select('*')
-                    .eq('id', id)
-                    .single();
+                setLoading(true);
+                setError(null);
 
-                if (error) throw error;
+                // Parse the slug to get state, zip, and name
+                const [state, zip, ...nameParts] = slug?.split('_') || [];
+                const clubName = nameParts.join('_').replace(/-/g, ' ');
+
+                if (!state || !zip || !clubName) {
+                    throw new Error('Invalid URL format');
+                }
+
+                const response = await fetch(
+                    `${config.API_URL}/api/clubs/details/?state=${state}&zip=${zip}&name=${encodeURIComponent(clubName)}`,
+                    {
+                        headers: {
+                            'Authorization': `Bearer ${session?.access_token}`
+                        }
+                    }
+                );
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch club details');
+                }
+
+                const data = await response.json();
                 setClub(data);
             } catch (err) {
-                setError(err instanceof Error ? err.message : 'Failed to fetch club details');
+                setError(err instanceof Error ? err.message : 'An error occurred');
+                console.error('Error fetching club details:', err);
             } finally {
                 setLoading(false);
             }
         };
 
-        fetchClubDetails();
-    }, [id]);
+        if (slug) {
+            fetchClubDetails();
+        }
+    }, [slug, session]);
 
     if (loading) {
         return (
@@ -55,10 +76,12 @@ export const ClubDetail: React.FC = () => {
         return (
             <PageLayout title="Error">
                 <Box sx={{ p: 3 }}>
-                    <Typography color="error">{error || 'Club not found'}</Typography>
-                    <Button startIcon={<ArrowBackIcon />} onClick={() => navigate(-1)}>
-                        Go Back
+                    <Button startIcon={<ArrowBackIcon />} onClick={() => navigate(-1)} sx={{ mb: 3 }}>
+                        Back to Search
                     </Button>
+                    <Alert severity="error" sx={{ mt: 2 }}>
+                        {error || 'Failed to load club details'}
+                    </Alert>
                 </Box>
             </PageLayout>
         );

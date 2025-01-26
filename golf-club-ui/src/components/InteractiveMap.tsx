@@ -9,6 +9,8 @@ interface Club {
     address: string;
     latitude?: number;
     longitude?: number;
+    state: string;
+    zip_code: string;
 }
 
 interface InteractiveMapProps {
@@ -65,7 +67,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({ clubs, center, r
                             closeButton: false,
                             maxWidth: '300px'
                         }).setHTML(`
-                            <div style="cursor: pointer" onclick="window.dispatchEvent(new CustomEvent('markerClick', { detail: '${club.id}' }))">
+                            <div style="cursor: pointer" onclick="window.dispatchEvent(new CustomEvent('markerClick', { detail: '${club.state.toLowerCase()}_${club.zip_code}_${club.club_name.toLowerCase().replace(/\s+/g, '-')}' }))">
                                 <h3 style="margin: 0 0 8px 0">${club.club_name}</h3>
                                 <p style="margin: 0">${club.address}</p>
                             </div>
@@ -84,9 +86,9 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({ clubs, center, r
         });
 
         // Add window event listener for popup clicks
-        const handleMarkerClick = (e: CustomEvent) => {
+        const handleMarkerClick = (event: CustomEvent) => {
             if (onMarkerClick) {
-                onMarkerClick(e.detail);
+                onMarkerClick(event.detail);
             }
         };
         window.addEventListener('markerClick', handleMarkerClick as EventListener);
