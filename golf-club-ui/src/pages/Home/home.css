@@ -29,3 +29,30 @@
   max-width: 1200px;
   margin-top: 0; /* Remove additional margin-top */
 }
+
+.zip-code-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  max-width: 400px;
+  margin-top: 2rem;
+}
+
+.zip-code-input {
+  padding: 1rem;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  width: 100%;
+}
+
+.highlighted {
+  background-color: rgba(0, 128, 0, 0.3);
+  border-radius: 5px;
+}
+
+/* Add conditional highlighting based on preferences */
+.preference-match {
+  background-color: #006400; /* Dark green */
+  color: white;
+}

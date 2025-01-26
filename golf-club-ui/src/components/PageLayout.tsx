@@ -1,6 +1,7 @@
-import React from 'react';
-import { Container, Typography, Box, Paper } from '@mui/material';
-import Header from './Header';
+import React, { useState } from 'react';
+import { Container, Typography, Box, Paper, Button, Dialog, DialogTitle, DialogContent, List, ListItem, ListItemText } from '@mui/material';
+import { useAuth } from '../context/AuthContext';
+import { supabase } from '../lib/supabase';
 
 interface PageLayoutProps {
   title: string;
@@ -8,37 +9,79 @@ interface PageLayoutProps {
 }
 
 const PageLayout: React.FC<PageLayoutProps> = ({ children, title }) => {
+  const [showFavorites, setShowFavorites] = useState(false);
+  const { session } = useAuth();
+  const [favorites, setFavorites] = useState<Array<{ id: string; club_name: string }>>([]);
+
+  const fetchFavorites = async () => {
+    if (!session?.user?.id) return;
+    
+    const { data, error } = await supabase
+      .from('favorites')
+      .select(`
+        id,
+        club_id,
+        clubs:clubs!inner(club_name)
+      `)
+      .eq('user_id', session.user.id);
+
+    if (error) {
+      console.error('Error fetching favorites:', error);
+      return;
+    }
+
+    setFavorites(data.map(item => ({
+      id: item.club_id,
+      club_name: item.clubs[0].club_name
+    })));
+  };
+
   return (
-    <>
-      <Header />
-      <div>
-        <Container maxWidth="lg" sx={{ py: 4 }}>
-          <Paper 
-            elevation={3} 
+    <div>
+      <Container maxWidth="lg" sx={{ py: 4 }}>
+        <Paper 
+          elevation={3} 
+          sx={{ 
+            p: 4,
+            mb: 4,
+            backgroundColor: 'background.paper',
+            borderRadius: 2
+          }}
+        >
+          <Typography 
+            variant="h5" 
+            component="h1" 
+            gutterBottom
             sx={{ 
-              p: 4,
-              mb: 4,
-              backgroundColor: 'background.paper',
-              borderRadius: 2
+              color: 'primary.main',
+              fontWeight: 'medium',
+              mb: 4
             }}
           >
-            <Typography 
-              variant="h5" 
-              component="h1" 
-              gutterBottom
-              sx={{ 
-                color: 'primary.main',
-                fontWeight: 'medium',
-                mb: 4
-              }}
-            >
-              {title}
-            </Typography>
-            {children}
-          </Paper>
-        </Container>
-      </div>
-    </>
+            {title}
+          </Typography>
+          {children}
+        </Paper>
+      </Container>
+
+      <Dialog 
+        open={showFavorites} 
+        onClose={() => setShowFavorites(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Your Favorite Clubs</DialogTitle>
+        <DialogContent>
+          <List>
+            {favorites.map((favorite) => (
+              <ListItem key={favorite.id}>
+                <ListItemText primary={favorite.club_name} />
+              </ListItem>
+            ))}
+          </List>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 };
 

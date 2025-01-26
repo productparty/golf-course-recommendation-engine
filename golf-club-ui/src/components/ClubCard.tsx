@@ -55,6 +55,7 @@ interface ClubCardProps {
   userPreferences?: Record<string, any>;
   isFavorite?: boolean;
   onToggleFavorite?: (clubId: string) => Promise<void>;
+  showToggle?: boolean;
 }
 
 const FeatureChip: React.FC<{ label: string; isMatch?: boolean }> = ({ label, isMatch = false }) => (
@@ -78,7 +79,8 @@ const ClubCard: React.FC<ClubCardProps> = ({
   showScore = false, 
   userPreferences,
   isFavorite = false,
-  onToggleFavorite 
+  onToggleFavorite,
+  showToggle = false
 }) => {
   const [weather, setWeather] = useState<WeatherData[]>([]);
   const [isLoadingWeather, setIsLoadingWeather] = useState(false);
@@ -151,7 +153,7 @@ const ClubCard: React.FC<ClubCardProps> = ({
           <Typography variant="h6" gutterBottom>
             {club.club_name}
           </Typography>
-          {onToggleFavorite && (
+          {showToggle && onToggleFavorite && (
             <IconButton 
               onClick={handleFavoriteClick}
               color="primary"

@@ -582,6 +582,7 @@ const FindClubUpdated: React.FC<Props> = ({ className, ...rest }) => {
                         club={club}
                         isFavorite={favorites.includes(club.id)}
                         onToggleFavorite={handleToggleFavorite}
+                        showToggle={true}
                       />
                     </Grid>
                   ))}

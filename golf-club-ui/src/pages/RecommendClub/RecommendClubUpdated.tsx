@@ -265,10 +265,11 @@ const RecommendClubUpdated: React.FC = () => {
             {getCurrentPageCourses().map((course) => (
               <Grid item xs={12} key={course.id}>
                 <ClubCard 
-                  club={course} 
+                  club={course}
                   showScore={true}
                   isFavorite={favorites.includes(course.id)}
                   onToggleFavorite={handleToggleFavorite}
+                  showToggle={true}
                 />
               </Grid>
             ))}
