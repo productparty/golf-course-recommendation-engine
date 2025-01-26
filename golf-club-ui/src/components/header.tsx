@@ -95,7 +95,6 @@ const Header: React.FC = () => {
   return (
     <AppBar position="static">
       <Toolbar>
-        {/* Logo/Brand - Always visible */}
         <Typography
           variant="h6"
           component={Link}
@@ -110,7 +109,7 @@ const Header: React.FC = () => {
         </Typography>
 
         {session && (
-          <Box>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
             {/* Desktop Navigation */}
             <Box sx={{ 
               display: { xs: 'none', md: 'flex' },
@@ -134,7 +133,6 @@ const Header: React.FC = () => {
                 </Button>
               ))}
               
-              {/* Desktop Favorites Button */}
               <Button
                 color="inherit"
                 onClick={handleMenu}
@@ -147,6 +145,19 @@ const Header: React.FC = () => {
                 }}
               >
                 Favorites {favorites.length > 0 && `(${favorites.length})`}
+              </Button>
+
+              <Button
+                color="inherit"
+                onClick={handleSignOut}
+                sx={{
+                  textTransform: 'none',
+                  '&:hover': {
+                    backgroundColor: 'rgba(255, 255, 255, 0.1)'
+                  }
+                }}
+              >
+                Sign Out
               </Button>
             </Box>
 

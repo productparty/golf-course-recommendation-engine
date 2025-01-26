@@ -319,59 +319,43 @@ const FindClubUpdated: React.FC<Props> = ({ className, ...rest }) => {
         component="div" 
         sx={{ className: `find-club ${className || ''}` }}
       >
-        <Card sx={{ 
-          mb: 3,
-          mx: { xs: -2, sm: 0 }
-        }}>
-          <CardContent>
-            <Grid container spacing={2} alignItems="flex-start">
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Zip Code"
-                  value={filters.zipCode}
-                  onChange={handleTextChange('zipCode')}
-                  placeholder="Enter ZIP code..."
-                  size="small"
-                  sx={{ 
-                    mt: 1,
-                    '& .MuiOutlinedInput-root': {
-                      '&:hover fieldset': {
-                        borderColor: 'primary.main',
-                      },
-                      '&.Mui-focused fieldset': {
-                        borderColor: 'primary.main',
-                      }
-                    }
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <FormControl fullWidth size="small" sx={{ mt: 1 }}>
-                  <InputLabel>Search Radius</InputLabel>
-                  <Select
-                    value={filters.radius}
-                    onChange={handleSelectChange('radius')}
-                    label="Search Radius"
-                  >
-                    <MenuItem value="10">10 miles</MenuItem>
-                    <MenuItem value="25">25 miles</MenuItem>
-                    <MenuItem value="50">50 miles</MenuItem>
-                    <MenuItem value="100">100 miles</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-            </Grid>
-          </CardContent>
-        </Card>
-
         <Typography variant="subtitle1" color="text.secondary" sx={{ mb: 4 }}>
           Search and filter golf clubs based on your preferences and location.
         </Typography>
+
         <div className="content">
           <aside className="filters">
             <Typography variant="h6" gutterBottom>Filters</Typography>
-            <Box sx={{ width: '100%' }}>
+            <Box sx={{ mb: 3 }}>
+              {/* Location Search */}
+              <Typography variant="subtitle1" gutterBottom>
+                Location
+              </Typography>
+              <TextField
+                fullWidth
+                label="Zip Code"
+                value={filters.zipCode}
+                onChange={handleTextChange('zipCode')}
+                placeholder="Enter ZIP code..."
+                size="small"
+                sx={{ mb: 2 }}
+              />
+              <FormControl fullWidth size="small">
+                <InputLabel>Search Radius</InputLabel>
+                <Select
+                  value={filters.radius}
+                  onChange={handleSelectChange('radius')}
+                  label="Search Radius"
+                >
+                  <MenuItem value="10">10 miles</MenuItem>
+                  <MenuItem value="25">25 miles</MenuItem>
+                  <MenuItem value="50">50 miles</MenuItem>
+                  <MenuItem value="100">100 miles</MenuItem>
+                </Select>
+              </FormControl>
+
+              <Divider sx={{ my: 2 }} />
+
               {/* Course Info */}
               <Typography variant="subtitle1" gutterBottom>Course Info</Typography>
               <FormControl fullWidth margin="normal">
