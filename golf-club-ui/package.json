@@ -15,9 +15,11 @@
     "@mui/icons-material": "^5.14.20",
     "@mui/material": "^5.14.20",
     "@supabase/supabase-js": "^2.47.16",
+    "@types/mapbox-gl": "^3.4.1",
     "axios": "^1.6.2",
     "framer-motion": "^10.16.4",
     "lodash.debounce": "^4.0.8",
+    "mapbox-gl": "^3.9.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.20.1"
