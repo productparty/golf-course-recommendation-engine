@@ -82,13 +82,16 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({ clubs, center, r
 
     // Add markers when clubs change
     useEffect(() => {
-        if (!map.current || !clubs || clubs.length === 0) return; // Check for valid clubs
+        if (!map.current || !clubs || clubs.length === 0) return;
 
         clearMarkers();
 
-        clubs.forEach((club, index) => {
-            if (club.latitude && club.longitude) {
-                const el = createNumberedMarker(index + 1);
+        const validClubs = clubs.filter(club => club.latitude !== undefined && club.longitude !== undefined);
+        if (validClubs.length === 0) return; // Exit if no valid clubs
+
+        validClubs.forEach((club, index) => {
+            const el = createNumberedMarker(index + 1);
+            if (club.longitude !== undefined && club.latitude !== undefined) {
                 const marker = new mapboxgl.Marker(el)
                     .setLngLat([club.longitude, club.latitude])
                     .setPopup(
@@ -115,10 +118,10 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({ clubs, center, r
         });
 
         // Fit bounds only if there are valid clubs
-        if (clubs.length > 0) {
+        if (validClubs.length > 0) {
             const bounds = new mapboxgl.LngLatBounds();
-            clubs.forEach((club) => {
-                if (club.latitude && club.longitude) {
+            validClubs.forEach((club) => {
+                if (club.longitude !== undefined && club.latitude !== undefined) {
                     bounds.extend([club.longitude, club.latitude]);
                 }
             });
