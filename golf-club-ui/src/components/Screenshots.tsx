@@ -1,25 +1,43 @@
 import React from 'react';
-import { Box, Typography } from '@mui/material';
+import { Box, Typography, Grid } from '@mui/material';
+import { motion } from 'framer-motion';
 
 interface ScreenshotProps {
   src: string;
   title: string;
   description: React.ReactNode;
-  align: 'left' | 'right';
+  align?: 'left' | 'right';
 }
 
-const Screenshot: React.FC<ScreenshotProps> = ({ src, title, description, align }) => {
+interface ScreenshotsProps {
+  screenshots: ScreenshotProps[];
+}
+
+const Screenshots: React.FC<ScreenshotsProps> = ({ screenshots }) => {
   return (
-    <Box sx={{ display: 'flex', flexDirection: align === 'left' ? 'row' : 'row-reverse', mb: 4 }}>
-      <Box sx={{ flex: 1 }}>
-        <img src={src} alt={title} style={{ width: '100%', borderRadius: '8px' }} />
-      </Box>
-      <Box sx={{ flex: 1, pl: 2 }}>
-        <Typography variant="h5" fontWeight="bold">{title}</Typography>
-        <Box>{description}</Box>
-      </Box>
-    </Box>
+    <Grid container spacing={4}>
+      {screenshots.map((screenshot, index) => (
+        <Grid item xs={12} md={6} key={index}>
+          <motion.div
+            initial={{ opacity: 0, x: screenshot.align === 'left' ? -50 : 50 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5 }}
+            viewport={{ once: true }}
+          >
+            <Box sx={{ display: 'flex', flexDirection: screenshot.align === 'left' ? 'row' : 'row-reverse', mb: 4 }}>
+              <Box sx={{ flex: 1 }}>
+                <img src={screenshot.src} alt={screenshot.title} style={{ width: '100%', borderRadius: '8px' }} />
+              </Box>
+              <Box sx={{ flex: 1, pl: 2 }}>
+                <Typography variant="h5" fontWeight="bold">{screenshot.title}</Typography>
+                <Box>{screenshot.description}</Box>
+              </Box>
+            </Box>
+          </motion.div>
+        </Grid>
+      ))}
+    </Grid>
   );
 };
 
-export default Screenshot;
+export default Screenshots;

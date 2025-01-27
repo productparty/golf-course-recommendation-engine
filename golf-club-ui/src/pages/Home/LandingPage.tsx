@@ -8,7 +8,7 @@ import RecommendIcon from '@mui/icons-material/Recommend';
 import StorageIcon from '@mui/icons-material/Storage';
 import AddLocationIcon from '@mui/icons-material/AddLocation';
 import StatisticBox from '../../components/StatisticBox';
-import Screenshot from '../../components/Screenshots';
+import Screenshots from '../../components/Screenshots';
 import { alpha } from '@mui/material/styles';
 
 const LandingPage = () => {
@@ -57,6 +57,55 @@ const LandingPage = () => {
     { number: '108', label: 'Data Points per Club', color: alpha('#D32F2F', 0.85) }
   ];
 
+  const screenshotData = [
+    {
+      src: '/find-club.jpeg',
+      title: 'Advanced Search & Filtering',
+      description: (
+        <Grid container spacing={4}>
+          <Grid item xs={12} md={6}>
+            <Typography variant="h6" fontWeight="bold">Location & Contact Details</Typography>
+            <ul style={{ paddingLeft: '16px', marginBottom: '16px' }}>
+              <li>Address and Directions</li>
+              <li>Phone Numbers</li>
+              <li>Operating Hours</li>
+              <li>Website Links</li>
+            </ul>
+            <Typography variant="h6" fontWeight="bold">Available Amenities</Typography>
+            <ul style={{ paddingLeft: '16px' }}>
+              <li>Practice Facilities</li>
+              <li>Pro Shop</li>
+              <li>Restaurant/Bar</li>
+              <li>Locker Rooms</li>
+            </ul>
+          </Grid>
+          {/* Add more details as needed */}
+        </Grid>
+      ),
+      align: 'left' as 'left' | 'right'
+    },
+    {
+      src: '/recommendations.jpg',
+      title: 'Comprehensive Course Data',
+      description: (
+        <Grid container spacing={4}>
+          {/* ... existing content ... */}
+        </Grid>
+      ),
+      align: 'right' as 'left' | 'right'
+    },
+    {
+      src: '/submit-club.jpg',
+      title: 'Easy Club Management',
+      description: (
+        <Grid container spacing={4}>
+          {/* ... existing content ... */}
+        </Grid>
+      ),
+      align: 'left' as 'left' | 'right'
+    },
+  ];
+
   return (
     <Container maxWidth="xl" sx={{ minHeight: '100vh', p: 0 }}>
       {/* Hero Section with Background Image */}
@@ -91,21 +140,22 @@ const LandingPage = () => {
             <Typography 
               variant="h1" 
               sx={{ 
-                fontSize: { xs: '2.5rem', sm: '4rem', md: '5rem' }, 
-                mb: 4,
+                fontSize: { xs: '2rem', sm: '3rem', md: '4rem' }, 
+                mb: 3,
                 textShadow: '2px 2px 4px rgba(0,0,0,0.3)'
               }}
             >
-              Find Your Perfect Golf Experience
+              Your Personalized Golf Experience
             </Typography>
             <Typography 
               variant="h5" 
               sx={{ 
-                mb: 6, 
+                mb: 4,
+                fontSize: { xs: '1rem', sm: '1.25rem', md: '1.5rem' },
                 textShadow: '1px 1px 2px rgba(0,0,0,0.3)'
               }}
             >
-              Your one-stop destination for discovering and managing golf courses across the U.S.
+              Discover and manage golf courses tailored to your preferences
             </Typography>
             <Box display="flex" gap={2} justifyContent="center">
               <Button
@@ -176,9 +226,7 @@ const LandingPage = () => {
       {/* Statistics Section with Updated Colors */}
       <Box sx={{ 
         py: 8,
-        backgroundImage: 'url(/statistics-bg.jpg)',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
+        backgroundColor: '#f5f5f5',
         position: 'relative',
         '&::before': {
           content: '""',
@@ -187,12 +235,12 @@ const LandingPage = () => {
           left: 0,
           right: 0,
           bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.7)',
+          backgroundColor: 'rgba(255, 255, 255, 0.8)',
           zIndex: 1
         }
       }}>
         <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 2 }}>
-          <Typography variant="h3" textAlign="center" gutterBottom sx={{ color: 'white', mb: 6 }}>
+          <Typography variant="h3" textAlign="center" gutterBottom sx={{ color: 'black', mb: 6 }}>
             Unmatched Database
           </Typography>
           <Grid container spacing={4}>
@@ -203,7 +251,11 @@ const LandingPage = () => {
                   animate={{ opacity: isLoaded ? 1 : 0, scale: isLoaded ? 1 : 0.9 }}
                   transition={{ duration: 0.5, delay: index * 0.1 }}
                 >
-                  <StatisticBox {...stat} />
+                  <StatisticBox 
+                    number={stat.number} 
+                    label={stat.label} 
+                    color="#333"
+                  />
                 </motion.div>
               </Grid>
             ))}
@@ -212,14 +264,38 @@ const LandingPage = () => {
       </Box>
 
       {/* Minimized CTA Section */}
-      <Box sx={{ py: 4, bgcolor: theme.palette.primary.main, color: 'white' }}>
-        <Container maxWidth="sm" sx={{ textAlign: 'center' }}>
-          <Typography variant="h6" sx={{ mb: 2 }}>
+      <Box 
+        sx={{ 
+          py: 1,
+          bgcolor: theme.palette.primary.main,
+          color: 'white',
+          display: 'flex',
+          alignItems: 'center',
+          minHeight: '64px'
+        }}
+      >
+        <Container 
+          maxWidth="sm" 
+          sx={{ 
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 2
+          }}
+        >
+          <Typography 
+            variant="body1" 
+            sx={{ 
+              m: 0,
+              fontSize: '1rem',
+              fontWeight: 500
+            }}
+          >
             Ready to find your perfect round?
           </Typography>
           <Button
             variant="contained"
-            size="large"
+            size="medium"
             onClick={() => navigate('/create-account')}
             sx={{
               bgcolor: 'white',
@@ -233,6 +309,8 @@ const LandingPage = () => {
           </Button>
         </Container>
       </Box>
+
+      <Screenshots screenshots={screenshotData} />
     </Container>
   );
 };
