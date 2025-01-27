@@ -39,6 +39,15 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({ clubs, center, r
             zoom: 4
         });
 
+        // Add zoom and rotation controls to the map.
+        map.current.addControl(new mapboxgl.NavigationControl());
+
+        // Display zoom level
+        map.current.on('zoom', () => {
+            const zoomLevel = map.current?.getZoom().toFixed(2);
+            console.log(`Current Zoom Level: ${zoomLevel}`);
+        });
+
         // Cleanup
         return () => {
             if (map.current) {

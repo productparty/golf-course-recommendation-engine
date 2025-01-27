@@ -14,6 +14,7 @@ import { SvgIcon } from '@mui/material';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import IconButton from '@mui/material/IconButton';
+import { Link } from 'react-router-dom';
 
 interface WeatherData {
   date: string;
@@ -64,11 +65,10 @@ interface WeatherResponse {
 
 interface ClubCardProps {
   club: Club;
-  showScore?: boolean;
-  userPreferences?: Record<string, any>;
-  isFavorite?: boolean;
-  showToggle?: boolean;
-  onToggleFavorite?: (clubId: string) => void;
+  index: number;
+  isFavorite: boolean;
+  onToggleFavorite: (clubId: string) => void;
+  showToggle: boolean;
 }
 
 const FeatureChip: React.FC<{ label: string; isMatch?: boolean }> = ({ label, isMatch = false }) => (
@@ -113,14 +113,7 @@ const getWeatherIcon = (weatherCode: number) => {
   }
 };
 
-const ClubCard: React.FC<ClubCardProps> = ({
-  club,
-  showScore = false,
-  userPreferences,
-  isFavorite = false,
-  showToggle = false,
-  onToggleFavorite
-}) => {
+const ClubCard: React.FC<ClubCardProps> = ({ club, index, isFavorite, onToggleFavorite, showToggle }) => {
   const [weather, setWeather] = useState<WeatherData[]>([]);
   const [isLoadingWeather, setIsLoadingWeather] = useState(false);
 
@@ -151,56 +144,37 @@ const ClubCard: React.FC<ClubCardProps> = ({
   return (
     <Card sx={{ mb: 2, position: 'relative' }}>
       <CardContent>
-        {/* Top Section: Name, Address, Heart */}
-        <Box sx={{ 
-          display: 'flex', 
-          flexDirection: { xs: 'column-reverse', sm: 'row' },
-          justifyContent: 'space-between',
-          alignItems: { xs: 'center', sm: 'flex-start' },
-          mb: 2
-        }}>
-          <Box sx={{ 
-            flex: 1, 
-            width: '100%',
-            textAlign: { xs: 'center', sm: 'left' }
-          }}>
-            <Typography variant="h6" component="h2">
-              {club.club_name}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {club.address}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {club.city}, {club.state} {club.zip_code}
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-              Distance: {typeof club.distance_miles === 'number' ? club.distance_miles.toFixed(1) : 'N/A'} miles
-            </Typography>
-          </Box>
+        <Link to={`/clubs/${club.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+          <Typography variant="h6">
+            {index + 1}. {club.club_name}
+          </Typography>
+        </Link>
+        <Typography variant="body2">{club.address}</Typography>
+        <Typography variant="body2">{club.city}, {club.state} {club.zip_code}</Typography>
+        <Typography variant="body2">Distance: {typeof club.distance_miles === 'number' ? club.distance_miles.toFixed(1) : 'N/A'} miles</Typography>
 
-          {showToggle && onToggleFavorite && (
-            <IconButton
-              onClick={(e) => {
-                e.preventDefault();
-                onToggleFavorite(club.id);
-              }}
-              className="heart-button"
-              sx={{
-                padding: '8px',
-                ml: { sm: 2 },
-                mb: { xs: 1, sm: 0 },
-                width: 'fit-content',
-                minWidth: 'auto',
-                '& .MuiSvgIcon-root': { 
-                  fontSize: '24px',
-                  display: 'block'
-                }
-              }}
-            >
-              {isFavorite ? <FavoriteIcon color="error" /> : <FavoriteBorderIcon />}
-            </IconButton>
-          )}
-        </Box>
+        {showToggle && onToggleFavorite && (
+          <IconButton
+            onClick={(e) => {
+              e.preventDefault();
+              onToggleFavorite(club.id);
+            }}
+            className="heart-button"
+            sx={{
+              padding: '8px',
+              ml: { sm: 2 },
+              mb: { xs: 1, sm: 0 },
+              width: 'fit-content',
+              minWidth: 'auto',
+              '& .MuiSvgIcon-root': { 
+                fontSize: '24px',
+                display: 'block'
+              }
+            }}
+          >
+            {isFavorite ? <FavoriteIcon color="error" /> : <FavoriteBorderIcon />}
+          </IconButton>
+        )}
 
         {/* Club Attributes Section */}
         <Box sx={{ mb: 2 }}>
@@ -257,7 +231,7 @@ const ClubCard: React.FC<ClubCardProps> = ({
           </Box>
         )}
 
-        {showScore && typeof club.score === 'number' && (
+        {typeof club.score === 'number' && (
           <Typography 
             variant="body2" 
             sx={{ 
