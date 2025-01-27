@@ -120,6 +120,8 @@ const LandingPage = () => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
+          flexDirection: 'column',
+          textAlign: 'center',
           '&::before': {
             content: '""',
             position: 'absolute',
@@ -282,7 +284,8 @@ const LandingPage = () => {
           sx={{ 
             m: 0,
             fontSize: '1rem',
-            fontWeight: 500
+            fontWeight: 500,
+            textAlign: 'center'
           }}
         >
           Ready to find your perfect round?
@@ -302,8 +305,6 @@ const LandingPage = () => {
           Get Started Now
         </Button>
       </Box>
-
-      <Screenshots screenshots={screenshotData} />
     </Container>
   );
 };
