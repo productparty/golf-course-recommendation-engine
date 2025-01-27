@@ -8,6 +8,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { useMap } from '../hooks/useMap';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
+import { InteractiveMap } from './InteractiveMap';
 
 interface Club {
     id: string;
@@ -20,7 +21,7 @@ interface Club {
     price_tier: string;
     difficulty: string;
     number_of_holes: string;
-    membership_type?: string; // Changed from club_membership to match database
+    club_membership: string;
     driving_range: boolean;
     putting_green: boolean;
     chipping_green: boolean;
@@ -126,7 +127,7 @@ export const ClubDetailPage = () => {
                         price_tier,
                         difficulty,
                         number_of_holes,
-                        membership_type,
+                        club_membership,
                         driving_range,
                         putting_green,
                         chipping_green,
@@ -147,7 +148,10 @@ export const ClubDetailPage = () => {
                 if (error) throw error;
                 if (!data) throw new Error('Club not found');
                 
-                setClub(data);
+                setClub({
+                    id: data.global_id,
+                    ...data
+                });
             } catch (err: any) {
                 setError(err.message);
                 console.error('Error fetching club:', err);
@@ -186,7 +190,17 @@ export const ClubDetailPage = () => {
                 )}
             </Box>
 
-            <Box ref={setMapContainer} sx={{ height: '400px', mb: 3, borderRadius: 1 }} />
+            <Box sx={{ height: '400px', mb: 3, borderRadius: 1 }}>
+                <InteractiveMap
+                    clubs={[club]}
+                    center={[club.longitude || 0, club.latitude || 0]}
+                    radius={500}
+                    initialZoom={16}
+                    onMarkerClick={(clubId) => {
+                        // Handle marker click if needed
+                    }}
+                />
+            </Box>
 
             <Box sx={{ display: 'grid', gap: 3 }}>
                 <Box>
@@ -200,8 +214,8 @@ export const ClubDetailPage = () => {
                     <Typography>Price Tier: {club.price_tier}</Typography>
                     <Typography>Difficulty: {club.difficulty}</Typography>
                     <Typography>Number of Holes: {club.number_of_holes}</Typography>
-                    {club.membership_type && (
-                        <Typography>Membership: {club.membership_type}</Typography>
+                    {club.club_membership && (
+                        <Typography>Membership: {club.club_membership}</Typography>
                     )}
                 </Box>
 

@@ -1,6 +1,7 @@
 // components/InteractiveMap.tsx
 import React, { useEffect, useRef } from 'react';
 import mapboxgl from 'mapbox-gl';
+import 'mapbox-gl/dist/mapbox-gl.css';
 import { Box } from '@mui/material';
 
 interface Club {
@@ -15,10 +16,11 @@ interface Club {
 
 interface InteractiveMapProps {
     clubs: Club[];
-    center?: [number, number];
-    radius?: number;
-    onMapClick?: (longitude: number, latitude: number) => void;
+    center: [number, number];
+    radius: number;
+    onMapClick?: (lngLat: [number, number]) => void;
     onMarkerClick?: (clubId: string) => void;
+    initialZoom?: number;
 }
 
 // Create a custom HTML element for each marker
@@ -38,100 +40,159 @@ function createNumberedMarker(number: number) {
   return el;
 }
 
-export const InteractiveMap: React.FC<InteractiveMapProps> = ({ clubs, center, radius, onMapClick, onMarkerClick }) => {
+export const InteractiveMap: React.FC<InteractiveMapProps> = ({ 
+  clubs, 
+  center, 
+  radius, 
+  onMapClick, 
+  onMarkerClick,
+  initialZoom = 16 
+}) => {
     const mapContainer = useRef<HTMLDivElement>(null);
     const map = useRef<mapboxgl.Map | null>(null);
-    const markersRef = useRef<mapboxgl.Marker[]>([]);
 
     useEffect(() => {
         if (!mapContainer.current) return;
 
-        // Initialize map
-        mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
-        
-        map.current = new mapboxgl.Map({
-            container: mapContainer.current,
-            style: 'mapbox://styles/mapbox/streets-v12',
-            center: center || [-98.5795, 39.8283], // Default to US center
-            zoom: 4
-        });
+        // Filter out clubs without valid coordinates
+        const validClubs = clubs.filter(club => 
+            club.latitude != null && 
+            club.longitude != null && 
+            !isNaN(club.latitude) && 
+            !isNaN(club.longitude)
+        );
 
-        // Add zoom and rotation controls to the map.
-        map.current.addControl(new mapboxgl.NavigationControl());
+        if (validClubs.length === 0) {
+            console.warn('No valid club coordinates found');
+        }
 
-        // Display zoom level
-        map.current.on('zoom', () => {
-            const zoomLevel = map.current?.getZoom().toFixed(2);
-            console.log(`Current Zoom Level: ${zoomLevel}`);
-        });
+        // Initialize map if it doesn't exist
+        if (!map.current) {
+            map.current = new mapboxgl.Map({
+                container: mapContainer.current,
+                style: 'mapbox://styles/mapbox/outdoors-v12', // Terrain-friendly style
+                center: center,
+                zoom: initialZoom,
+                pitch: 45,
+                bearing: 0,
+            });
 
-        // Cleanup
-        return () => {
-            if (map.current) {
-                map.current.remove();
-                map.current = null; // Ensure map is set to null after removal
-            }
-        };
-    }, [center]);
+            // Add terrain and sky layers
+            map.current.on('load', () => {
+                map.current!.addSource('mapbox-dem', {
+                    'type': 'raster-dem',
+                    'url': 'mapbox://mapbox.mapbox-terrain-dem-v1',
+                    'tileSize': 512,
+                    'maxzoom': 14
+                });
 
-    // Clear markers helper
-    const clearMarkers = () => {
-        markersRef.current.forEach(marker => marker.remove());
-        markersRef.current = [];
-    };
+                map.current!.setTerrain({ 
+                    'source': 'mapbox-dem',
+                    'exaggeration': 1.5 
+                });
 
-    // Add markers when clubs change
-    useEffect(() => {
-        if (!map.current || !clubs || clubs.length === 0) return;
-
-        clearMarkers();
-
-        const validClubs = clubs.filter(club => club.latitude !== undefined && club.longitude !== undefined);
-        if (validClubs.length === 0) return; // Exit if no valid clubs
-
-        validClubs.forEach((club, index) => {
-            const el = createNumberedMarker(index + 1);
-            if (club.longitude !== undefined && club.latitude !== undefined) {
-                const marker = new mapboxgl.Marker(el)
-                    .setLngLat([club.longitude, club.latitude])
-                    .setPopup(
-                        new mapboxgl.Popup({
-                            closeButton: false,
-                            maxWidth: '300px'
-                        }).setHTML(`
-                            <div style="cursor: pointer">
-                                <h3 style="margin: 0 0 8px 0">${index + 1}. ${club.club_name}</h3>
-                                <p style="margin: 0">${club.address}</p>
-                            </div>
-                        `)
-                    )
-                    .addTo(map.current!);
-
-                marker.getElement().addEventListener('click', () => {
-                    if (onMarkerClick) {
-                        onMarkerClick(club.id);
+                map.current!.addLayer({
+                    'id': 'sky',
+                    'type': 'sky',
+                    'paint': {
+                        'sky-type': 'atmosphere',
+                        'sky-atmosphere-sun': [0.0, 90.0],
+                        'sky-atmosphere-sun-intensity': 15
                     }
                 });
 
-                markersRef.current.push(marker);
-            }
-        });
+                // Add clubs source
+                map.current!.addSource('clubs', {
+                    type: 'geojson',
+                    data: {
+                        type: 'FeatureCollection',
+                        features: validClubs.map(club => ({
+                            type: 'Feature',
+                            geometry: {
+                                type: 'Point',
+                                coordinates: [club.longitude!, club.latitude!]
+                            },
+                            properties: {
+                                id: club.id,
+                                name: club.club_name,
+                                address: club.address
+                            }
+                        }))
+                    },
+                    cluster: true,
+                    clusterMaxZoom: 14,
+                    clusterRadius: 50
+                });
 
-        // Fit bounds only if there are valid clubs
-        if (validClubs.length > 0) {
-            const bounds = new mapboxgl.LngLatBounds();
-            validClubs.forEach((club) => {
-                if (club.longitude !== undefined && club.latitude !== undefined) {
-                    bounds.extend([club.longitude, club.latitude]);
-                }
+                // Add cluster layers
+                map.current!.addLayer({
+                    id: 'clusters',
+                    type: 'circle',
+                    source: 'clubs',
+                    filter: ['has', 'point_count'],
+                    paint: {
+                        'circle-color': [
+                            'step',
+                            ['get', 'point_count'],
+                            '#51bbd6',
+                            10,
+                            '#f1f075',
+                            30,
+                            '#f28cb1'
+                        ],
+                        'circle-radius': [
+                            'step',
+                            ['get', 'point_count'],
+                            20,
+                            10,
+                            30,
+                            30,
+                            40
+                        ]
+                    }
+                });
+
+                // Add individual markers
+                map.current!.addLayer({
+                    id: 'unclustered-point',
+                    type: 'circle',
+                    source: 'clubs',
+                    filter: ['!', ['has', 'point_count']],
+                    paint: {
+                        'circle-color': '#11b4da',
+                        'circle-radius': 8,
+                        'circle-stroke-width': 1,
+                        'circle-stroke-color': '#fff'
+                    }
+                });
+
+                // Add club labels
+                map.current!.addLayer({
+                    id: 'club-labels',
+                    type: 'symbol',
+                    source: 'clubs',
+                    filter: ['!', ['has', 'point_count']],
+                    layout: {
+                        'text-field': ['get', 'name'],
+                        'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
+                        'text-size': 12,
+                        'text-offset': [0, 1.5],
+                        'text-anchor': 'top'
+                    },
+                    paint: {
+                        'text-halo-color': '#fff',
+                        'text-halo-width': 1
+                    }
+                });
             });
-            map.current.fitBounds(bounds, { padding: 50 });
         }
 
-        map.current.on('load', () => {
-            map.current!.addSource('clubs', {
-                type: 'geojson',
-                data: {
+        // Update map center and source data when props change
+        if (map.current) {
+            map.current.setCenter(center);
+            const source = map.current.getSource('clubs') as mapboxgl.GeoJSONSource;
+            if (source) {
+                source.setData({
                     type: 'FeatureCollection',
                     features: validClubs.map(club => ({
                         type: 'Feature',
@@ -141,73 +202,27 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({ clubs, center, r
                         },
                         properties: {
                             id: club.id,
-                            name: club.club_name
+                            name: club.club_name,
+                            address: club.address
                         }
                     }))
-                },
-                cluster: true,
-                clusterMaxZoom: 14, // Max zoom to cluster points on
-                clusterRadius: 50 // Radius of each cluster when clustering points
-            });
-
-            map.current!.addLayer({
-                id: 'clusters',
-                type: 'circle',
-                source: 'clubs',
-                filter: ['has', 'point_count'],
-                paint: {
-                    'circle-color': '#51bbd6',
-                    'circle-radius': 20
-                }
-            });
-
-            map.current!.addLayer({
-                id: 'cluster-count',
-                type: 'symbol',
-                source: 'clubs',
-                filter: ['has', 'point_count'],
-                layout: {
-                    'text-field': '{point_count_abbreviated}',
-                    'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
-                    'text-size': 12
-                }
-            });
-
-            map.current!.addLayer({
-                id: 'unclustered-point',
-                type: 'circle',
-                source: 'clubs',
-                filter: ['!', ['has', 'point_count']],
-                paint: {
-                    'circle-color': '#11b4da',
-                    'circle-radius': 8
-                }
-            });
-        });
-    }, [clubs, onMarkerClick]);
-
-    // Add click handler
-    useEffect(() => {
-        if (!map.current) return;
-
-        const handleClick = (e: mapboxgl.MapMouseEvent) => {
-            if (onMapClick) {
-                onMapClick(e.lngLat.lng, e.lngLat.lat);
+                });
             }
-        };
-
-        map.current.on('click', handleClick);
+        }
 
         return () => {
-            map.current?.off('click', handleClick);
+            if (map.current) {
+                map.current.remove();
+                map.current = null;
+            }
         };
-    }, [onMapClick]);
+    }, [clubs, center, radius, initialZoom]);
 
     return (
         <Box
             ref={mapContainer}
             sx={{
-                height: '30vh',
+                height: '400px',
                 width: '100%',
                 borderRadius: 1,
                 overflow: 'hidden',
