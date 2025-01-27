@@ -7,6 +7,7 @@ import MenuIcon from '@mui/icons-material/Menu';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import { supabase } from '../lib/supabase';
 import { useFavorites } from '../context/FavoritesContext';
+import { Link as RouterLink } from 'react-router-dom';
 
 interface GolfClub {
   club_name: string;
