@@ -67,8 +67,9 @@ interface ClubCardProps {
   club: Club;
   index: number;
   isFavorite: boolean;
-  onToggleFavorite: (clubId: string) => void;
+  onToggleFavorite: (clubId: string) => Promise<void>;
   showToggle: boolean;
+  showScore: boolean;
 }
 
 const FeatureChip: React.FC<{ label: string; isMatch?: boolean }> = ({ label, isMatch = false }) => (

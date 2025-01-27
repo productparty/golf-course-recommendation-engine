@@ -282,7 +282,7 @@ const RecommendClubUpdated: React.FC = () => {
           <Grid container spacing={2}>
             {courses
               .slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
-              .map((club) => (
+              .map((club, index) => (
                 <Grid item xs={12} key={club.id}>
                   <Box
                     sx={{
@@ -300,6 +300,7 @@ const RecommendClubUpdated: React.FC = () => {
                       isFavorite={favorites.includes(club.id)}
                       onToggleFavorite={handleToggleFavorite}
                       showToggle={true}
+                      index={index}
                     />
                   </Box>
                 </Grid>

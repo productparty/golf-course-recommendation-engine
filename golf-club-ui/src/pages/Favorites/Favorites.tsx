@@ -111,7 +111,7 @@ const Favorites: React.FC = () => {
         ) : (
           <>
             <Grid container spacing={2}>
-              {getCurrentPageFavorites().map((favorite) => (
+              {getCurrentPageFavorites().map((favorite, index) => (
                 <Grid item xs={12} key={favorite.id}>
                   <ClubCard
                     club={{
@@ -121,7 +121,8 @@ const Favorites: React.FC = () => {
                     isFavorite={true}
                     showToggle={true}
                     onToggleFavorite={handleToggleFavorite}
-                    showScore={false}
+                    showScore={true}
+                    index={index}
                   />
                 </Grid>
               ))}
