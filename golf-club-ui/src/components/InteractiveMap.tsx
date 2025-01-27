@@ -21,6 +21,23 @@ interface InteractiveMapProps {
     onMarkerClick?: (clubId: string) => void;
 }
 
+// Create a custom HTML element for each marker
+function createNumberedMarker(number: number) {
+  const el = document.createElement('div');
+  el.className = 'custom-marker';
+  el.innerHTML = `<span>${number}</span>`;
+  el.style.backgroundColor = '#3FB1CE';
+  el.style.width = '30px';
+  el.style.height = '30px';
+  el.style.borderRadius = '50%';
+  el.style.display = 'flex';
+  el.style.justifyContent = 'center';
+  el.style.alignItems = 'center';
+  el.style.color = 'white';
+  el.style.fontWeight = 'bold';
+  return el;
+}
+
 export const InteractiveMap: React.FC<InteractiveMapProps> = ({ clubs, center, radius, onMapClick, onMarkerClick }) => {
     const mapContainer = useRef<HTMLDivElement>(null);
     const map = useRef<mapboxgl.Map | null>(null);
@@ -65,29 +82,27 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({ clubs, center, r
 
     // Add markers when clubs change
     useEffect(() => {
-        if (!map.current || !clubs) return;
+        if (!map.current || !clubs || clubs.length === 0) return; // Check for valid clubs
 
         clearMarkers();
 
         clubs.forEach((club, index) => {
             if (club.latitude && club.longitude) {
-                const marker = new mapboxgl.Marker({
-                    element: createMarkerElement(club),
-                    anchor: 'bottom'
-                })
-                .setLngLat([club.longitude, club.latitude])
-                .setPopup(
-                    new mapboxgl.Popup({
-                        closeButton: false,
-                        maxWidth: '300px'
-                    }).setHTML(`
-                        <div style="cursor: pointer">
-                            <h3 style="margin: 0 0 8px 0">${index + 1}. ${club.club_name}</h3>
-                            <p style="margin: 0">${club.address}</p>
-                        </div>
-                    `)
-                )
-                .addTo(map.current!);
+                const el = createNumberedMarker(index + 1);
+                const marker = new mapboxgl.Marker(el)
+                    .setLngLat([club.longitude, club.latitude])
+                    .setPopup(
+                        new mapboxgl.Popup({
+                            closeButton: false,
+                            maxWidth: '300px'
+                        }).setHTML(`
+                            <div style="cursor: pointer">
+                                <h3 style="margin: 0 0 8px 0">${index + 1}. ${club.club_name}</h3>
+                                <p style="margin: 0">${club.address}</p>
+                            </div>
+                        `)
+                    )
+                    .addTo(map.current!);
 
                 marker.getElement().addEventListener('click', () => {
                     if (onMarkerClick) {
@@ -99,7 +114,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({ clubs, center, r
             }
         });
 
-        // Fit bounds if we have clubs
+        // Fit bounds only if there are valid clubs
         if (clubs.length > 0) {
             const bounds = new mapboxgl.LngLatBounds();
             clubs.forEach((club) => {
@@ -127,14 +142,6 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({ clubs, center, r
             map.current?.off('click', handleClick);
         };
     }, [onMapClick]);
-
-    // Create custom marker elements
-    const createMarkerElement = (club: Club) => {
-        const el = document.createElement('div');
-        el.className = 'marker';
-        el.innerHTML = '📍'; // You can use any icon or text here
-        return el;
-    };
 
     return (
         <Box

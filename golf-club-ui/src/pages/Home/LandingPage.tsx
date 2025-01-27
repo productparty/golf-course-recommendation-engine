@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from 'react';
 import { Container, Typography, Box, Button, Grid, Paper, Divider } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { commonStyles } from '../../styles/commonStyles';
@@ -7,365 +8,404 @@ import SearchIcon from '@mui/icons-material/Search';
 import RecommendIcon from '@mui/icons-material/Recommend';
 import StorageIcon from '@mui/icons-material/Storage';
 import AddLocationIcon from '@mui/icons-material/AddLocation';
-
-const Screenshot = ({ src, title, description, align = 'left' }: any) => (
-  <motion.div
-    initial={{ opacity: 0, x: align === 'left' ? -50 : 50 }}
-    whileInView={{ opacity: 1, x: 0 }}
-    transition={{ duration: 0.5 }}
-    viewport={{ once: true }}
-  >
-    <Box sx={{ 
-      display: 'flex', 
-      flexDirection: { xs: 'column', md: align === 'left' ? 'row' : 'row-reverse' },
-      alignItems: 'center',
-      gap: 4,
-      mb: 8 
-    }}>
-      <Box sx={{ flex: 1 }}>
-        <Typography variant="h4" gutterBottom color="primary">
-          {title}
-        </Typography>
-        <Typography variant="body1" sx={{ mb: 3 }}>
-          {description}
-        </Typography>
-      </Box>
-      <Box sx={{ 
-        flex: 1,
-        '& img': {
-          width: '100%',
-          borderRadius: 2,
-          boxShadow: 3,
-          transition: 'transform 0.3s ease-in-out',
-          '&:hover': {
-            transform: 'scale(1.02)',
-          }
-        }
-      }}>
-        <img src={src} alt={title} />
-      </Box>
-    </Box>
-  </motion.div>
-);
-
-const StatisticBox = ({ number, label }: { number: string; label: string }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    whileInView={{ opacity: 1, y: 0 }}
-    transition={{ duration: 0.5 }}
-    viewport={{ once: true }}
-  >
-    <Box sx={{ textAlign: 'center', p: 2 }}>
-      <Typography 
-        variant="h3" 
-        sx={{ 
-          fontWeight: 'bold',
-          color: 'primary.main',
-          mb: 1 
-        }}
-      >
-        {number}
-      </Typography>
-      <Typography variant="subtitle1" color="text.secondary">
-        {label}
-      </Typography>
-    </Box>
-  </motion.div>
-);
+import StatisticBox from '../../components/StatisticBox';
+import Screenshot from '../../components/Screenshots';
 
 const LandingPage = () => {
   const navigate = useNavigate();
   const theme = useTheme();
   const styles = commonStyles(theme);
 
+  // Add state for animations
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  // Handle scroll animation
+  const handleScroll = () => {
+    if (window.scrollY > 100) {
+      setIsLoaded(true);
+    }
+  };
+
+  useEffect(() => {
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   return (
-    <Container maxWidth="lg">
-      {/* Hero Section with Parallax Effect */}
-      <Box sx={{ 
-        textAlign: 'center', 
-        minHeight: '70vh',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center',
-        backgroundImage: 'url("/golfclubheader.jpg")',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundAttachment: 'fixed',
-        borderRadius: 2,
-        mb: 6,
-        color: 'white',
-        position: 'relative',
-        '&::before': {
-          content: '""',
-          position: 'absolute',
+    <Container maxWidth="xl" sx={{ minHeight: '100vh', px: { xs: 2, sm: 4, md: 8 } }}>
+      {/* Navigation Bar */}
+      <Box
+        component="nav"
+        sx={{
+          backgroundColor: 'white',
+          boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+          position: 'sticky',
           top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0,0,0,0.4)',
-          borderRadius: 2,
-        }
-      }}>
-        <Box sx={{ position: 'relative', zIndex: 1 }}>
-          <Typography variant="h2" component="h1" gutterBottom sx={{
-            fontSize: { xs: '2.5rem', sm: '3.5rem', md: '4rem' }
-          }}>
-            Find My Club
+          zIndex: 1,
+        }}
+      >
+        <Grid container justifyContent="space-between" alignItems="center" py={2}>
+          <Grid item>
+            <Typography variant="h6" sx={{ fontWeight: 'bold' }}>GolfDB</Typography>
+          </Grid>
+          <Grid item>
+            <Box display="flex" gap={2}>
+              <Button
+                variant="text"
+                onClick={() => navigate('/about')}
+                aria-label="About GolfDB"
+                sx={{
+                  color: 'primary.main',
+                  '&:hover': {
+                    color: 'primary.dark',
+                  },
+                }}
+              >
+                About
+              </Button>
+              <Button
+                variant="text"
+                onClick={() => navigate('/contact')}
+                aria-label="Contact GolfDB"
+                sx={{
+                  color: 'primary.main',
+                  '&:hover': {
+                    color: 'primary.dark',
+                  },
+                }}
+              >
+                Contact
+              </Button>
+            </Box>
+          </Grid>
+        </Grid>
+      </Box>
+
+      {/* Hero Section */}
+      <Box
+        sx={{
+          my: 12,
+          textAlign: 'center',
+          pb: 8,
+          '&::after': {
+            content: '""',
+            position: 'absolute',
+            left: 0,
+            right: 0,
+            top: '50%',
+            height: 2,
+            backgroundColor: 'primary.main',
+            transform: 'translateY(-50%)',
+            opacity: 0.3,
+          },
+        }}
+      >
+        <Box>
+          <Typography
+            variant="h1"
+            gutterBottom
+            sx={{
+              fontSize: { xs: '4rem', sm: '6rem', md: '8rem' },
+              fontWeight: 'bold',
+              mb: 4,
+              opacity: isLoaded ? 1 : 0,
+              transform: isLoaded ? 'translateY(0)' : 'translateY(-20px)',
+            }}
+          >
+            Find Your Perfect Golf Experience
           </Typography>
-          <Typography variant="h5" sx={{ 
-            mb: 4,
-            fontSize: { xs: '1.1rem', sm: '1.25rem', md: '1.5rem' },
-            px: { xs: 2, sm: 0 }
-          }}>
-            Personalized golf club recommendations for golfers of every level.
-          </Typography>
-          <Box sx={{ mt: 4 }}>
-            <Button 
-              variant="contained" 
-              size="large"
-              onClick={() => navigate('/create-account')}
-              sx={{ 
-                mr: 2,
-                px: 4,
-                py: 1.5,
-                fontSize: '1.1rem',
-                backgroundColor: 'primary.main',
-                '&:hover': {
-                  backgroundColor: 'primary.dark',
-                }
+          
+          <Box sx={{ opacity: isLoaded ? 1 : 0, transition: '.5s ease' }}>
+            <Typography
+              variant="h6"
+              sx={{
+                fontSize: { xs: '2rem', sm: '3rem' },
+                mb: 8,
+                fontWeight: 'medium',
               }}
             >
-              Get Started
-            </Button>
-            <Button 
-              variant="outlined" 
-              size="large"
-              onClick={() => navigate('/login')}
-              sx={{ 
-                px: 4,
-                py: 1.5,
-                fontSize: '1.1rem',
-                borderColor: 'white',
-                color: 'white',
-                '&:hover': {
-                  borderColor: 'white',
-                  backgroundColor: 'rgba(255,255,255,0.1)',
-                }
+              Your one-stop destination for discovering and managing golf courses across the U.S.
+            </Typography>
+
+            <Box
+              component="div"
+              sx={{
+                display: 'flex',
+                gap: 2,
+                justifyContent: 'center',
               }}
             >
-              Sign In
-            </Button>
+              <Button
+                variant="contained"
+                size="large"
+                onClick={() => navigate('/create-account')}
+                sx={{
+                  px: 6,
+                  py: 3,
+                  fontSize: { xs: '1.5rem', sm: '2rem' },
+                  backgroundColor: '#4CAF50',
+                  '&:hover': {
+                    backgroundColor: '#45a049',
+                  },
+                  transition: 'all .3s ease',
+                }}
+              >
+                Get Started
+              </Button>
+              <Button
+                variant="outlined"
+                size="large"
+                onClick={() => navigate('/login')}
+                sx={{
+                  px: 6,
+                  py: 3,
+                  fontSize: { xs: '1.5rem', sm: '2rem' },
+                  borderColor: '#4CAF50',
+                  color: '#4CAF50',
+                  '&:hover': {
+                    backgroundColor: 'rgba(76,175,80,0.1)',
+                  },
+                  transition: 'all .3s ease',
+                }}
+              >
+                Sign In
+              </Button>
+            </Box>
           </Box>
         </Box>
       </Box>
 
       {/* Database Statistics Section */}
-      <Box sx={{ py: 12, textAlign: 'center' }}>
-        <Typography variant="h3" gutterBottom sx={{
-          fontSize: { xs: '2rem', sm: '2.5rem', md: '3rem' },
-          px: { xs: 2, sm: 0 },
-          textAlign: { xs: 'center', sm: 'center' }
-        }}>
+      <Box
+        sx={{
+          py: 12,
+          textAlign: 'center',
+          opacity: isLoaded ? 1 : 0,
+          transform: isLoaded ? 'translateY(0)' : 'translateY(-20px)',
+        }}
+      >
+        <Typography variant="h3" gutterBottom>
           Unmatched Database
         </Typography>
-        <Typography variant="subtitle1" sx={{ mb: 8, maxWidth: 800, mx: 'auto' }}>
-          Our comprehensive database covers clubs and courses across the U.S., offering 
-          in-depth details about facilities, services, pricing, and more.
-        </Typography>
         
-        <Grid container spacing={2} sx={{ mb: 8 }}>
-          <Grid item xs={12} sm={6} md={3}>
-            <StatisticBox number="14,680" label="Golf Clubs" />
+        <Box
+          sx={{
+            maxWidth: { xs: 600, sm: 800 },
+            mx: 'auto',
+            my: 4,
+          }}
+        >
+          <Typography
+            variant="subtitle1"
+            sx={{ mb: 8, color: 'secondary.main' }}
+          >
+            Our comprehensive database covers clubs and courses across the U.S., offering in-depth details about facilities, services, pricing, and more.
+          </Typography>
+
+          <Grid container spacing={4}>
+            {[{
+              number: '14,680',
+              label: 'Golf Clubs',
+              color: '#FF9800',
+            },
+            {
+              number: '18,091',
+              label: 'Golf Courses',
+              color: '#2E7D32',
+            },
+            {
+              number: '84,861',
+              label: 'Tees',
+              color: '#9C27B0',
+            },
+            {
+              number: '108',
+              label: 'Data Points per Club',
+              color: '#AB4000',
+            }].map((stat) => (
+              <Grid key={stat.label} item xs={12} sm={6} md={3}>
+                <StatisticBox
+                  number={stat.number}
+                  label={stat.label}
+                  color={stat.color}
+                />
+              </Grid>
+            ))}
+
           </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <StatisticBox number="18,091" label="Golf Courses" />
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <StatisticBox number="84,861" label="Tees" />
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <StatisticBox number="108" label="Data Points per Club" />
-          </Grid>
-        </Grid>
+        </Box>
       </Box>
 
       {/* Combined Database Content & Screenshots Section */}
-      <Box sx={{ py: 8 }}>
-        <Typography variant="h3" gutterBottom textAlign="center" sx={{ mb: 6 }}>
+      <Box sx={{ py: 12 }}>
+        <Typography variant="h3" gutterBottom textAlign="center">
           What's Inside?
         </Typography>
 
-        <Screenshot
-          src="/find-club.jpeg"
-          title="Advanced Search & Filtering"
-          description={
-            <Box component="div">
-              <Typography variant="body1" sx={{ mb: 2 }}>
-                Find your perfect match with detailed filtering options:
-              </Typography>
+        <Box
+          component="div"
+          sx={{
+            overflowX: 'hidden',
+            mb: 8,
+          }}
+        >
+          {[{
+            src: '/find-club.jpeg',
+            title: 'Advanced Search & Filtering',
+            description: (
               <Grid container spacing={4}>
                 <Grid item xs={12} md={6}>
-                  <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 'bold' }}>
-                    Location & Contact Details
-                  </Typography>
-                  <Typography component="ul" sx={{ pl: 2, mb: 2 }}>
+                  <Typography variant="h6" fontWeight="bold">Location & Contact Details</Typography>
+                  <ul style={{ paddingLeft: '16px', marginBottom: '16px' }}>
                     <li>Address and Directions</li>
                     <li>Phone Numbers</li>
                     <li>Operating Hours</li>
                     <li>Website Links</li>
-                  </Typography>
+                  </ul>
 
-                  <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 'bold' }}>
-                    Available Amenities
-                  </Typography>
-                  <Typography component="ul" sx={{ pl: 2 }}>
+                  <Typography variant="h6" fontWeight="bold">Available Amenities</Typography>
+                  <ul style={{ paddingLeft: '16px' }}>
                     <li>Practice Facilities</li>
                     <li>Pro Shop</li>
                     <li>Restaurant/Bar</li>
                     <li>Locker Rooms</li>
-                  </Typography>
+                  </ul>
                 </Grid>
+
                 <Grid item xs={12} md={6}>
-                  <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 'bold' }}>
-                    Membership Options
-                  </Typography>
-                  <Typography component="ul" sx={{ pl: 2, mb: 2 }}>
+                  <Typography variant="h6" fontWeight="bold">Membership Options</Typography>
+                  <ul style={{ paddingLeft: '16px', marginBottom: '16px' }}>
                     <li>Public/Private Status</li>
                     <li>Membership Types</li>
                     <li>Guest Policies</li>
                     <li>Special Programs</li>
-                  </Typography>
+                  </ul>
 
-                  <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 'bold' }}>
-                    Course Details
-                  </Typography>
-                  <Typography component="ul" sx={{ pl: 2 }}>
+                  <Typography variant="h6" fontWeight="bold">Course Details</Typography>
+                  <ul style={{ paddingLeft: '16px' }}>
                     <li>Difficulty Levels</li>
                     <li>Course Conditions</li>
                     <li>Price Ranges</li>
                     <li>Peak Hours</li>
-                  </Typography>
+                  </ul>
                 </Grid>
               </Grid>
-            </Box>
-          }
-        />
-        
-        <Screenshot
-          src="/recommendations.jpg"
-          title="Comprehensive Course Data"
-          description={
-            <Box component="div">
-              <Typography variant="body1" sx={{ mb: 2 }}>
-                Access detailed course information tailored to your needs:
-              </Typography>
-              <Grid container spacing={4}>
-                <Grid item xs={12} md={6}>
-                  <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 'bold' }}>
-                    Course Par & Layout
-                  </Typography>
-                  <Typography component="ul" sx={{ pl: 2, mb: 2 }}>
-                    <li>Total Par</li>
-                    <li>Course Length</li>
-                    <li>Hole Details</li>
-                    <li>Course Maps</li>
-                  </Typography>
+            ),
+          },
+          {
+            src: '/recommendations.jpg',
+            title: 'Comprehensive Course Data',
+            description: (
+              <Box component="div">
+                <Grid container spacing={4}>
+                  <Grid item xs={12} md={6}>
+                    <Typography variant="h6" fontWeight="bold">Course Par & Layout</Typography>
+                    <ul style={{ paddingLeft: '16px', marginBottom: '16px' }}>
+                      <li>Total Par</li>
+                      <li>Course Length</li>
+                      <li>Hole Details</li>
+                      <li>Course Maps</li>
+                    </ul>
 
-                  <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 'bold' }}>
-                    Course Ratings
-                  </Typography>
-                  <Typography component="ul" sx={{ pl: 2 }}>
-                    <li>USGA Rating</li>
-                    <li>Slope Rating</li>
-                    <li>Difficulty Index</li>
-                    <li>Player Reviews</li>
-                  </Typography>
-                </Grid>
-                <Grid item xs={12} md={6}>
-                  <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 'bold' }}>
-                    Tee Information
-                  </Typography>
-                  <Typography component="ul" sx={{ pl: 2, mb: 2 }}>
-                    <li>Multiple Tee Options</li>
-                    <li>Distance Per Hole</li>
-                    <li>Handicap Information</li>
-                    <li>Recommended Skill Level</li>
-                  </Typography>
+                    <Typography variant="h6" fontWeight="bold">Course Ratings</Typography>
+                    <ul style={{ paddingLeft: '16px' }}>
+                      <li>USGA Rating</li>
+                      <li>Slope Rating</li>
+                      <li>Difficulty Index</li>
+                      <li>Player Reviews</li>
+                    </ul>
+                  </Grid>
 
-                  <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 'bold' }}>
-                    Practice Facilities
-                  </Typography>
-                  <Typography component="ul" sx={{ pl: 2 }}>
-                    <li>Driving Range</li>
-                    <li>Putting Green</li>
-                    <li>Chipping Area</li>
-                    <li>Practice Bunkers</li>
-                  </Typography>
-                </Grid>
-              </Grid>
-            </Box>
-          }
-          align="right"
-        />
-        
-        <Screenshot
-          src="/submit-club.jpg"
-          title="Easy Club Management"
-          description={
-            <Box component="div">
-              <Typography variant="body1" sx={{ mb: 2 }}>
-                Club operators can easily manage their facility information:
-              </Typography>
-              <Grid container spacing={2}>
-                <Grid item xs={12} md={6}>
-                  <Typography component="ul" sx={{ pl: 2 }}>
-                    <li>Facility Details</li>
-                    <li>Service Offerings</li>
-                    <li>Pricing Updates</li>
-                    <li>Course Changes</li>
-                  </Typography>
-                </Grid>
-                <Grid item xs={12} md={6}>
-                  <Typography component="ul" sx={{ pl: 2 }}>
-                    <li>Special Events</li>
-                    <li>Amenity Updates</li>
-                    <li>Contact Information</li>
-                    <li>Operating Hours</li>
-                  </Typography>
-                </Grid>
-              </Grid>
-            </Box>
-          }
-        />
-      </Box>
+                  <Grid item xs={12} md={6}>
+                    <Typography variant="h6" fontWeight="bold">Tee Information</Typography>
+                    <ul style={{ paddingLeft: '16px', marginBottom: '16px' }}>
+                      <li>Multiple Tee Options</li>
+                      <li>Distance Per Hole</li>
+                      <li>Handicap Information</li>
+                      <li>Recommended Skill Level</li>
+                    </ul>
 
-      {/* Final Call to Action */}
-      <Box sx={{ 
-        textAlign: 'center', 
-        py: 8,
-        backgroundColor: '#2E5A27',
-        color: 'white',
-        borderRadius: 2,
-        mb: 6 
-      }}>
-        <Typography variant="h5" gutterBottom>
-          Ready to find your perfect round?
-        </Typography>
-        <Button 
-          variant="contained" 
-          size="large"
-          onClick={() => navigate('/create-account')}
-          sx={{ 
-            mt: 3,
-            backgroundColor: 'white',
-            color: '#2E5A27',
-            '&:hover': {
-              backgroundColor: 'grey.100',
-            }
+                    <Typography variant="h6" fontWeight="bold">Practice Facilities</Typography>
+                    <ul style={{ paddingLeft: '16px' }}>
+                      <li>Driving Range</li>
+                      <li>Putting Green</li>
+                      <li>Chipping Area</li>
+                      <li>Practice Bunkers</li>
+                    </ul>
+                  </Grid>
+                </Grid>
+              </Box>
+            ),
+          },
+          {
+            src: '/submit-club.jpg',
+            title: 'Easy Club Management',
+            description: (
+              <Box component="div">
+                <Grid container spacing={4}>
+                  <Grid item xs={12} md={6}>
+                    <ul style={{ paddingLeft: '16px' }}>
+                      <li>Facility Details</li>
+                      <li>Service Offerings</li>
+                      <li>Pricing Updates</li>
+                      <li>Course Changes</li>
+                    </ul>
+                  </Grid>
+
+                  <Grid item xs={12} md={6}>
+                    <ul style={{ paddingLeft: '16px' }}>
+                      <li>Special Events</li>
+                      <li>Amenity Updates</li>
+                      <li>Contact Information</li>
+                      <li>Operating Hours</li>
+                    </ul>
+                  </Grid>
+                </Grid>
+              </Box>
+            ),
+          }].map((item, index) => (
+            <Screenshot
+              key={index}
+              src={item.src}
+              title={item.title}
+              description={item.description}
+              align={index === 0 ? 'left' : 'right'}
+            />
+          ))}
+
+        </Box>
+
+        <Box
+          component="div"
+          sx={{
+            mb: 8,
+            textAlign: 'center',
           }}
         >
-          Get Started Now
-        </Button>
+          <Typography variant="h6" gutterBottom>
+            Ready to find your perfect round?
+          </Typography>
+          
+          <Button
+            variant="contained"
+            size="large"
+            onClick={() => navigate('/create-account')}
+            sx={{
+              mt: 3,
+              px: { xs: 4, sm: 6 },
+              py: 2.5,
+              fontSize: { xs: '1.2rem', sm: '1.5rem' },
+              backgroundColor: '#4CAF50',
+              color: 'white',
+              '&:hover': {
+                backgroundColor: '#45a049',
+              },
+              transition: 'all .3s ease',
+            }}
+          >
+            Get Started Now
+          </Button>
+        </Box>
       </Box>
     </Container>
   );
