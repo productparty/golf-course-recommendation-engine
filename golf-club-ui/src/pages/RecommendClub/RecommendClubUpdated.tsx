@@ -191,192 +191,202 @@ const RecommendClubUpdated: React.FC = () => {
   }, [session?.user?.id]);
 
   return (
-    <PageLayout title="Recommended Clubs">
-      <Typography 
-        variant="subtitle1" 
-        color="text.secondary" 
-        sx={{ mb: 4, textAlign: 'center' }}
-      >
-        Enter your desired zip code and search radius below for club recommendations based on your profile.
-      </Typography>
-      <Card sx={{ 
-        mb: 3, 
-        mt: -2,
-        mx: { xs: -2, sm: 0 }
-      }}>
-        <CardContent>
-          <Grid container spacing={2} alignItems="flex-start">
-            <Grid item xs={12} sm={6}>
-              <TextField
-              fullWidth
-              label="Zip Code"
-              value={zipCode}
-              onChange={(e) => setZipCode(e.target.value)}
-              size="small"
-              sx={{ mt: 1 }}
-              />
+    <Box
+      sx={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        minHeight: '100vh', // Full viewport height
+        textAlign: 'center', // Center text if needed
+      }}
+    >
+      <PageLayout title="Recommended Clubs">
+        <Typography 
+          variant="subtitle1" 
+          color="text.secondary" 
+          sx={{ mb: 4, textAlign: 'center' }}
+        >
+          Enter your desired zip code and search radius below for club recommendations based on your profile.
+        </Typography>
+        <Card sx={{ 
+          mb: 3, 
+          mt: -2,
+          mx: { xs: -2, sm: 0 }
+        }}>
+          <CardContent>
+            <Grid container spacing={2} alignItems="flex-start">
+              <Grid item xs={12} sm={6}>
+                <TextField
+                fullWidth
+                label="Zip Code"
+                value={zipCode}
+                onChange={(e) => setZipCode(e.target.value)}
+                size="small"
+                sx={{ mt: 1 }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth size="small" sx={{ mt: 1 }}>
+                <InputLabel>Search Radius</InputLabel>
+                <Select
+                  value={radius}
+                  onChange={(e) => setRadius(e.target.value)}
+                  label="Search Radius"
+                >
+                  <MenuItem value="10">10 miles</MenuItem>
+                  <MenuItem value="25">25 miles</MenuItem>
+                  <MenuItem value="50">50 miles</MenuItem>
+                  <MenuItem value="100">100 miles</MenuItem>
+                </Select>
+                </FormControl>
+              </Grid>
             </Grid>
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth size="small" sx={{ mt: 1 }}>
-              <InputLabel>Search Radius</InputLabel>
-              <Select
-                value={radius}
-                onChange={(e) => setRadius(e.target.value)}
-                label="Search Radius"
+            <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
+              <Button
+                variant="contained"
+                onClick={handleSearch}
+                disabled={isLoading}
               >
-                <MenuItem value="10">10 miles</MenuItem>
-                <MenuItem value="25">25 miles</MenuItem>
-                <MenuItem value="50">50 miles</MenuItem>
-                <MenuItem value="100">100 miles</MenuItem>
-              </Select>
-              </FormControl>
-            </Grid>
-          </Grid>
-          <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
-            <Button
-              variant="contained"
-              onClick={handleSearch}
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <>
-                  <CircularProgress size={24} sx={{ mr: 1 }} />
-                  Finding Recommendations...
-                </>
-              ) : (
-                'Find Recommendations'
-              )}
-            </Button>
-          </Box>
-        </CardContent>
-      </Card>
+                {isLoading ? (
+                  <>
+                    <CircularProgress size={24} sx={{ mr: 1 }} />
+                    Finding Recommendations...
+                  </>
+                ) : (
+                  'Find Recommendations'
+                )}
+              </Button>
+            </Box>
+          </CardContent>
+        </Card>
 
-      {error && hasSearched && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
-        </Alert>
-      )}
+        {error && hasSearched && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
 
-      {hasSearched && courses.length === 0 && !error && !isLoading && (
-        <Alert severity="info">
-          No recommendations found for this location.
-        </Alert>
-      )}
+        {hasSearched && courses.length === 0 && !error && !isLoading && (
+          <Alert severity="info">
+            No recommendations found for this location.
+          </Alert>
+        )}
 
-      {courses.length > 0 && (
-        <>
-          <Box sx={{ mb: 4, mt: 2 }}>
-            <InteractiveMap 
-              clubs={courses}
-              center={mapCenter}
-              radius={Number(radius)}
-              onMarkerClick={(clubId) => {
-                const club = courses.find(c => c.id === clubId);
-                if (club?.latitude && club?.longitude) {
-                  setMapCenter([club.longitude, club.latitude]);
-                }
-              }}
-            />
-          </Box>
+        {courses.length > 0 && (
+          <>
+            <Box sx={{ mb: 4, mt: 2 }}>
+              <InteractiveMap 
+                clubs={courses}
+                center={mapCenter}
+                radius={Number(radius)}
+                onMarkerClick={(clubId) => {
+                  const club = courses.find(c => c.id === clubId);
+                  if (club?.latitude && club?.longitude) {
+                    setMapCenter([club.longitude, club.latitude]);
+                  }
+                }}
+              />
+            </Box>
 
-          <Grid container spacing={2}>
-            {courses
-              .slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
-              .map((club, index) => (
-                <Grid item xs={12} key={club.id}>
-                  <Box
-                    sx={{
-                      backgroundColor: club.score >= 80 ? 'rgba(46, 90, 39, 0.05)' : 'transparent',
-                      borderRadius: 1,
-                      transition: 'background-color 0.2s ease',
-                      '&:hover': {
-                        backgroundColor: club.score >= 80 ? 'rgba(46, 90, 39, 0.08)' : 'rgba(0, 0, 0, 0.02)'
-                      }
-                    }}
-                  >
-                    <ClubCard 
-                      club={club}
-                      showScore={true}
-                      isFavorite={favorites.includes(club.id)}
-                      onToggleFavorite={handleToggleFavorite}
-                      showToggle={true}
-                      index={index}
-                    />
-                  </Box>
-                </Grid>
-              ))
-            }
-          </Grid>
-
-          {/* Pagination Controls */}
-          <Box sx={{ 
-            mt: 3, 
-            display: 'flex', 
-            flexWrap: 'wrap',
-            justifyContent: 'center', 
-            gap: { xs: 0.5, sm: 1 },
-            '& .MuiButton-root': {
-              minWidth: { xs: '40px', sm: 'auto' },
-              px: { xs: 1, sm: 2 },
-              fontSize: { xs: '0.75rem', sm: '0.875rem' }
-            }
-          }}>
-            <Button
-              onClick={() => handlePageChange(1)}
-              disabled={currentPage === 1}
-              variant="outlined"
-            >
-              First
-            </Button>
-            <Button
-              onClick={() => handlePageChange(currentPage - 1)}
-              disabled={currentPage === 1}
-              variant="outlined"
-            >
-              Previous
-            </Button>
-            
-            {/* Page numbers */}
-            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-              const pageNum = currentPage - 2 + i;
-              if (pageNum > 0 && pageNum <= totalPages) {
-                return (
-                  <Button
-                    key={pageNum}
-                    onClick={() => handlePageChange(pageNum)}
-                    variant={pageNum === currentPage ? "contained" : "outlined"}
-                  >
-                    {pageNum}
-                  </Button>
-                );
+            <Grid container spacing={2}>
+              {courses
+                .slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
+                .map((club, index) => (
+                  <Grid item xs={12} key={club.id}>
+                    <Box
+                      sx={{
+                        backgroundColor: club.score >= 80 ? 'rgba(46, 90, 39, 0.05)' : 'transparent',
+                        borderRadius: 1,
+                        transition: 'background-color 0.2s ease',
+                        '&:hover': {
+                          backgroundColor: club.score >= 80 ? 'rgba(46, 90, 39, 0.08)' : 'rgba(0, 0, 0, 0.02)'
+                        }
+                      }}
+                    >
+                      <ClubCard 
+                        club={club}
+                        showScore={true}
+                        isFavorite={favorites.includes(club.id)}
+                        onToggleFavorite={handleToggleFavorite}
+                        showToggle={true}
+                        index={index}
+                      />
+                    </Box>
+                  </Grid>
+                ))
               }
-              return null;
-            })}
-            
-            <Button
-              onClick={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage === totalPages}
-              variant="outlined"
+            </Grid>
+
+            {/* Pagination Controls */}
+            <Box sx={{ 
+              mt: 3, 
+              display: 'flex', 
+              flexWrap: 'wrap',
+              justifyContent: 'center', 
+              gap: { xs: 0.5, sm: 1 },
+              '& .MuiButton-root': {
+                minWidth: { xs: '40px', sm: 'auto' },
+                px: { xs: 1, sm: 2 },
+                fontSize: { xs: '0.75rem', sm: '0.875rem' }
+              }
+            }}>
+              <Button
+                onClick={() => handlePageChange(1)}
+                disabled={currentPage === 1}
+                variant="outlined"
+              >
+                First
+              </Button>
+              <Button
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                variant="outlined"
+              >
+                Previous
+              </Button>
+              
+              {/* Page numbers */}
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                const pageNum = currentPage - 2 + i;
+                if (pageNum > 0 && pageNum <= totalPages) {
+                  return (
+                    <Button
+                      key={pageNum}
+                      onClick={() => handlePageChange(pageNum)}
+                      variant={pageNum === currentPage ? "contained" : "outlined"}
+                    >
+                      {pageNum}
+                    </Button>
+                  );
+                }
+                return null;
+              })}
+              
+              <Button
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                variant="outlined"
+              >
+                Next
+              </Button>
+              <Button
+                onClick={() => handlePageChange(totalPages)}
+                disabled={currentPage === totalPages}
+                variant="outlined"
+              >
+                Last
+              </Button>
+            </Box>
+            <Typography 
+              variant="body2" 
+              sx={{ mt: 1, textAlign: 'center' }}
             >
-              Next
-            </Button>
-            <Button
-              onClick={() => handlePageChange(totalPages)}
-              disabled={currentPage === totalPages}
-              variant="outlined"
-            >
-              Last
-            </Button>
-          </Box>
-          <Typography 
-            variant="body2" 
-            sx={{ mt: 1, textAlign: 'center' }}
-          >
-            Page {currentPage} of {totalPages}
-          </Typography>
-        </>
-      )}
-    </PageLayout>
+              Page {currentPage} of {totalPages}
+            </Typography>
+          </>
+        )}
+      </PageLayout>
+    </Box>
   );
 };
 

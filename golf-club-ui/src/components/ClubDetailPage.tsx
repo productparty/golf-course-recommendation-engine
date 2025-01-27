@@ -116,8 +116,32 @@ export const ClubDetailPage = () => {
                 setLoading(true);
                 const { data, error } = await supabase
                     .from('golfclub')
-                    .select('*')
-                    .eq('id', id)
+                    .select(`
+                        global_id,
+                        club_name,
+                        address,
+                        city,
+                        state,
+                        zip_code,
+                        price_tier,
+                        difficulty,
+                        number_of_holes,
+                        membership_type,
+                        driving_range,
+                        putting_green,
+                        chipping_green,
+                        practice_bunker,
+                        restaurant,
+                        lodging_on_site,
+                        motor_cart,
+                        pull_cart,
+                        golf_clubs_rental,
+                        club_fitting,
+                        golf_lessons,
+                        latitude,
+                        longitude
+                    `)
+                    .eq('global_id', id)
                     .single();
 
                 if (error) throw error;
@@ -126,6 +150,7 @@ export const ClubDetailPage = () => {
                 setClub(data);
             } catch (err: any) {
                 setError(err.message);
+                console.error('Error fetching club:', err);
             } finally {
                 setLoading(false);
             }
