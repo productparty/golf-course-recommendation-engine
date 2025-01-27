@@ -614,19 +614,29 @@ const FindClubUpdated: React.FC<Props> = ({ className, ...rest }) => {
                   />
                 </Box>
                 <Grid container spacing={2}>
-                  {getPaginatedClubs().map((club, index) => (
+                  {getCurrentPageClubs().map((club, index) => (
                     <Grid item xs={12} key={club.id}>
-                      <ClubCard 
-                        club={club}
-                        isFavorite={favorites.includes(club.id)}
-                        onToggleFavorite={handleToggleFavorite}
-                        showToggle={true}
-                      />
-                      <Typography variant="body2" sx={{ mt: 1 }}>
-                        <Link to={`/clubs/${club.id}`} style={{ textDecoration: 'none', color: 'blue' }}>
-                          {index + 1}. {club.club_name}
+                      <Box
+                        sx={{
+                          backgroundColor: 'white',
+                          borderRadius: 1,
+                          boxShadow: 1,
+                          padding: 2,
+                          position: 'relative',
+                        }}
+                      >
+                        <Link to={`/clubs/${club.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                          <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center' }}>
+                            {index + 1}. {club.club_name}
+                          </Typography>
                         </Link>
-                      </Typography>
+                        <ClubCard 
+                          club={club}
+                          isFavorite={favorites.includes(club.id)}
+                          onToggleFavorite={handleToggleFavorite}
+                          showToggle={true}
+                        />
+                      </Box>
                     </Grid>
                   ))}
                 </Grid>

@@ -1043,11 +1043,7 @@ async def search_clubs(
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/clubs/{club_id}")
-async def get_club_by_id(
-    club_id: str,
-    request: Request,
-    current_user: Dict[str, Any] = Depends(get_current_user)
-):
+async def get_club_by_id(club_id: str):
     try:
         with get_db_connection() as conn:
             with conn.cursor(cursor_factory=RealDictCursor) as cursor:
@@ -1056,21 +1052,13 @@ async def get_club_by_id(
                 result = cursor.fetchone()
 
                 if not result:
-                    raise HTTPException(
-                        status_code=status.HTTP_404_NOT_FOUND,
-                        detail="Club not found"
-                    )
+                    raise HTTPException(status_code=404, detail="Club not found")
 
                 return result
 
-    except HTTPException:
-        raise
     except Exception as e:
         logger.error(f"Error fetching club details: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to fetch club details"
-        )
+        raise HTTPException(status_code=500, detail="Failed to fetch club details")
 
 if __name__ == "__main__":
     import uvicorn
