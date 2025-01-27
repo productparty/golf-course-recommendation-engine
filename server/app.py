@@ -1047,7 +1047,7 @@ async def get_club_by_id(club_id: str):
     try:
         with get_db_connection() as conn:
             with conn.cursor(cursor_factory=RealDictCursor) as cursor:
-                query = "SELECT * FROM golfclub WHERE id = %s"
+                query = "SELECT * FROM golfclub WHERE global_id = %s"
                 cursor.execute(query, (club_id,))
                 result = cursor.fetchone()
 

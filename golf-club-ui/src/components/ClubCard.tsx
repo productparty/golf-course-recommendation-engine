@@ -147,7 +147,7 @@ const ClubCard: React.FC<ClubCardProps> = ({ club, index, isFavorite, onToggleFa
       <CardContent>
         <Link to={`/clubs/${club.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
           <Typography variant="h6">
-            {index + 1}. {club.club_name}
+            {club.club_name}
           </Typography>
         </Link>
         <Typography variant="body2">{club.address}</Typography>
