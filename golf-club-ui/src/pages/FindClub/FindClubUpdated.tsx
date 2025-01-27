@@ -18,7 +18,7 @@ import {
 } from '@mui/icons-material';
 import { supabase } from '../../lib/supabase';
 import { InteractiveMap } from '../../components/InteractiveMap';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 interface Club {
   id: string;
@@ -609,21 +609,24 @@ const FindClubUpdated: React.FC<Props> = ({ className, ...rest }) => {
                     center={mapCenter}
                     radius={Number(filters.radius)}
                     onMarkerClick={(clubId) => {
-                      const club = clubs.find(c => c.id === clubId);
-                      if (club?.latitude && club?.longitude) {
-                        setMapCenter([club.longitude, club.latitude]);
-                      }
+                      navigate(`/clubs/${clubId}`);
                     }}
                   />
                 </Box>
                 <Grid container spacing={2}>
-                  {getPaginatedClubs().map((club) => (
+                  {getPaginatedClubs().map((club, index) => (
                     <Grid item xs={12} key={club.id}>
                       <ClubCard 
                         club={club}
                         isFavorite={favorites.includes(club.id)}
                         onToggleFavorite={handleToggleFavorite}
+                        showToggle={true}
                       />
+                      <Typography variant="body2" sx={{ mt: 1 }}>
+                        <Link to={`/clubs/${club.id}`} style={{ textDecoration: 'none', color: 'blue' }}>
+                          {index + 1}. {club.club_name}
+                        </Link>
+                      </Typography>
                     </Grid>
                   ))}
                 </Grid>

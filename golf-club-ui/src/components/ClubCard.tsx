@@ -239,7 +239,7 @@ const ClubCard: React.FC<ClubCardProps> = ({
         {weather.length > 0 && (
           <Box sx={{ mt: 2 }}>
             <Typography variant="body2" sx={{ mb: 1, fontWeight: 'medium' }}>
-              Weather Forecast:
+              Three Day Weather Forecast:
             </Typography>
             <Box sx={{ display: 'flex', gap: 2, overflowX: 'auto', pb: 1 }}>
               {weather.slice(0, 3).map((day: WeatherData) => (

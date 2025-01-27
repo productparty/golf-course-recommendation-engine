@@ -1,5 +1,5 @@
 // components/InteractiveMap.tsx
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import mapboxgl from 'mapbox-gl';
 import { Box } from '@mui/material';
 
@@ -24,7 +24,7 @@ interface InteractiveMapProps {
 export const InteractiveMap: React.FC<InteractiveMapProps> = ({ clubs, center, radius, onMapClick, onMarkerClick }) => {
     const mapContainer = useRef<HTMLDivElement>(null);
     const map = useRef<mapboxgl.Map | null>(null);
-    const markersRef = useRef<mapboxgl.Marker[]>([]);  // Add this to track markers
+    const markersRef = useRef<mapboxgl.Marker[]>([]);
 
     useEffect(() => {
         if (!mapContainer.current) return;
@@ -41,9 +41,12 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({ clubs, center, r
 
         // Cleanup
         return () => {
-            map.current?.remove();
+            if (map.current) {
+                map.current.remove();
+                map.current = null; // Ensure map is set to null after removal
+            }
         };
-    }, []);
+    }, [center]);
 
     // Clear markers helper
     const clearMarkers = () => {
@@ -57,7 +60,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({ clubs, center, r
 
         clearMarkers();
 
-        clubs.forEach((club) => {
+        clubs.forEach((club, index) => {
             if (club.latitude && club.longitude) {
                 const marker = new mapboxgl.Marker({
                     element: createMarkerElement(club),
@@ -70,14 +73,13 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({ clubs, center, r
                         maxWidth: '300px'
                     }).setHTML(`
                         <div style="cursor: pointer">
-                            <h3 style="margin: 0 0 8px 0">${club.club_name}</h3>
+                            <h3 style="margin: 0 0 8px 0">${index + 1}. ${club.club_name}</h3>
                             <p style="margin: 0">${club.address}</p>
                         </div>
                     `)
                 )
                 .addTo(map.current!);
 
-                // Add click handler directly to marker
                 marker.getElement().addEventListener('click', () => {
                     if (onMarkerClick) {
                         onMarkerClick(club.id);
@@ -100,10 +102,10 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({ clubs, center, r
         }
     }, [clubs, onMarkerClick]);
 
+    // Add click handler
     useEffect(() => {
         if (!map.current) return;
 
-        // Add click handler
         const handleClick = (e: mapboxgl.MapMouseEvent) => {
             if (onMapClick) {
                 onMapClick(e.lngLat.lng, e.lngLat.lat);
@@ -117,21 +119,13 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({ clubs, center, r
         };
     }, [onMapClick]);
 
-    // Add this function to create custom marker elements
+    // Create custom marker elements
     const createMarkerElement = (club: Club) => {
         const el = document.createElement('div');
         el.className = 'marker';
         el.innerHTML = '📍'; // You can use any icon or text here
         return el;
     };
-
-    // Cleanup
-    useEffect(() => {
-        return () => {
-            clearMarkers();
-            map.current?.remove();
-        };
-    }, []);
 
     return (
         <Box
