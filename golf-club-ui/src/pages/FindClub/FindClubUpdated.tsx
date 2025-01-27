@@ -615,7 +615,7 @@ const FindClubUpdated: React.FC<Props> = ({ className, ...rest }) => {
                   <Box sx={{ mb: 4, mt: 2 }}>
                     <InteractiveMap 
                       clubs={getCurrentPageClubs()}
-                      center={mapCenter}
+                      center={[mapCenter[0], mapCenter[1]]}
                       radius={Number(filters.radius)}
                       onMarkerClick={(clubId) => {
                         navigate(`/clubs/${clubId}`);

@@ -4,6 +4,8 @@ console.log('Environment Variables:', {
   ALL_ENV: import.meta.env
 });
 
+console.log('Mapbox Token Available:', !!import.meta.env.VITE_MAPBOX_TOKEN);
+
 // Get API URL from environment
 const VITE_API_URL = import.meta.env.VITE_API_URL;
 

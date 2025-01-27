@@ -91,7 +91,7 @@ const RecommendClubUpdated: React.FC = () => {
         throw new Error('Invalid response format');
       }
 
-      const coursesWithCoords = await Promise.all(data.courses.map(async (course: Club) => {
+      const coursesWithCoords = await Promise.all(data.courses.map(async (course: any) => {
         try {
           const response = await fetch(
             `https://api.zippopotam.us/us/${course.zip_code}`
@@ -100,8 +100,8 @@ const RecommendClubUpdated: React.FC = () => {
           
           return {
             ...course,
-            latitude: Number(zipData.places[0].latitude),
-            longitude: Number(zipData.places[0].longitude)
+            latitude: Number(course.lat),
+            longitude: Number(course.lng)
           };
         } catch (error) {
           console.error(`Failed to get coordinates for ${course.zip_code}:`, error);
