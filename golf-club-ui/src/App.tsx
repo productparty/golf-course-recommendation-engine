@@ -27,7 +27,7 @@ import PasswordResetConfirm from './pages/PasswordResetConfirm/PasswordResetConf
 import ErrorBoundary from './components/ErrorBoundary';
 import theme from './theme';
 import Favorites from './pages/Favorites/Favorites';
-import { ClubDetail } from './pages/ClubDetail/ClubDetail';
+import { ClubDetailPage } from './components/ClubDetailPage';
 
 // Import styles
 import './App.css';
@@ -71,7 +71,7 @@ const App: React.FC = () => {
                       <Route path="/submit-club" element={<ProtectedRoute><SubmitClub /></ProtectedRoute>} />
                       <Route path="/golfer-profile" element={<ProtectedRoute><GolferProfileUpdated /></ProtectedRoute>} />
                       <Route path="/favorites" element={<ProtectedRoute><Favorites /></ProtectedRoute>} />
-                      <Route path="/clubs/:id" element={<ClubDetail />} />
+                      <Route path="/clubs/:id" element={<ProtectedRoute><ClubDetailPage /></ProtectedRoute>} />
 
                       {/* Catch all route */}
                       <Route path="*" element={<Navigate to="/" replace />} />

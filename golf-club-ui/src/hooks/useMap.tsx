@@ -1,65 +1,43 @@
 // hooks/useMap.tsx
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 
-export interface MapEvents {
-    click: (event: mapboxgl.MapMouseEvent) => void;
-    move: () => void;
-}
-
-export const useMap = ({
-    center,
-    radius,
-}: {
+interface UseMapProps {
     center: [number, number];
     radius?: number;
-}) => {
+}
+
+export const useMap = ({ center, radius }: UseMapProps) => {
+    const mapRef = useRef<mapboxgl.Map | null>(null);
     const [mapContainer, setMapContainer] = useState<HTMLDivElement | null>(null);
-    const [map, setMap] = useState<mapboxgl.Map | null>(null);
 
     useEffect(() => {
-        if (!mapContainer) return;
+        if (!mapContainer || !center[0] || !center[1]) return;
 
-        mapboxgl.accessToken = process.env.MAPBOX_TOKEN || '';
+        mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
 
-        const initMap = () => {
-            const newMap = new mapboxgl.Map({
-                container: mapContainer,
-                style: 'mapbox://styles/mapbox/outdoors-v11', // Use a terrain style
-                center,
-                zoom: 14, // Zoom in closer to the club
-            });
+        const map = new mapboxgl.Map({
+            container: mapContainer,
+            style: 'mapbox://styles/mapbox/outdoors-v11',
+            center: center,
+            zoom: 14
+        });
 
-            setMap(newMap);
+        // Add marker for the club location
+        new mapboxgl.Marker()
+            .setLngLat(center)
+            .addTo(map);
 
-            // Set up click handlers
-            newMap.on('click', (e) => {
-                if (radius) {
-                    const clickLngLat = e.lngLat;
-                    const centerLngLat = new mapboxgl.LngLat(center[0], center[1]);
-                    const distance = clickLngLat.distanceTo(centerLngLat); // Calculate distance in meters
+        // Add navigation controls
+        map.addControl(new mapboxgl.NavigationControl());
 
-                    if (distance < radius * 1000) {
-                        // Handle click within the search radius
-                    }
-                }
-            });
-
-            // Set up move handler
-            newMap.on('move', () => {
-                const bounds = newMap.getBounds();
-                console.log(bounds);
-            });
-        };
-
-        initMap();
+        mapRef.current = map;
 
         return () => {
-            if (map) {
-                map.remove();
-            }
+            map.remove();
+            mapRef.current = null;
         };
-    }, [mapContainer, center, radius]);
+    }, [mapContainer, center]);
 
-    return { mapContainer, map, setMapContainer };
+    return { mapContainer, setMapContainer, map: mapRef.current };
 };
