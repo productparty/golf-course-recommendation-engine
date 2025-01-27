@@ -122,6 +122,7 @@ const LandingPage = () => {
           justifyContent: 'center',
           flexDirection: 'column',
           textAlign: 'center',
+          paddingTop: { xs: '20%', md: 0 },
           '&::before': {
             content: '""',
             position: 'absolute',
@@ -201,52 +202,10 @@ const LandingPage = () => {
       {/* Features Section */}
       <Box sx={{ py: 8, bgcolor: 'grey.50' }}>
         <Container maxWidth="lg">
-          <Typography variant="h3" textAlign="center" gutterBottom>
-            Features
-          </Typography>
-          <Grid container spacing={4} sx={{ mt: 4 }}>
-            {features.map((feature, index) => (
-              <Grid item xs={12} sm={6} md={3} key={index}>
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: isLoaded ? 1 : 0, y: isLoaded ? 0 : 20 }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                >
-                  <Box sx={{ textAlign: 'center', p: 3 }}>
-                    {feature.icon}
-                    <Typography variant="h6" sx={{ my: 2 }}>{feature.title}</Typography>
-                    <Typography variant="body1" color="text.secondary">
-                      {feature.description}
-                    </Typography>
-                  </Box>
-                </motion.div>
-              </Grid>
-            ))}
-          </Grid>
-        </Container>
-      </Box>
-
-      {/* Statistics Section with Updated Colors */}
-      <Box sx={{ 
-        py: 8,
-        backgroundColor: '#f5f5f5',
-        position: 'relative',
-        '&::before': {
-          content: '""',
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(255, 255, 255, 0.8)',
-          zIndex: 1
-        }
-      }}>
-        <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 2 }}>
-          <Typography variant="h3" textAlign="center" gutterBottom sx={{ color: 'black', mb: 6 }}>
+          <Typography variant="h3" textAlign="center" gutterBottom sx={{ fontSize: { xs: '2rem', sm: '3rem', md: '4rem' }, color: 'black', mb: 6 }}>
             Unmatched Database
           </Typography>
-          <Grid container spacing={4}>
+          <Grid container spacing={4} sx={{ mt: 4 }}>
             {statistics.map((stat, index) => (
               <Grid item xs={12} sm={6} md={3} key={index}>
                 <motion.div
