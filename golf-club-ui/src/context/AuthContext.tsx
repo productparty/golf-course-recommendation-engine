@@ -11,69 +11,45 @@ interface AuthContextType {
   getToken: () => Promise<string | null>;
 }
 
-export const AuthContext = createContext<AuthContextType>({
-  session: null,
-  loading: true,
-  signOut: async () => {},
-  signIn: async () => ({ error: null }),
-  getToken: async () => null
-});
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
-    let mounted = true;
-
-    const setupAuth = async () => {
-      try {
-        const { data: { session: initialSession } } = await supabase.auth.getSession();
-        if (mounted) {
-          console.log('Initial session check:', initialSession ? 'Found' : 'None');
-          setSession(initialSession);
-          setLoading(false);
-        }
-      } catch (error) {
-        console.error('Auth setup error:', error);
-        if (mounted) setLoading(false);
-      }
-    };
-
-    setupAuth();
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, currentSession) => {
-      if (mounted) {
-        console.log('Auth state changed:', event, currentSession?.user?.email);
-        setSession(currentSession);
-      }
+    // Check active session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setLoading(false);
     });
 
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
-    };
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const signIn = async (email: string, password: string) => {
     try {
-      const { data: { user }, error } = await supabase.auth.signInWithPassword({ email, password });
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
       if (error) throw error;
 
-      // Navigate to home after successful login
-      navigate('/home');
-
-      if (user) {
-        const { data: { session } } = await supabase.auth.getSession();
-        setSession(session);
+      if (data.user) {
+        navigate('/');
       }
 
       return { error: null };
     } catch (error) {
-      console.error('Error signing in:', error);
+      console.error('Sign in error:', error);
       return { error: error as AuthError };
     }
   };
@@ -81,33 +57,41 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const signOut = async () => {
     try {
       await supabase.auth.signOut();
-      setSession(null);
+      navigate('/');
     } catch (error) {
-      console.error('Error signing out:', error);
+      console.error('Sign out error:', error);
     }
   };
 
-  const getToken = async (): Promise<string | null> => {
+  const getToken = async () => {
     try {
-      const { data: { session: currentSession } } = await supabase.auth.getSession();
-      return currentSession?.access_token || null;
+      const { data: { session } } = await supabase.auth.getSession();
+      return session?.access_token || null;
     } catch (error) {
-      console.error('Error getting token:', error);
+      console.error('Get token error:', error);
       return null;
     }
   };
 
+  const value = {
+    session,
+    loading,
+    signIn,
+    signOut,
+    getToken,
+  };
+
   return (
-    <AuthContext.Provider value={{ session, loading, signOut, signIn, getToken }}>
+    <AuthContext.Provider value={value}>
       {!loading && children}
     </AuthContext.Provider>
   );
-}
+};
 
 export const useAuth = () => {
-  const context = useContext(AuthContext)
+  const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider')
+    throw new Error('useAuth must be used within an AuthProvider');
   }
-  return context
-}
+  return context;
+};

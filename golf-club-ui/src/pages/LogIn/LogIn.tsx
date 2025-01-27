@@ -28,8 +28,7 @@ const LogIn: React.FC = () => {
         return;
       }
 
-      // Success - redirect to profile
-      navigate('/golfer-profile');
+      // Navigation is handled in AuthContext after successful sign in
     } catch (err) {
       setError('Failed to sign in');
       console.error('Sign in error:', err);
