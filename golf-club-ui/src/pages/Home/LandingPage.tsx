@@ -122,7 +122,7 @@ const LandingPage = () => {
           justifyContent: 'center',
           flexDirection: 'column',
           textAlign: 'center',
-          paddingTop: { xs: '20%', md: 0 },
+          paddingTop: { xs: '40%', md: 0 },
           '&::before': {
             content: '""',
             position: 'absolute',
@@ -161,7 +161,7 @@ const LandingPage = () => {
             >
               Discover and manage golf courses tailored to your preferences
             </Typography>
-            <Box display="flex" gap={2} justifyContent="center">
+            <Box display={{ xs: 'flex', sm: 'column' }} gap={2} justifyContent="center">
               <Button
                 variant="contained"
                 size="large"
@@ -229,7 +229,7 @@ const LandingPage = () => {
       <Box 
         sx={{ 
           py: 1,
-          bgcolor: theme.palette.primary.main,
+          bgcolor: 'rgba(0, 0, 0, 0.5)',
           color: 'white',
           display: 'flex',
           flexDirection: 'column',
@@ -239,10 +239,9 @@ const LandingPage = () => {
         }}
       >
         <Typography 
-          variant="body1" 
+          variant="body2"
           sx={{ 
             m: 0,
-            fontSize: '1rem',
             fontWeight: 500,
             textAlign: 'center'
           }}
