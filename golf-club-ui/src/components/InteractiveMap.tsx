@@ -6,7 +6,7 @@ import { Box } from '@mui/material';
 import { config } from '../config';
 
 // Set the access token for mapboxgl
-mapboxgl.accessToken = config.MAPBOX_TOKEN || '';
+mapboxgl.accessToken = config.MAPBOX_TOKEN;
 
 interface Club {
     id: string;

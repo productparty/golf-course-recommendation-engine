@@ -14,7 +14,7 @@ export const useMap = ({ center, radius }: UseMapProps) => {
     useEffect(() => {
         if (!mapContainer || !center[0] || !center[1]) return;
 
-        mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
+        mapboxgl.accessToken = config.MAPBOX_TOKEN;
 
         const map = new mapboxgl.Map({
             container: mapContainer,
