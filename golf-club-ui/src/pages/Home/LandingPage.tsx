@@ -119,6 +119,7 @@ const LandingPage = () => {
           backgroundPosition: 'center',
           display: 'flex',
           alignItems: 'center',
+          justifyContent: 'center',
           '&::before': {
             content: '""',
             position: 'absolute',
@@ -270,10 +271,22 @@ const LandingPage = () => {
           bgcolor: theme.palette.primary.main,
           color: 'white',
           display: 'flex',
+          flexDirection: 'column',
           alignItems: 'center',
           minHeight: '64px'
         }}
       >
+        <Typography 
+          variant="body1" 
+          sx={{ 
+            m: 0,
+            fontSize: '1rem',
+            fontWeight: 500,
+            mb: 1
+          }}
+        >
+          Ready to find your perfect round?
+        </Typography>
         <Container 
           maxWidth="sm" 
           sx={{ 
@@ -283,16 +296,6 @@ const LandingPage = () => {
             gap: 2
           }}
         >
-          <Typography 
-            variant="body1" 
-            sx={{ 
-              m: 0,
-              fontSize: '1rem',
-              fontWeight: 500
-            }}
-          >
-            Ready to find your perfect round?
-          </Typography>
           <Button
             variant="contained"
             size="medium"
