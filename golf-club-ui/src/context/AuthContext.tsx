@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Session, AuthError } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
+import { useNavigate } from 'react-router-dom';
 
 interface AuthContextType {
   session: Session | null;
@@ -21,6 +22,7 @@ export const AuthContext = createContext<AuthContextType>({
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     let mounted = true;
@@ -58,14 +60,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signIn = async (email: string, password: string) => {
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
-
+      const { data: { user }, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
-      if (data?.session) {
-        setSession(data.session);
+
+      // Navigate to home after successful login
+      navigate('/home');
+
+      if (user) {
+        const { data: { session } } = await supabase.auth.getSession();
+        setSession(session);
       }
 
       return { error: null };
