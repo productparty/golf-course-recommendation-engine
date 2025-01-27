@@ -51,10 +51,10 @@ const LandingPage = () => {
   ];
 
   const statistics = [
-    { number: '14,680', label: 'Golf Clubs', color: alpha('#2E7D32', 0.9) },
-    { number: '18,091', label: 'Golf Courses', color: alpha('#1976D2', 0.9) },
-    { number: '84,861', label: 'Tees', color: alpha('#9C27B0', 0.85) },
-    { number: '108', label: 'Data Points per Club', color: alpha('#D32F2F', 0.85) }
+    { number: '14,680', label: 'Golf Clubs', color: 'transparent' },
+    { number: '18,091', label: 'Golf Courses', color: 'transparent' },
+    { number: '84,861', label: 'Tees', color: 'transparent' },
+    { number: '108', label: 'Data Points per Club', color: 'transparent' }
   ];
 
   const screenshotData = [
@@ -255,7 +255,7 @@ const LandingPage = () => {
                   <StatisticBox 
                     number={stat.number} 
                     label={stat.label} 
-                    color="#333"
+                    color="transparent"
                   />
                 </motion.div>
               </Grid>
@@ -273,7 +273,8 @@ const LandingPage = () => {
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          minHeight: '64px'
+          minHeight: '48px',
+          gap: 1
         }}
       >
         <Typography 
@@ -281,36 +282,25 @@ const LandingPage = () => {
           sx={{ 
             m: 0,
             fontSize: '1rem',
-            fontWeight: 500,
-            mb: 1
+            fontWeight: 500
           }}
         >
           Ready to find your perfect round?
         </Typography>
-        <Container 
-          maxWidth="sm" 
-          sx={{ 
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 2
+        <Button
+          variant="contained"
+          size="medium"
+          onClick={() => navigate('/create-account')}
+          sx={{
+            bgcolor: 'white',
+            color: theme.palette.primary.main,
+            '&:hover': {
+              bgcolor: 'grey.100'
+            }
           }}
         >
-          <Button
-            variant="contained"
-            size="medium"
-            onClick={() => navigate('/create-account')}
-            sx={{
-              bgcolor: 'white',
-              color: theme.palette.primary.main,
-              '&:hover': {
-                bgcolor: 'grey.100'
-              }
-            }}
-          >
-            Get Started Now
-          </Button>
-        </Container>
+          Get Started Now
+        </Button>
       </Box>
 
       <Screenshots screenshots={screenshotData} />
