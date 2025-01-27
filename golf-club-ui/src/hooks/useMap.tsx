@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 
 export interface MapEvents {
-    click: (event: mapboxgl.MapClickEvent) => void;
+    click: (event: mapboxgl.MapMouseEvent) => void;
     move: () => void;
 }
 
@@ -22,20 +22,26 @@ export const useMap = ({
 
         mapboxgl.accessToken = process.env.MAPBOX_TOKEN || '';
 
-        const initMap = async () => {
-            const newMap = await new mapboxgl.Map({
+        const initMap = () => {
+            const newMap = new mapboxgl.Map({
                 container: mapContainer,
-                style: 'mapbox://styles/yourusername/dark_mode_style', // Replace with your Mapbox style ID
+                style: 'mapbox://styles/mapbox/outdoors-v11', // Use a terrain style
                 center,
-                zoom: 12,
+                zoom: 14, // Zoom in closer to the club
             });
 
             setMap(newMap);
 
             // Set up click handlers
             newMap.on('click', (e) => {
-                if (radius && e.point.distance < radius * 1000) {
-                    // Handle click within the search radius
+                if (radius) {
+                    const clickLngLat = e.lngLat;
+                    const centerLngLat = new mapboxgl.LngLat(center[0], center[1]);
+                    const distance = clickLngLat.distanceTo(centerLngLat); // Calculate distance in meters
+
+                    if (distance < radius * 1000) {
+                        // Handle click within the search radius
+                    }
                 }
             });
 
@@ -53,7 +59,7 @@ export const useMap = ({
                 map.remove();
             }
         };
-    }, [center, radius]);
+    }, [mapContainer, center, radius]);
 
-    return { mapContainer, map };
+    return { mapContainer, map, setMapContainer };
 };

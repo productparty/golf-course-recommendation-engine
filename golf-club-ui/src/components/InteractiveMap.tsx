@@ -127,6 +127,63 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({ clubs, center, r
             });
             map.current.fitBounds(bounds, { padding: 50 });
         }
+
+        map.current.on('load', () => {
+            map.current!.addSource('clubs', {
+                type: 'geojson',
+                data: {
+                    type: 'FeatureCollection',
+                    features: validClubs.map(club => ({
+                        type: 'Feature',
+                        geometry: {
+                            type: 'Point',
+                            coordinates: [club.longitude!, club.latitude!]
+                        },
+                        properties: {
+                            id: club.id,
+                            name: club.club_name
+                        }
+                    }))
+                },
+                cluster: true,
+                clusterMaxZoom: 14, // Max zoom to cluster points on
+                clusterRadius: 50 // Radius of each cluster when clustering points
+            });
+
+            map.current!.addLayer({
+                id: 'clusters',
+                type: 'circle',
+                source: 'clubs',
+                filter: ['has', 'point_count'],
+                paint: {
+                    'circle-color': '#51bbd6',
+                    'circle-radius': 20
+                }
+            });
+
+            map.current!.addLayer({
+                id: 'cluster-count',
+                type: 'symbol',
+                source: 'clubs',
+                filter: ['has', 'point_count'],
+                layout: {
+                    'text-field': '{point_count_abbreviated}',
+                    'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
+                    'text-size': 12
+                }
+            });
+
+            map.current!.addLayer({
+                id: 'unclustered-point',
+                type: 'circle',
+                source: 'clubs',
+                filter: ['!', ['has', 'point_count']],
+                paint: {
+                    'circle-color': '#11b4da',
+                    'circle-radius': 8
+                }
+            });
+        });
     }, [clubs, onMarkerClick]);
 
     // Add click handler

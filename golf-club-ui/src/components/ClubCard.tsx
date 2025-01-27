@@ -24,7 +24,7 @@ interface WeatherData {
   description: string;
 }
 
-interface Club {
+export interface Club {
   id: string;
   club_name: string;
   address: string;
@@ -50,7 +50,7 @@ interface Club {
   golf_lessons: boolean;
   latitude?: number;
   longitude?: number;
-  match_percentage: number; // Assuming this is the match percentage
+  match_percentage: number;
 }
 
 interface WeatherResponse {
@@ -147,7 +147,7 @@ const ClubCard: React.FC<ClubCardProps> = ({ club, index, isFavorite, onToggleFa
       <CardContent>
         <Link to={`/clubs/${club.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
           <Typography variant="h6">
-            {club.club_name}
+            {index + 1}. {club.club_name}
           </Typography>
         </Link>
         <Typography variant="body2">{club.address}</Typography>
