@@ -9,6 +9,7 @@ import StorageIcon from '@mui/icons-material/Storage';
 import AddLocationIcon from '@mui/icons-material/AddLocation';
 import StatisticBox from '../../components/StatisticBox';
 import Screenshot from '../../components/Screenshots';
+import { alpha } from '@mui/material/styles';
 
 const LandingPage = () => {
   const navigate = useNavigate();
@@ -50,64 +51,99 @@ const LandingPage = () => {
   ];
 
   const statistics = [
-    { number: '14,680', label: 'Golf Clubs', color: '#FF9800' },
-    { number: '18,091', label: 'Golf Courses', color: '#2E7D32' },
-    { number: '84,861', label: 'Tees', color: '#9C27B0' },
-    { number: '108', label: 'Data Points per Club', color: '#AB4000' }
+    { number: '14,680', label: 'Golf Clubs', color: alpha('#2E7D32', 0.9) },
+    { number: '18,091', label: 'Golf Courses', color: alpha('#1976D2', 0.9) },
+    { number: '84,861', label: 'Tees', color: alpha('#9C27B0', 0.85) },
+    { number: '108', label: 'Data Points per Club', color: alpha('#D32F2F', 0.85) }
   ];
 
   return (
-    <Container maxWidth="xl" sx={{ minHeight: '100vh' }}>
-      {/* Navigation */}
-      <Box component="nav" sx={{ py: 2, position: 'sticky', top: 0, bgcolor: 'white', zIndex: 10, boxShadow: 1 }}>
-        <Grid container justifyContent="space-between" alignItems="center">
-          <Grid item>
-            <Typography variant="h5" sx={{ fontWeight: 'bold', color: theme.palette.primary.main }}>
-              GolfDB
-            </Typography>
-          </Grid>
-          <Grid item>
-            <Box display="flex" gap={2}>
-              <Button variant="text" onClick={() => navigate('/about')}>About</Button>
-              <Button variant="text" onClick={() => navigate('/contact')}>Contact</Button>
-            </Box>
-          </Grid>
-        </Grid>
-      </Box>
-
-      {/* Hero Section */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8 }}
+    <Container maxWidth="xl" sx={{ minHeight: '100vh', p: 0 }}>
+      {/* Hero Section with Background Image */}
+      <Box
+        sx={{
+          position: 'relative',
+          height: { xs: '60vh', md: '80vh' },
+          width: '100%',
+          backgroundImage: 'url(/golfclubheader.jpg)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          display: 'flex',
+          alignItems: 'center',
+          '&::before': {
+            content: '""',
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            zIndex: 1
+          }
+        }}
       >
-        <Box sx={{ py: { xs: 8, md: 12 }, textAlign: 'center' }}>
-          <Typography variant="h1" sx={{ fontSize: { xs: '2.5rem', sm: '4rem', md: '5rem' }, mb: 4 }}>
-            Find Your Perfect Golf Experience
-          </Typography>
-          <Typography variant="h5" sx={{ mb: 6, color: 'text.secondary' }}>
-            Your one-stop destination for discovering and managing golf courses across the U.S.
-          </Typography>
-          <Box display="flex" gap={2} justifyContent="center">
-            <Button
-              variant="contained"
-              size="large"
-              onClick={() => navigate('/create-account')}
-              sx={{ px: 4, py: 1.5 }}
+        <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 2, color: 'white', textAlign: 'center' }}>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+          >
+            <Typography 
+              variant="h1" 
+              sx={{ 
+                fontSize: { xs: '2.5rem', sm: '4rem', md: '5rem' }, 
+                mb: 4,
+                textShadow: '2px 2px 4px rgba(0,0,0,0.3)'
+              }}
             >
-              Get Started
-            </Button>
-            <Button
-              variant="outlined"
-              size="large"
-              onClick={() => navigate('/login')}
-              sx={{ px: 4, py: 1.5 }}
+              Find Your Perfect Golf Experience
+            </Typography>
+            <Typography 
+              variant="h5" 
+              sx={{ 
+                mb: 6, 
+                textShadow: '1px 1px 2px rgba(0,0,0,0.3)'
+              }}
             >
-              Sign In
-            </Button>
-          </Box>
-        </Box>
-      </motion.div>
+              Your one-stop destination for discovering and managing golf courses across the U.S.
+            </Typography>
+            <Box display="flex" gap={2} justifyContent="center">
+              <Button
+                variant="contained"
+                size="large"
+                onClick={() => navigate('/create-account')}
+                sx={{
+                  px: 4,
+                  py: 1.5,
+                  bgcolor: theme.palette.success.main,
+                  '&:hover': {
+                    bgcolor: theme.palette.success.dark,
+                  }
+                }}
+              >
+                Get Started
+              </Button>
+              <Button
+                variant="outlined"
+                size="large"
+                onClick={() => navigate('/login')}
+                sx={{
+                  px: 4,
+                  py: 1.5,
+                  color: 'white',
+                  borderColor: 'white',
+                  '&:hover': {
+                    borderColor: 'white',
+                    bgcolor: 'rgba(255,255,255,0.1)'
+                  }
+                }}
+              >
+                Sign In
+              </Button>
+            </Box>
+          </motion.div>
+        </Container>
+      </Box>
 
       {/* Features Section */}
       <Box sx={{ py: 8, bgcolor: 'grey.50' }}>
@@ -137,13 +173,29 @@ const LandingPage = () => {
         </Container>
       </Box>
 
-      {/* Statistics Section */}
-      <Box sx={{ py: 8 }}>
-        <Container maxWidth="lg">
-          <Typography variant="h3" textAlign="center" gutterBottom>
+      {/* Statistics Section with Updated Colors */}
+      <Box sx={{ 
+        py: 8,
+        backgroundImage: 'url(/statistics-bg.jpg)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        position: 'relative',
+        '&::before': {
+          content: '""',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.7)',
+          zIndex: 1
+        }
+      }}>
+        <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 2 }}>
+          <Typography variant="h3" textAlign="center" gutterBottom sx={{ color: 'white', mb: 6 }}>
             Unmatched Database
           </Typography>
-          <Grid container spacing={4} sx={{ mt: 4 }}>
+          <Grid container spacing={4}>
             {statistics.map((stat, index) => (
               <Grid item xs={12} sm={6} md={3} key={index}>
                 <motion.div
@@ -159,10 +211,10 @@ const LandingPage = () => {
         </Container>
       </Box>
 
-      {/* Call to Action */}
-      <Box sx={{ py: 8, textAlign: 'center', bgcolor: 'primary.main', color: 'white' }}>
-        <Container maxWidth="md">
-          <Typography variant="h4" gutterBottom>
+      {/* Minimized CTA Section */}
+      <Box sx={{ py: 4, bgcolor: theme.palette.primary.main, color: 'white' }}>
+        <Container maxWidth="sm" sx={{ textAlign: 'center' }}>
+          <Typography variant="h6" sx={{ mb: 2 }}>
             Ready to find your perfect round?
           </Typography>
           <Button
@@ -170,9 +222,8 @@ const LandingPage = () => {
             size="large"
             onClick={() => navigate('/create-account')}
             sx={{
-              mt: 3,
               bgcolor: 'white',
-              color: 'primary.main',
+              color: theme.palette.primary.main,
               '&:hover': {
                 bgcolor: 'grey.100'
               }
