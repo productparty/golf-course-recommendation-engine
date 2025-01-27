@@ -3,6 +3,10 @@ import React, { useEffect, useRef } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { Box } from '@mui/material';
+import { config } from '../config';
+
+// Set the access token for mapboxgl
+mapboxgl.accessToken = config.MAPBOX_TOKEN || '';
 
 interface Club {
     id: string;
@@ -53,6 +57,10 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
 
     useEffect(() => {
         if (!mapContainer.current) return;
+        if (!mapboxgl.accessToken) {
+            console.error('Mapbox token is not set');
+            return;
+        }
 
         // Filter out clubs without valid coordinates
         const validClubs = clubs.filter(club => 

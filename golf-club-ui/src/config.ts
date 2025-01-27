@@ -22,6 +22,7 @@ const formatApiUrl = (url: string) => {
 // Export configuration object
 export const config = {
   API_URL: process.env.REACT_APP_API_URL || 'https://golf-course-recommendation-engin-production.up.railway.app',
+  MAPBOX_TOKEN: process.env.REACT_APP_MAPBOX_TOKEN || '',
   SUPABASE_URL: import.meta.env.VITE_SUPABASE_URL,
   SUPABASE_ANON_KEY: import.meta.env.VITE_SUPABASE_ANON_KEY,
   APP_URL: import.meta.env.VITE_APP_URL
