@@ -21,9 +21,8 @@
 
 .content {
   display: flex;
-  width: 100%;
-  max-width: 1200px;
-  margin-top: 10px; /* Reduce margin-top */
+  gap: 2rem;
+  padding-top: 1rem;
 }
 
 .filters {
@@ -32,6 +31,7 @@
   background-color: #f9f9f9;
   border-radius: 8px;
   margin-right: 20px;
+  transition: all 0.3s ease;
 }
 
 .filters h3 {
@@ -73,11 +73,12 @@
 }
 
 .results {
-  flex: 2;
+  flex: 1;
   padding: 20px;
   background-color: #ffffff;
   border-radius: 8px;
   margin-top: 10px; /* Reduce margin-top */
+  margin-left: 320px; /* Adjust based on filter width */
   font-size: var(--font-size-base);
 }
 
@@ -160,7 +161,7 @@
   }
 
   .results {
-    width: auto;
+    margin-left: 0;
   }
 
   /* Adjust club details layout */

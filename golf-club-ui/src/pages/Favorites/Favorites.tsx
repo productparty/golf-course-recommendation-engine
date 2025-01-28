@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Typography, Grid, Button } from '@mui/material';
+import { Box, Typography, Grid, Button, Alert } from '@mui/material';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
 import ClubCard from '../../components/ClubCard';
 import PageLayout from '../../components/PageLayout';
+import { InteractiveMap } from '../../components/InteractiveMap';
+import { useNavigate } from 'react-router-dom';
 
 interface GolfClub {
   id: string;
@@ -46,6 +48,8 @@ const Favorites: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const ITEMS_PER_PAGE = 5;  // Show 5 items per page
+  const [mapCenter, setMapCenter] = useState<[number, number]>([-98.5795, 39.8283]);
+  const navigate = useNavigate();
 
   const fetchFavorites = async () => {
     if (!session?.user?.id) return;
@@ -102,100 +106,37 @@ const Favorites: React.FC = () => {
   }, [session?.user?.id]);
 
   return (
-    <PageLayout title="My Favorite Clubs">
-      <Box sx={{ p: 3 }}>
-        {isLoading ? (
-          <Typography>Loading favorites...</Typography>
-        ) : favorites.length === 0 ? (
-          <Typography>No favorites saved yet.</Typography>
-        ) : (
+    <PageLayout title="Favorite Clubs">
+      <div className="favorites-container">
+        {favorites.length > 0 ? (
           <>
-            <Grid container spacing={2}>
-              {getCurrentPageFavorites().map((favorite, index) => (
-                <Grid item xs={12} key={favorite.id}>
-                  <ClubCard
-                    club={{
-                      ...favorite.golfclub,
-                      score: undefined
-                    }}
-                    isFavorite={true}
-                    showToggle={true}
-                    onToggleFavorite={handleToggleFavorite}
-                    showScore={true}
-                    index={index}
-                  />
-                </Grid>
-              ))}
-            </Grid>
-
-            {/* Pagination Controls */}
-            {totalPages > 1 && (
-              <Box sx={{ 
-                mt: 3, 
-                display: 'flex', 
-                flexWrap: 'wrap',
-                justifyContent: 'center', 
-                gap: { xs: 0.5, sm: 1 }
-              }}>
-                <Button
-                  onClick={() => handlePageChange(1)}
-                  disabled={currentPage === 1}
-                  variant="outlined"
-                >
-                  First
-                </Button>
-                <Button
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  disabled={currentPage === 1}
-                  variant="outlined"
-                >
-                  Previous
-                </Button>
-                
-                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                  const pageNum = currentPage - 2 + i;
-                  if (pageNum > 0 && pageNum <= totalPages) {
-                    return (
-                      <Button
-                        key={pageNum}
-                        onClick={() => handlePageChange(pageNum)}
-                        variant={pageNum === currentPage ? "contained" : "outlined"}
-                      >
-                        {pageNum}
-                      </Button>
-                    );
-                  }
-                  return null;
-                })}
-                
-                <Button
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  disabled={currentPage === totalPages}
-                  variant="outlined"
-                >
-                  Next
-                </Button>
-                <Button
-                  onClick={() => handlePageChange(totalPages)}
-                  disabled={currentPage === totalPages}
-                  variant="outlined"
-                >
-                  Last
-                </Button>
-              </Box>
-            )}
+            <div className="favorites-map">
+              <InteractiveMap
+                clubs={favorites.slice(0, Math.min(favorites.length, 10)).map(f => f.golfclub)}
+                center={mapCenter}
+                radius={25}
+                onMarkerClick={(clubId) => navigate(`/clubs/${clubId}`)}
+                showNumbers={true}
+              />
+            </div>
             
-            {totalPages > 1 && (
-              <Typography 
-                variant="body2" 
-                sx={{ mt: 1, textAlign: 'center' }}
-              >
-                Page {currentPage} of {totalPages}
-              </Typography>
-            )}
+            <div className="favorites-list">
+              {favorites.map((club) => (
+                <ClubCard 
+                  key={club.id}
+                  club={club.golfclub}
+                  isFavorite={true}
+                  onToggleFavorite={handleToggleFavorite}
+                  showToggle={true} index={0} showScore={false}                />
+              ))}
+            </div>
           </>
+        ) : (
+          <Alert severity="info">
+            You haven't added any clubs to your favorites yet.
+          </Alert>
         )}
-      </Box>
+      </div>
     </PageLayout>
   );
 };

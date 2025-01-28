@@ -89,7 +89,7 @@ const FindClubUpdated: React.FC<Props> = ({ className, ...rest }) => {
   const [error, setError] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const ITEMS_PER_PAGE = 5;
+  const ITEMS_PER_PAGE = 10;
   
   const [sortBy, setSortBy] = useState<SortOption>('');
   
@@ -123,6 +123,8 @@ const FindClubUpdated: React.FC<Props> = ({ className, ...rest }) => {
   const navigate = useNavigate();
 
   const [mapCenter, setMapCenter] = useState<[number, number]>([-98.5795, 39.8283]);
+
+  const [isSticky, setIsSticky] = useState(false);
 
   const handleTextChange = (name: keyof Filters) => (
     event: React.ChangeEvent<HTMLInputElement>
@@ -403,6 +405,14 @@ const FindClubUpdated: React.FC<Props> = ({ className, ...rest }) => {
     }
   }, [location.search]);
 
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsSticky(window.scrollY > 100);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   return (
     <Box
       sx={{
@@ -427,7 +437,16 @@ const FindClubUpdated: React.FC<Props> = ({ className, ...rest }) => {
           </Typography>
 
           <div className="content">
-            <aside className="filters">
+            <aside className="filters" style={{
+              position: isSticky ? 'fixed' : 'static',
+              top: isSticky ? '0' : 'auto',
+              width: isSticky ? '300px' : '100%',
+              zIndex: isSticky ? 100 : 'auto',
+              transition: 'all 0.3s ease',
+              backgroundColor: isSticky ? 'white' : 'transparent',
+              padding: isSticky ? '16px' : '0',
+              boxShadow: isSticky ? '0 2px 4px rgba(0,0,0,0.1)' : 'none'
+            }}>
               <Typography variant="h6" gutterBottom>Filters</Typography>
               <Box sx={{ mb: 3 }}>
                 {/* Location Search */}
@@ -660,7 +679,7 @@ const FindClubUpdated: React.FC<Props> = ({ className, ...rest }) => {
                 <>
                   <Box sx={{ mb: 4, mt: 2 }}>
                     <InteractiveMap 
-                      clubs={clubs}
+                      clubs={getCurrentPageClubs()}
                       center={[mapCenter[0], mapCenter[1]]}
                       radius={Number(filters.radius)}
                       onMarkerClick={(clubId) => {
