@@ -1,6 +1,6 @@
 // hooks/useMap.tsx
 import { useEffect, useRef, useState } from 'react';
-import mapboxgl from 'mapbox-gl';
+import mapboxgl, { Map } from 'mapbox-gl';
 import { config } from '../config';
 
 interface UseMapProps {
