@@ -6,6 +6,7 @@ import ClubCard from '../../components/ClubCard';
 import PageLayout from '../../components/PageLayout';
 import { InteractiveMap } from '../../components/InteractiveMap';
 import { useNavigate } from 'react-router-dom';
+import mapboxgl from 'mapbox-gl';
 
 interface GolfClub {
   id: string;
@@ -50,6 +51,7 @@ const Favorites: React.FC = () => {
   const ITEMS_PER_PAGE = 5;  // Show 5 items per page
   const [mapCenter, setMapCenter] = useState<[number, number]>([-98.5795, 39.8283]);
   const navigate = useNavigate();
+  const mapRef = React.useRef<mapboxgl.Map | null>(null);
 
   const fetchFavorites = async () => {
     if (!session?.user?.id) return;
@@ -105,18 +107,32 @@ const Favorites: React.FC = () => {
     fetchFavorites();
   }, [session?.user?.id]);
 
+  useEffect(() => {
+    if (favorites.length > 0) {
+      const newBounds = new mapboxgl.LngLatBounds();
+      favorites.forEach(club => {
+        if (club.golfclub.longitude && club.golfclub.latitude) {
+          newBounds.extend([club.golfclub.longitude, club.golfclub.latitude]);
+        }
+      });
+      // Update map bounds immediately
+      mapRef.current?.fitBounds(newBounds, { padding: 50 });
+    }
+  }, [favorites]);  // Run when favorite clubs change
+
   return (
     <PageLayout title="Favorite Clubs">
       <div className="favorites-container">
         {favorites.length > 0 ? (
           <>
             <div className="favorites-map">
-              <InteractiveMap
-                clubs={favorites.slice(0, Math.min(favorites.length, 10)).map(f => f.golfclub)}
+              <InteractiveMap 
+                clubs={favorites.map(f => f.golfclub)}
                 center={mapCenter}
                 radius={25}
                 onMarkerClick={(clubId) => navigate(`/clubs/${clubId}`)}
-                showNumbers={true}
+                showNumbers={false}
+                key="favorites-map"
               />
             </div>
             
