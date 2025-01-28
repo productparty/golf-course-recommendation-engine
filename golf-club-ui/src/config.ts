@@ -34,3 +34,5 @@ export const config = {
 if (import.meta.env.DEV) {
   console.log('Config:', config);
 }
+
+export default config;
