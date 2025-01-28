@@ -1,41 +1,32 @@
 {
   "name": "golf-club-ui",
-  "version": "1.0.0",
   "private": true,
+  "version": "0.1.0",
+  "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview",
-    "type-check": "tsc --noEmit"
+    "build": "tsc && vite build",
+    "preview": "vite preview"
   },
   "dependencies": {
-    "@emotion/react": "^11.11.1",
+    "@emotion/react": "^11.11.0",
     "@emotion/styled": "^11.11.0",
-    "@fontsource/roboto": "^5.1.1",
-    "@mui/icons-material": "^5.14.20",
-    "@mui/material": "^5.14.20",
-    "@supabase/supabase-js": "^2.47.16",
-    "@types/mapbox-gl": "^3.4.1",
-    "axios": "^1.6.2",
-    "framer-motion": "^10.16.4",
-    "lodash.debounce": "^4.0.8",
-    "mapbox-gl": "^3.9.3",
+    "@mui/icons-material": "^5.11.16",
+    "@mui/material": "^5.13.0",
+    "@supabase/supabase-js": "^2.21.0",
+    "mapbox-gl": "^2.15.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-router-dom": "^6.20.1"
+    "react-router-dom": "^6.11.1"
   },
   "devDependencies": {
-    "@testing-library/jest-dom": "^6.1.4",
-    "@testing-library/react": "^14.1.2",
-    "@types/react": "^18.2.37",
-    "@types/react-dom": "^18.2.15",
-    "@vitejs/plugin-react": "^4.2.0",
-    "autoprefixer": "^10.4.16",
-    "postcss": "^8.4.31",
-    "tailwindcss": "^3.3.5",
-    "typescript": "^5.3.2",
-    "vite": "^5.0.4",
-    "vitest": "^0.34.6"
+    "@types/mapbox-gl": "^2.7.11",
+    "@types/node": "^20.1.3",
+    "@types/react": "^18.2.6",
+    "@types/react-dom": "^18.2.4",
+    "@vitejs/plugin-react": "^4.0.0",
+    "typescript": "^5.0.4",
+    "vite": "^4.3.5"
   },
   "browserslist": {
     "production": [
@@ -48,6 +39,5 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  },
-  "type": "module"
+  }
 }
