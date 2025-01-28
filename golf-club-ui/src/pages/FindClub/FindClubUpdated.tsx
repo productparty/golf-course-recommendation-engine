@@ -632,11 +632,6 @@ const FindClubUpdated: React.FC<Props> = ({ className, ...rest }) => {
                             position: 'relative',
                           }}
                         >
-                          <Link to={`/clubs/${club.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                            <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center' }}>
-                              {index + 1}. {club.club_name}
-                            </Typography>
-                          </Link>
                           <ClubCard 
                             club={club}
                             isFavorite={favorites.includes(club.id)}

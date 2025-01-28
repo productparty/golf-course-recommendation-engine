@@ -146,13 +146,15 @@ const ClubCard: React.FC<ClubCardProps> = ({ club, index, isFavorite, onToggleFa
     <Card sx={{ mb: 2, position: 'relative' }}>
       <CardContent>
         <Link to={`/clubs/${club.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-          <Typography variant="h6">
+          <Typography variant="h6" align="left">
             {index + 1}. {club.club_name}
           </Typography>
         </Link>
-        <Typography variant="body2">{club.address}</Typography>
-        <Typography variant="body2">{club.city}, {club.state} {club.zip_code}</Typography>
-        <Typography variant="body2">Distance: {typeof club.distance_miles === 'number' ? club.distance_miles.toFixed(1) : 'N/A'} miles</Typography>
+        <Typography variant="body2" align="left">{club.address}</Typography>
+        <Typography variant="body2" align="left">{club.city}, {club.state} {club.zip_code}</Typography>
+        <Typography variant="body2" align="left">
+          Distance: {typeof club.distance_miles === 'number' ? club.distance_miles.toFixed(1) : 'N/A'} miles
+        </Typography>
 
         {showToggle && onToggleFavorite && (
           <IconButton
