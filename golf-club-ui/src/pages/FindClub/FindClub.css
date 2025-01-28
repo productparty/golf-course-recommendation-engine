@@ -22,19 +22,17 @@
 .content {
   display: flex;
   gap: 2rem;
-  padding-top: 1rem;
-  position: relative;
+  padding: 1rem;
+  max-width: 1440px;
+  margin: 0 auto;
 }
 
 .filters {
+  flex: 0 0 300px;
   position: sticky;
   top: 1rem;
-  width: 300px;
-  height: fit-content;
-  max-height: calc(100vh - 2rem);
+  height: calc(100vh - 2rem);
   overflow-y: auto;
-  z-index: 1;
-  transition: all 0.3s ease;
   background-color: white;
   padding: 16px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
@@ -80,12 +78,8 @@
 
 .results {
   flex: 1;
-  padding: 20px;
-  background-color: #ffffff;
-  border-radius: 8px;
-  margin-top: 10px; /* Reduce margin-top */
-  margin-left: 320px; /* Adjust based on filter width */
-  font-size: var(--font-size-base);
+  min-width: 0;
+  padding: 0;
 }
 
 .results h3 {
@@ -161,8 +155,8 @@
   
   .filters {
     position: static;
+    height: auto;
     width: 100%;
-    max-height: none;
   }
 
   .results {

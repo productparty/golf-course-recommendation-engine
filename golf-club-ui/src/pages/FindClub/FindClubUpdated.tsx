@@ -417,10 +417,11 @@ const FindClubUpdated: React.FC<Props> = ({ className, ...rest }) => {
     <Box
       sx={{
         display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
+        flexDirection: 'column',
         minHeight: '100vh',
-        textAlign: 'center',
+        maxWidth: '1440px',
+        margin: '0 auto',
+        padding: '1rem'
       }}
     >
       <PageLayout title="Find Club">
@@ -439,15 +440,15 @@ const FindClubUpdated: React.FC<Props> = ({ className, ...rest }) => {
           <div className="content" style={{
             display: 'flex',
             gap: '2rem',
-            paddingTop: '1rem',
-            position: 'relative'
+            flex: 1,
+            minHeight: 0,
+            overflow: 'hidden'
           }}>
             <aside className="filters" style={{
-              position: clubs.length > 0 ? 'sticky' : 'static',
-              top: clubs.length > 0 ? '1rem' : 'auto',
-              width: '300px',
-              height: 'fit-content',
-              maxHeight: 'calc(100vh - 2rem)',
+              flex: '0 0 300px',
+              position: 'sticky',
+              top: '1rem',
+              height: 'calc(100vh - 2rem)',
               overflowY: 'auto',
               zIndex: 1,
               transition: 'all 0.3s ease',
@@ -456,7 +457,12 @@ const FindClubUpdated: React.FC<Props> = ({ className, ...rest }) => {
               boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
             }}>
               <Typography variant="h6" gutterBottom>Filters</Typography>
-              <Box sx={{ mb: 3 }}>
+              <Box sx={{ 
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '1rem',
+                height: '100%'
+              }}>
                 {/* Location Search */}
                 <Typography variant="subtitle1" gutterBottom>
                   Location
@@ -633,24 +639,19 @@ const FindClubUpdated: React.FC<Props> = ({ className, ...rest }) => {
                     onClick={handleSearch}
                     disabled={isLoading}
                     fullWidth
-                    sx={{ 
-                      height: 36,
-                    }}
                   >
-                    {isLoading ? (
-                      <>
-                        <CircularProgress size={24} sx={{ mr: 1 }} />
-                        Searching...
-                      </>
-                    ) : (
-                      'Search Clubs'
-                    )}
+                    {isLoading ? 'Searching...' : 'Search Clubs'}
                   </Button>
                 </Box>
               </Box>
             </aside>
 
-            <section className="results">
+            <section className="results" style={{ 
+              flex: 1,
+              minWidth: 0,
+              overflowY: 'auto',
+              padding: '1rem'
+            }}>
               <Box sx={{ 
                 display: 'flex', 
                 justifyContent: 'space-between', 
