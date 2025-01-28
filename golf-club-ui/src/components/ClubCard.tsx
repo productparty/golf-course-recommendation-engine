@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, Typography, Chip, Box, Divider, Grid, CircularProgress, Icon, FormControl, Select } from '@mui/material';
+import { Card, CardContent, Typography, Chip, Box, Divider, Grid, CircularProgress, Icon, FormControl, Select, SxProps, Theme } from '@mui/material';
 import GolfCourseIcon from '@mui/icons-material/GolfCourse';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
@@ -65,11 +65,12 @@ interface WeatherResponse {
 
 interface ClubCardProps {
   club: Club;
-  index: number;
+  showScore?: boolean;
   isFavorite: boolean;
-  onToggleFavorite: (clubId: string) => Promise<void>;
-  showToggle: boolean;
-  showScore: boolean;
+  onToggleFavorite: (clubId: string) => void;
+  showToggle?: boolean;
+  index?: number;
+  sx?: SxProps<Theme>;
 }
 
 const FeatureChip: React.FC<{ label: string; isMatch?: boolean }> = ({ label, isMatch = false }) => (
@@ -114,7 +115,7 @@ const getWeatherIcon = (weatherCode: number) => {
   }
 };
 
-const ClubCard: React.FC<ClubCardProps> = ({ club, index, isFavorite, onToggleFavorite, showToggle }) => {
+const ClubCard: React.FC<ClubCardProps> = ({ club, showScore, isFavorite, onToggleFavorite, showToggle, index, sx }) => {
   const [weather, setWeather] = useState<WeatherData[]>([]);
   const [isLoadingWeather, setIsLoadingWeather] = useState(false);
 
@@ -143,7 +144,7 @@ const ClubCard: React.FC<ClubCardProps> = ({ club, index, isFavorite, onToggleFa
   }, [club.latitude, club.longitude]);
 
   return (
-    <Card sx={{ mb: 2, position: 'relative' }}>
+    <Card sx={{ mb: 2, position: 'relative', ...sx }}>
       <CardContent>
         <Link to={`/clubs/${club.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
           <Typography variant="h6" align="left">

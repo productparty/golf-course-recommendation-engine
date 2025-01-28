@@ -206,7 +206,15 @@ const RecommendClubUpdated: React.FC = () => {
         padding: '1rem'
       }}
     >
-      <PageLayout title="Recommended Clubs">
+      <PageLayout 
+        title="Recommended Clubs" 
+        titleProps={{ 
+          sx: { 
+            textAlign: 'center', 
+            color: 'primary.main' 
+          } 
+        }}
+      >
         <Typography 
           variant="subtitle1" 
           color="text.secondary" 
@@ -282,12 +290,12 @@ const RecommendClubUpdated: React.FC = () => {
           <>
             <Box sx={{ 
               height: '400px', 
-              width: '100%', // Ensure full width
+              width: '100%',
               mb: 3, 
               borderRadius: 1 
             }}>
               <InteractiveMap
-                clubs={courses}
+                clubs={getCurrentPageCourses()}
                 center={mapCenter}
                 radius={parseInt(radius)}
                 onMarkerClick={(clubId) => {
@@ -324,6 +332,13 @@ const RecommendClubUpdated: React.FC = () => {
                           onToggleFavorite={handleToggleFavorite}
                           showToggle={true}
                           index={index}
+                          sx={{
+                            '& .MuiCardHeader-action': {
+                              position: { xs: 'static', sm: 'absolute' },
+                              right: { xs: 0, sm: 16 },
+                              top: { xs: 0, sm: 16 }
+                            }
+                          }}
                         />
                       </Link>
                     </Box>
