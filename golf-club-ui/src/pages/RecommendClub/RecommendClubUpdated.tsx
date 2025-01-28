@@ -199,10 +199,11 @@ const RecommendClubUpdated: React.FC = () => {
     <Box
       sx={{
         display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        minHeight: '100vh', // Full viewport height
-        textAlign: 'center', // Center text if needed
+        flexDirection: 'column',
+        minHeight: '100vh',
+        maxWidth: '1440px',
+        margin: '0 auto',
+        padding: '1rem'
       }}
     >
       <PageLayout title="Recommended Clubs">

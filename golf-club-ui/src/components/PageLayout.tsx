@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
-import { Container, Typography, Box, Paper, Button, Dialog, DialogTitle, DialogContent, List, ListItem, ListItemText } from '@mui/material';
+import { Container, Typography, Box, Paper, Button, Dialog, DialogTitle, DialogContent, List, ListItem, ListItemText, SxProps, Theme } from '@mui/material';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
 
 interface PageLayoutProps {
   title: string;
   children: React.ReactNode;
+  titleProps?: SxProps<Theme>;
 }
 
-const PageLayout: React.FC<PageLayoutProps> = ({ children, title }) => {
+const PageLayout: React.FC<PageLayoutProps> = ({ children, title, titleProps }) => {
   const [showFavorites, setShowFavorites] = useState(false);
   const { session } = useAuth();
   const [favorites, setFavorites] = useState<Array<{ id: string; club_name: string }>>([]);
@@ -55,7 +56,8 @@ const PageLayout: React.FC<PageLayoutProps> = ({ children, title }) => {
             sx={{ 
               color: 'primary.main',
               fontWeight: 'medium',
-              mb: 4
+              mb: 4,
+              ...titleProps
             }}
           >
             {title}

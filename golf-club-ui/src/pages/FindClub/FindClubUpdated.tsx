@@ -424,7 +424,7 @@ const FindClubUpdated: React.FC<Props> = ({ className, ...rest }) => {
         padding: '1rem'
       }}
     >
-      <PageLayout title="Find Club">
+      <PageLayout title="Find Club" titleProps={{ sx: { textAlign: 'center' } }}>
         <Box 
           component="div" 
           sx={{ className: `find-club ${className || ''}` }}
@@ -482,14 +482,6 @@ const FindClubUpdated: React.FC<Props> = ({ className, ...rest }) => {
                     value={filters.radius}
                     onChange={handleSelectChange('radius')}
                     label="Search Radius"
-                    MenuProps={{
-                        PaperProps: {
-                            style: {
-                                textAlign: 'left'
-                            }
-                        }
-                    }}
-                    sx={{ textAlign: 'left' }}
                   >
                     <MenuItem value="10">10 miles</MenuItem>
                     <MenuItem value="25">25 miles</MenuItem>
@@ -497,6 +489,16 @@ const FindClubUpdated: React.FC<Props> = ({ className, ...rest }) => {
                     <MenuItem value="100">100 miles</MenuItem>
                   </Select>
                 </FormControl>
+
+                <Button
+                  variant="contained"
+                  onClick={handleSearch}
+                  disabled={isLoading}
+                  fullWidth
+                  sx={{ mt: 2 }}
+                >
+                  {isLoading ? 'Searching...' : 'Search Clubs'}
+                </Button>
 
                 <Divider sx={{ my: 2 }} />
 
@@ -628,21 +630,6 @@ const FindClubUpdated: React.FC<Props> = ({ className, ...rest }) => {
                   label="Show Only Favorites"
                   sx={{ mb: 2 }}
                 />
-
-                <Box sx={{ 
-                  mt: 'auto',
-                  pt: 2,
-                  pb: 3
-                }}>
-                  <Button
-                    variant="contained"
-                    onClick={handleSearch}
-                    disabled={isLoading}
-                    fullWidth
-                  >
-                    {isLoading ? 'Searching...' : 'Search Clubs'}
-                  </Button>
-                </Box>
               </Box>
             </aside>
 
