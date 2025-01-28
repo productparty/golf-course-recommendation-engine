@@ -19,5 +19,16 @@
   "env": {
     "VITE_APP_URL": "https://golf-club-ui-lac.vercel.app",
     "VITE_API_URL": "https://golf-course-recommendation-engin-production.up.railway.app"
-  }
+  },
+  "build": {
+    "env": {
+      "NODE_ENV": "production"
+    }
+  },
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/"
+    }
+  ]
 }
