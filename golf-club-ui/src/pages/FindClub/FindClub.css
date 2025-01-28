@@ -23,15 +23,21 @@
   display: flex;
   gap: 2rem;
   padding-top: 1rem;
+  position: relative;
 }
 
 .filters {
-  flex: 1;
-  padding: 20px;
-  background-color: #f9f9f9;
-  border-radius: 8px;
-  margin-right: 20px;
+  position: sticky;
+  top: 1rem;
+  width: 300px;
+  height: fit-content;
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
+  z-index: 1;
   transition: all 0.3s ease;
+  background-color: white;
+  padding: 16px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 .filters h3 {
@@ -152,12 +158,11 @@
   .content {
     flex-direction: column;
   }
-
+  
   .filters {
-    margin-right: 0;
-    margin-bottom: 20px;
-    width: auto;
-    font-size: var(--font-size-sm);
+    position: static;
+    width: 100%;
+    max-height: none;
   }
 
   .results {

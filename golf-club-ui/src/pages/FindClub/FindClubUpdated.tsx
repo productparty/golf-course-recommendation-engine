@@ -436,16 +436,24 @@ const FindClubUpdated: React.FC<Props> = ({ className, ...rest }) => {
             Search and filter golf clubs based on your preferences and location.
           </Typography>
 
-          <div className="content">
+          <div className="content" style={{
+            display: 'flex',
+            gap: '2rem',
+            paddingTop: '1rem',
+            position: 'relative'
+          }}>
             <aside className="filters" style={{
-              position: isSticky ? 'fixed' : 'static',
-              top: isSticky ? '0' : 'auto',
-              width: isSticky ? '300px' : '100%',
-              zIndex: isSticky ? 100 : 'auto',
+              position: clubs.length > 0 ? 'sticky' : 'static',
+              top: clubs.length > 0 ? '1rem' : 'auto',
+              width: '300px',
+              height: 'fit-content',
+              maxHeight: 'calc(100vh - 2rem)',
+              overflowY: 'auto',
+              zIndex: 1,
               transition: 'all 0.3s ease',
-              backgroundColor: isSticky ? 'white' : 'transparent',
-              padding: isSticky ? '16px' : '0',
-              boxShadow: isSticky ? '0 2px 4px rgba(0,0,0,0.1)' : 'none'
+              backgroundColor: 'white',
+              padding: '16px',
+              boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
             }}>
               <Typography variant="h6" gutterBottom>Filters</Typography>
               <Box sx={{ mb: 3 }}>
