@@ -197,9 +197,7 @@ const FindClubUpdated: React.FC<Props> = ({ className, ...rest }) => {
 
       const coursesWithCoords = await Promise.all((data.results || []).map(async (course: Club) => {
         try {
-          const response = await fetch(
-            `https://api.zippopotam.us/us/${course.zip_code}`
-          );
+          const response = await fetch(`https://api.zippopotam.us/us/${course.zip_code}`);
           const zipData = await response.json();
           
           return {

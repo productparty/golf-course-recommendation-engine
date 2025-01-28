@@ -33,8 +33,8 @@ interface Club {
     golf_clubs_rental: boolean;
     club_fitting: boolean;
     golf_lessons: boolean;
-    latitude?: number;
-    longitude?: number;
+    lat?: number;
+    lng?: number;
     match_percentage?: number;
 }
 
@@ -105,7 +105,7 @@ export const ClubDetailPage = () => {
     }, [session?.user?.id]);
 
     const { mapContainer, setMapContainer } = useMap({
-        center: club ? [club.longitude || 0, club.latitude || 0] : [0, 0],
+        center: club ? [club.lng || 0, club.lat || 0] : [0, 0],
         radius: 500
     });
 
@@ -139,8 +139,8 @@ export const ClubDetailPage = () => {
                         golf_clubs_rental,
                         club_fitting,
                         golf_lessons,
-                        latitude,
-                        longitude
+                        lat,
+                        lng
                     `)
                     .eq('global_id', id)
                     .single();
@@ -168,7 +168,12 @@ export const ClubDetailPage = () => {
     if (!club) return <Typography>Club not found</Typography>;
 
     return (
-        <Box sx={{ p: 3 }}>
+        <Box sx={{ 
+            p: 3, 
+            maxWidth: '1200px',
+            margin: '0 auto',
+            textAlign: 'left'
+        }}>
             <Button
                 startIcon={<ArrowBackIcon />}
                 onClick={() => navigate(-1)}
@@ -193,7 +198,7 @@ export const ClubDetailPage = () => {
             <Box sx={{ height: '400px', mb: 3, borderRadius: 1 }}>
                 <InteractiveMap
                     clubs={[club]}
-                    center={[club.longitude || 0, club.latitude || 0]}
+                    center={[club.lng || 0, club.lat || 0]}
                     radius={500}
                     initialZoom={16}
                     onMarkerClick={(clubId) => {
@@ -202,15 +207,15 @@ export const ClubDetailPage = () => {
                 />
             </Box>
 
-            <Box sx={{ display: 'grid', gap: 3 }}>
+            <Box sx={{ display: 'grid', gap: 3, textAlign: 'left' }}>
                 <Box>
-                    <Typography variant="h6" gutterBottom>Location</Typography>
-                    <Typography>{club.address}</Typography>
-                    <Typography>{club.city}, {club.state} {club.zip_code}</Typography>
+                    <Typography variant="h6" align="left" gutterBottom>Location</Typography>
+                    <Typography align="left">{club.address}</Typography>
+                    <Typography align="left">{club.city}, {club.state} {club.zip_code}</Typography>
                 </Box>
 
                 <Box>
-                    <Typography variant="h6" gutterBottom>Details</Typography>
+                    <Typography variant="h6" align="left" gutterBottom>Details</Typography>
                     <Typography>Price Tier: {club.price_tier}</Typography>
                     <Typography>Difficulty: {club.difficulty}</Typography>
                     <Typography>Number of Holes: {club.number_of_holes}</Typography>
@@ -220,7 +225,7 @@ export const ClubDetailPage = () => {
                 </Box>
 
                 <Box>
-                    <Typography variant="h6" gutterBottom>Amenities & Facilities</Typography>
+                    <Typography variant="h6" align="left" gutterBottom>Amenities & Facilities</Typography>
                     <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 2 }}>
                         {club.driving_range && <Typography>• Driving Range</Typography>}
                         {club.putting_green && <Typography>• Putting Green</Typography>}
@@ -231,7 +236,7 @@ export const ClubDetailPage = () => {
                 </Box>
 
                 <Box>
-                    <Typography variant="h6" gutterBottom>Equipment & Services</Typography>
+                    <Typography variant="h6" align="left" gutterBottom>Equipment & Services</Typography>
                     <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 2 }}>
                         {club.motor_cart && <Typography>• Motor Cart</Typography>}
                         {club.pull_cart && <Typography>• Pull Cart</Typography>}
