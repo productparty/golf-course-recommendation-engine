@@ -1,6 +1,6 @@
 // components/ClubDetailPage.tsx
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Box, Typography, IconButton, Button, CircularProgress } from '@mui/material';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
@@ -41,6 +41,7 @@ interface Club {
 export const ClubDetailPage = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+    const location = useLocation();
     const { session } = useAuth();
     const [club, setClub] = useState<Club | null>(null);
     const [loading, setLoading] = useState(true);
@@ -175,7 +176,7 @@ export const ClubDetailPage = () => {
             textAlign: 'left'
         }}>
             <IconButton 
-                onClick={() => navigate(-1)}
+                onClick={() => navigate(location.state?.from || '/find-club')}
                 sx={{ position: 'absolute', top: 16, left: 16 }}
             >
                 <ArrowBackIcon />

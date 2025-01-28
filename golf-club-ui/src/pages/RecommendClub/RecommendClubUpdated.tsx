@@ -10,6 +10,8 @@ import ClubCard from '../../components/ClubCard';
 import { supabase } from '../../lib/supabase';
 import { InteractiveMap } from '../../components/InteractiveMap';
 import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 
 interface Club {
   id: string;
@@ -54,6 +56,7 @@ const RecommendClubUpdated: React.FC = () => {
   const [favorites, setFavorites] = useState<string[]>([]);
   const [mapCenter, setMapCenter] = useState<[number, number]>([-98.5795, 39.8283]);
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleSearch = async () => {
     if (!zipCode) {
@@ -308,14 +311,20 @@ const RecommendClubUpdated: React.FC = () => {
                         }
                       }}
                     >
-                      <ClubCard 
-                        club={club}
-                        showScore={true}
-                        isFavorite={favorites.includes(club.id)}
-                        onToggleFavorite={handleToggleFavorite}
-                        showToggle={true}
-                        index={index}
-                      />
+                      <Link 
+                        to={`/clubs/${club.id}`} 
+                        state={{ from: location.pathname + location.search }}
+                        style={{ textDecoration: 'none', color: 'inherit' }}
+                      >
+                        <ClubCard 
+                          club={club}
+                          showScore={true}
+                          isFavorite={favorites.includes(club.id)}
+                          onToggleFavorite={handleToggleFavorite}
+                          showToggle={true}
+                          index={index}
+                        />
+                      </Link>
                     </Box>
                   </Grid>
                 ))
