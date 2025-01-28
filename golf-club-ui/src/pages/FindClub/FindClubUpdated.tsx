@@ -265,9 +265,9 @@ const FindClubUpdated: React.FC<Props> = ({ className, ...rest }) => {
   };
 
   const getPaginatedClubs = () => {
-    const allClubs = getCurrentPageClubs();
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-    return allClubs.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+    const endIndex = startIndex + ITEMS_PER_PAGE;
+    return getCurrentPageClubs().slice(startIndex, endIndex);
   };
 
   const handlePageChange = (newPage: number) => {
@@ -675,17 +675,16 @@ const FindClubUpdated: React.FC<Props> = ({ className, ...rest }) => {
                 <>
                   <Box sx={{ mb: 4, mt: 2 }}>
                     <InteractiveMap 
-                      clubs={getCurrentPageClubs()}
+                      clubs={getPaginatedClubs()}
                       center={[mapCenter[0], mapCenter[1]]}
                       radius={Number(filters.radius)}
-                      onMarkerClick={(clubId) => {
-                        navigate(`/clubs/${clubId}`);
-                      }}
+                      onMarkerClick={handleMarkerClick}
                       showNumbers={true}
+                      key={currentPage}
                     />
                   </Box>
                   <Grid container spacing={2}>
-                    {getCurrentPageClubs().map((club, index) => (
+                    {getPaginatedClubs().map((club, index) => (
                       <Grid item xs={12} key={club.id}>
                         <Box
                           sx={{
