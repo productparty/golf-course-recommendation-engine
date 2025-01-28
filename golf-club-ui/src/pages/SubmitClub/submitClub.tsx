@@ -71,7 +71,6 @@ const SubmitClub = () => {
       [name]: value
     }));
   };
-
   return (
     <PageLayout title="Submit Club">
       <Box display="flex" justifyContent="center" sx={{ mb: 4 }}>

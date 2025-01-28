@@ -200,16 +200,16 @@ const GolferProfileUpdated: React.FC = () => {
 
   if (isLoading) {
     return (
-      <PageLayout title="Golfer Profile">
+      <PageLayout title="My Profile">
         <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
           <CircularProgress />
         </Box>
       </PageLayout>
     );
   }
-
   return (
     <PageLayout title="My Profile">
+      <Typography variant="h4" align="center">My Profile</Typography>
       <Card>
         <CardContent>
           <Grid container spacing={3}>
