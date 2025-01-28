@@ -47,6 +47,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
 }) => {
     const mapContainer = useRef<HTMLDivElement>(null);
     const map = useRef<mapboxgl.Map | null>(null);
+    const markers = useRef<mapboxgl.Marker[]>([]);
 
     useEffect(() => {
         if (!mapContainer.current) return;
@@ -211,7 +212,11 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
             }
         }
 
-        // Add markers
+        // Clear existing markers
+        markers.current.forEach(marker => marker.remove());
+        markers.current = [];
+
+        // Add new markers
         clubs.forEach((club, index) => {
             if (club.longitude && club.latitude) {
                 const el = showNumbers ? createNumberedMarker(index + 1) : document.createElement('div');
@@ -219,14 +224,27 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
                     el.className = 'marker';
                 }
                 
-                new mapboxgl.Marker(el)
+                const marker = new mapboxgl.Marker(el)
                     .setLngLat([club.longitude, club.latitude])
                     .setPopup(new mapboxgl.Popup().setHTML(club.club_name))
                     .addTo(map.current!);
 
+                markers.current.push(marker);
+
                 el.addEventListener('click', () => onMarkerClick(club.id));
             }
         });
+
+        // Fit map to bounds if there are markers
+        if (clubs.length > 0 && clubs.some(club => club.longitude && club.latitude)) {
+            const bounds = new mapboxgl.LngLatBounds();
+            clubs.forEach(club => {
+                if (club.longitude && club.latitude) {
+                    bounds.extend([club.longitude, club.latitude]);
+                }
+            });
+            map.current!.fitBounds(bounds, { padding: 50 });
+        }
 
         return () => {
             if (map.current) {

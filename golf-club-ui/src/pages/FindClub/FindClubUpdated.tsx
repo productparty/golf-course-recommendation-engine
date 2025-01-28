@@ -660,12 +660,13 @@ const FindClubUpdated: React.FC<Props> = ({ className, ...rest }) => {
                 <>
                   <Box sx={{ mb: 4, mt: 2 }}>
                     <InteractiveMap 
-                      clubs={getCurrentPageClubs()}
+                      clubs={clubs}
                       center={[mapCenter[0], mapCenter[1]]}
                       radius={Number(filters.radius)}
                       onMarkerClick={(clubId) => {
                         navigate(`/clubs/${clubId}`);
                       }}
+                      showNumbers={true}
                     />
                   </Box>
                   <Grid container spacing={2}>
