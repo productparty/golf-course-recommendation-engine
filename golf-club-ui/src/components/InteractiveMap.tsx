@@ -30,19 +30,10 @@ interface InteractiveMapProps {
 
 // Create a custom HTML element for each marker
 function createNumberedMarker(number: number) {
-  const el = document.createElement('div');
-  el.className = 'custom-marker';
-  el.innerHTML = `<span>${number}</span>`;
-  el.style.backgroundColor = '#3FB1CE';
-  el.style.width = '30px';
-  el.style.height = '30px';
-  el.style.borderRadius = '50%';
-  el.style.display = 'flex';
-  el.style.justifyContent = 'center';
-  el.style.alignItems = 'center';
-  el.style.color = 'white';
-  el.style.fontWeight = 'bold';
-  return el;
+    const el = document.createElement('div');
+    el.className = 'marker';
+    el.innerHTML = `<div class="marker-number">${number}</div>`;
+    return el;
 }
 
 export const InteractiveMap: React.FC<InteractiveMapProps> = ({
@@ -222,20 +213,19 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
 
         // Add markers
         clubs.forEach((club, index) => {
-          if (club.longitude && club.latitude) {
-            const el = document.createElement('div');
-            el.className = 'marker';
-            if (showNumbers) {
-              el.innerHTML = `<div class="marker-number">${index + 1}</div>`;
-            }
-            
-            new mapboxgl.Marker(el)
-              .setLngLat([club.longitude, club.latitude])
-              .setPopup(new mapboxgl.Popup().setHTML(club.club_name))
-              .addTo(map.current!);
+            if (club.longitude && club.latitude) {
+                const el = showNumbers ? createNumberedMarker(index + 1) : document.createElement('div');
+                if (!showNumbers) {
+                    el.className = 'marker';
+                }
+                
+                new mapboxgl.Marker(el)
+                    .setLngLat([club.longitude, club.latitude])
+                    .setPopup(new mapboxgl.Popup().setHTML(club.club_name))
+                    .addTo(map.current!);
 
-            el.addEventListener('click', () => onMarkerClick(club.id));
-          }
+                el.addEventListener('click', () => onMarkerClick(club.id));
+            }
         });
 
         return () => {

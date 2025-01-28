@@ -276,16 +276,20 @@ const RecommendClubUpdated: React.FC = () => {
 
         {courses.length > 0 && (
           <>
-            <Box sx={{ mb: 4, mt: 2 }}>
-              <InteractiveMap 
+            <Box sx={{ 
+              height: '400px', 
+              width: '100%', // Ensure full width
+              mb: 3, 
+              borderRadius: 1 
+            }}>
+              <InteractiveMap
                 clubs={courses}
                 center={mapCenter}
-                radius={Number(radius)}
+                radius={parseInt(radius)}
                 onMarkerClick={(clubId) => {
                   navigate(`/clubs/${clubId}`);
                 }}
                 showNumbers={true}
-                initialZoom={11}
               />
             </Box>
 
