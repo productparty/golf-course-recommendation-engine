@@ -200,7 +200,7 @@ export const ClubDetailPage = () => {
                     clubs={[club]}
                     center={[club.lng || 0, club.lat || 0]}
                     radius={500}
-                    initialZoom={16}
+                    initialZoom={14}
                     onMarkerClick={(clubId) => {
                         // Handle marker click if needed
                     }}

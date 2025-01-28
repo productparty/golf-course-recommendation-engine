@@ -1,6 +1,7 @@
 // hooks/useMap.tsx
 import { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
+import { config } from 'config';
 
 interface UseMapProps {
     center: [number, number];
@@ -20,10 +21,13 @@ export const useMap = ({ center, radius }: UseMapProps) => {
             container: mapContainer,
             style: 'mapbox://styles/mapbox/outdoors-v11',
             center: center,
-            zoom: 14
+            zoom: 14,
+            fitBoundsOptions: {
+                padding: 50  // Add padding around the centered point
+            }
         });
 
-        // Add marker for the club location
+        // Add marker at the center
         new mapboxgl.Marker()
             .setLngLat(center)
             .addTo(map);
