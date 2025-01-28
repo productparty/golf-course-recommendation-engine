@@ -136,6 +136,11 @@ const FindClubUpdated: React.FC<Props> = ({ className, ...rest }) => {
     setFilters(prev => ({ ...prev, [name]: event.target.value }));
   };
 
+  const updateURL = (params: Record<string, string>) => {
+    const searchParams = new URLSearchParams(params);
+    navigate(`?${searchParams.toString()}`, { replace: true });
+  };
+
   const handleSearch = async () => {
     if (!filters.zipCode) {
       setError('Please enter a zip code');
@@ -218,6 +223,12 @@ const FindClubUpdated: React.FC<Props> = ({ className, ...rest }) => {
       if (sortBy) {
         handleSortChange({ target: { value: sortBy } } as SelectChangeEvent<SortOption>);
       }
+
+      updateURL({
+        zipCode: filters.zipCode,
+        radius: filters.radius,
+        page: currentPage.toString()
+      });
     } catch (error: any) {
       console.error('Error finding clubs:', error);
       setError(error.message || 'Failed to find clubs');
@@ -362,6 +373,35 @@ const FindClubUpdated: React.FC<Props> = ({ className, ...rest }) => {
     }
     setTotalPages(Math.ceil(filteredClubs.length / ITEMS_PER_PAGE));
   }, [clubs, showOnlyFavorites, favorites]);
+
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const initialFilters = {
+      zipCode: searchParams.get('zipCode') || '',
+      radius: searchParams.get('radius') || '25',
+      preferred_price_range: searchParams.get('preferred_price_range') || '',
+      preferred_difficulty: searchParams.get('preferred_difficulty') || '',
+      number_of_holes: searchParams.get('number_of_holes') || '',
+      club_membership: searchParams.get('club_membership') || '',
+      driving_range: searchParams.get('driving_range') === 'true',
+      putting_green: searchParams.get('putting_green') === 'true',
+      chipping_green: searchParams.get('chipping_green') === 'true',
+      practice_bunker: searchParams.get('practice_bunker') === 'true',
+      restaurant: searchParams.get('restaurant') === 'true',
+      lodging_on_site: searchParams.get('lodging_on_site') === 'true',
+      motor_cart: searchParams.get('motor_cart') === 'true',
+      pull_cart: searchParams.get('pull_cart') === 'true',
+      golf_clubs_rental: searchParams.get('golf_clubs_rental') === 'true',
+      club_fitting: searchParams.get('club_fitting') === 'true',
+      golf_lessons: searchParams.get('golf_lessons') === 'true',
+    };
+    setFilters(initialFilters);
+    setCurrentPage(Number(searchParams.get('page')) || 1);
+    
+    if (initialFilters.zipCode) {
+      handleSearch();
+    }
+  }, [location.search]);
 
   return (
     <Box
@@ -640,14 +680,20 @@ const FindClubUpdated: React.FC<Props> = ({ className, ...rest }) => {
                             position: 'relative',
                           }}
                         >
-                          <ClubCard 
-                            club={club}
-                            isFavorite={favorites.includes(club.id)}
-                            onToggleFavorite={handleToggleFavorite}
-                            showToggle={true}
-                            index={index}
-                            showScore={true}
-                          />
+                          <Link 
+                            to={`/clubs/${club.id}`} 
+                            state={{ from: location.pathname + location.search }}
+                            style={{ textDecoration: 'none', color: 'inherit' }}
+                          >
+                            <ClubCard 
+                              club={club}
+                              isFavorite={favorites.includes(club.id)}
+                              onToggleFavorite={handleToggleFavorite}
+                              showToggle={true}
+                              index={index}
+                              showScore={true}
+                            />
+                          </Link>
                         </Box>
                       </Grid>
                     ))}

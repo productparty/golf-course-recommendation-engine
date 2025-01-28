@@ -174,13 +174,12 @@ export const ClubDetailPage = () => {
             margin: '0 auto',
             textAlign: 'left'
         }}>
-            <Button
-                startIcon={<ArrowBackIcon />}
+            <IconButton 
                 onClick={() => navigate(-1)}
-                sx={{ mb: 2 }}
+                sx={{ position: 'absolute', top: 16, left: 16 }}
             >
-                Back
-            </Button>
+                <ArrowBackIcon />
+            </IconButton>
 
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
                 <Typography variant="h4">{club.club_name}</Typography>
