@@ -20,7 +20,9 @@
   },
   "devDependencies": {
     "@types/lodash.debounce": "^4.0.9",
+    "@types/mapbox-gl": "^3.4.1",
     "@types/node": "^22.10.7",
+    "@types/react-dom": "^19.0.3",
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.20",
     "concurrently": "^6.2.1",

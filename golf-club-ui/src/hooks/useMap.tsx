@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from 'react';
 import mapboxgl, { Map } from 'mapbox-gl';
 import { config } from '../config';
+import type { Map as MapType } from 'mapbox-gl';
 
 interface UseMapProps {
     center: [number, number];
@@ -9,7 +10,7 @@ interface UseMapProps {
 }
 
 export const useMap = ({ center, radius }: UseMapProps) => {
-    const mapRef = useRef<mapboxgl.Map | null>(null);
+    const mapRef = useRef<MapType | null>(null);
     const [mapContainer, setMapContainer] = useState<HTMLDivElement | null>(null);
 
     useEffect(() => {
