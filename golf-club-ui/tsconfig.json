@@ -11,7 +11,8 @@
     "baseUrl": "./src",
     "lib": ["DOM", "DOM.Iterable", "ESNext"],
     "noEmit": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "types": ["mapbox-gl", "react-dom"]
   },
   "include": ["src", "src/main.tsx", "Archive/GolferProfile.tsx"]
 }
