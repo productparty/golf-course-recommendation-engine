@@ -542,10 +542,11 @@ const FindClubUpdated: React.FC<Props> = ({ className, ...rest }) => {
             {clubs.length > 0 && (
               <>
                 <Grid container spacing={2}>
-                  {getCurrentPageClubs().map((club) => (
+                  {getCurrentPageClubs().map((club, index) => (
                     <Grid item xs={12} key={club.id}>
                       <ClubCard 
                         club={club}
+                        index={index}
                         showScore={false}
                         isFavorite={favorites.includes(club.id)}
                         onToggleFavorite={handleToggleFavorite}

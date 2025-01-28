@@ -97,6 +97,9 @@ export const ClubDetail: React.FC = () => {
                         clubs={[club]}
                         center={[club.longitude || 0, club.latitude || 0]}
                         radius={0}
+                        onMarkerClick={(clubId) => {
+                            console.log(`Marker clicked for club ID: ${clubId}`);
+                        }}
                     />
                 </Box>
 
