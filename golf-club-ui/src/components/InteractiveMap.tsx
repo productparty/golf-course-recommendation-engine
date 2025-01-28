@@ -23,7 +23,8 @@ interface InteractiveMapProps {
     center: [number, number];
     radius: number;
     onMapClick?: (lngLat: [number, number]) => void;
-    onMarkerClick?: (clubId: string) => void;
+    onMarkerClick: (clubId: string) => void;
+    showNumbers?: boolean;
     initialZoom?: number;
 }
 
@@ -44,13 +45,14 @@ function createNumberedMarker(number: number) {
   return el;
 }
 
-export const InteractiveMap: React.FC<InteractiveMapProps> = ({ 
-  clubs, 
-  center, 
-  radius, 
-  onMapClick, 
+export const InteractiveMap: React.FC<InteractiveMapProps> = ({
+  clubs,
+  center,
+  radius,
+  onMapClick,
   onMarkerClick,
-  initialZoom = 16 
+  showNumbers = false,
+  initialZoom = 14
 }) => {
     const mapContainer = useRef<HTMLDivElement>(null);
     const map = useRef<mapboxgl.Map | null>(null);
@@ -218,13 +220,31 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
             }
         }
 
+        // Add markers
+        clubs.forEach((club, index) => {
+          if (club.longitude && club.latitude) {
+            const el = document.createElement('div');
+            el.className = 'marker';
+            if (showNumbers) {
+              el.innerHTML = `<div class="marker-number">${index + 1}</div>`;
+            }
+            
+            new mapboxgl.Marker(el)
+              .setLngLat([club.longitude, club.latitude])
+              .setPopup(new mapboxgl.Popup().setHTML(club.club_name))
+              .addTo(map.current!);
+
+            el.addEventListener('click', () => onMarkerClick(club.id));
+          }
+        });
+
         return () => {
             if (map.current) {
                 map.current.remove();
                 map.current = null;
             }
         };
-    }, [clubs, center, radius, initialZoom]);
+    }, [clubs, center, radius, initialZoom, showNumbers, onMarkerClick]);
 
     return (
         <Box

@@ -9,6 +9,7 @@ import { config } from '../../config';
 import ClubCard from '../../components/ClubCard';
 import { supabase } from '../../lib/supabase';
 import { InteractiveMap } from '../../components/InteractiveMap';
+import { useNavigate } from 'react-router-dom';
 
 interface Club {
   id: string;
@@ -52,6 +53,7 @@ const RecommendClubUpdated: React.FC = () => {
   const ITEMS_PER_PAGE = 5;
   const [favorites, setFavorites] = useState<string[]>([]);
   const [mapCenter, setMapCenter] = useState<[number, number]>([-98.5795, 39.8283]);
+  const navigate = useNavigate();
 
   const handleSearch = async () => {
     if (!zipCode) {
@@ -280,11 +282,10 @@ const RecommendClubUpdated: React.FC = () => {
                 center={mapCenter}
                 radius={Number(radius)}
                 onMarkerClick={(clubId) => {
-                  const club = courses.find(c => c.id === clubId);
-                  if (club?.latitude && club?.longitude) {
-                    setMapCenter([club.longitude, club.latitude]);
-                  }
+                  navigate(`/clubs/${clubId}`);
                 }}
+                showNumbers={true}
+                initialZoom={11}
               />
             </Box>
 

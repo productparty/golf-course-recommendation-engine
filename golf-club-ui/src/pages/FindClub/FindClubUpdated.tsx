@@ -409,6 +409,14 @@ const FindClubUpdated: React.FC<Props> = ({ className, ...rest }) => {
                     value={filters.radius}
                     onChange={handleSelectChange('radius')}
                     label="Search Radius"
+                    MenuProps={{
+                        PaperProps: {
+                            style: {
+                                textAlign: 'left'
+                            }
+                        }
+                    }}
+                    sx={{ textAlign: 'left' }}
                   >
                     <MenuItem value="10">10 miles</MenuItem>
                     <MenuItem value="25">25 miles</MenuItem>
