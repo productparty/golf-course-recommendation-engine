@@ -2,9 +2,6 @@
   "version": 2,
   "buildCommand": "cd golf-club-ui && npm install && npm run build",
   "outputDirectory": "golf-club-ui/dist",
-  "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
-  ],
   "headers": [
     {
       "source": "/api/(.*)",
@@ -25,10 +22,7 @@
       "NODE_ENV": "production"
     }
   },
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "/"
-    }
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
