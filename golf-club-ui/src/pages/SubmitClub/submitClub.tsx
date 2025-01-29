@@ -72,7 +72,16 @@ const SubmitClub = () => {
     }));
   };
   return (
-    <PageLayout title="Submit Club">
+    <PageLayout 
+      title="Submit Club"
+      titleProps={{
+        sx: {
+          textAlign: 'center',
+          justifyContent: 'center',
+          color: 'primary.main'
+        }
+      }}
+    >
       <Box display="flex" justifyContent="center" sx={{ mb: 4 }}>
         <Typography variant="subtitle1" color="text.secondary">
           Can't find a specific golf club? Send us a note below and we will get it added.

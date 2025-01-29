@@ -37,6 +37,12 @@ function createNumberedMarker(number: number) {
     return el;
 }
 
+// Add validation function
+const isValidCoordinate = (lat: number, lng: number) => 
+  !isNaN(lat) && !isNaN(lng) && 
+  lat >= -90 && lat <= 90 && 
+  lng >= -180 && lng <= 180;
+
 export const InteractiveMap: React.FC<InteractiveMapProps> = ({
   clubs,
   center,
@@ -46,12 +52,14 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
   showNumbers = false,
   initialZoom = 14
 }) => {
+    const containerRef = useRef<HTMLDivElement>(null);
     const mapContainer = useRef<HTMLDivElement>(null);
     const map = useRef<Map | null>(null);
     const markers = useRef<mapboxgl.Marker[]>([]);
     const bounds = useRef<mapboxgl.LngLatBounds | null>(null);
 
     useEffect(() => {
+        if (!containerRef.current) return;
         if (!mapContainer.current) return;
         if (!(mapboxgl as any).accessToken) {
             console.error('Mapbox token is not set');
@@ -222,7 +230,8 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
 
         // Add new markers
         clubs.forEach((club, index) => {
-            if (club.longitude && club.latitude) {
+            if (club.latitude && club.longitude && 
+                isValidCoordinate(club.latitude, club.longitude)) {
                 const el = showNumbers ? createNumberedMarker(index + 1) : document.createElement('div');
                 if (!showNumbers) {
                     el.className = 'marker';
@@ -263,21 +272,23 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
                 map.current = null;
             }
         };
-    }, [clubs, center]);
+    }, [containerRef.current]);
 
     return (
-        <Box
-            ref={mapContainer}
-            sx={{
-                height: '400px',
-                width: '100%',
-                borderRadius: 1,
-                overflow: 'hidden',
-                position: 'relative',
-                '& .mapboxgl-canvas': {
-                    borderRadius: 1
-                }
-            }}
-        />
+        <Box ref={containerRef} sx={{ height: '100%', width: '100%' }}>
+            <Box
+                ref={mapContainer}
+                sx={{
+                    height: '400px',
+                    width: '100%',
+                    borderRadius: 1,
+                    overflow: 'hidden',
+                    position: 'relative',
+                    '& .mapboxgl-canvas': {
+                        borderRadius: 1
+                    }
+                }}
+            />
+        </Box>
     );
 };

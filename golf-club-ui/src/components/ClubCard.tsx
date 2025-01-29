@@ -69,7 +69,7 @@ interface ClubCardProps {
   isFavorite: boolean;
   onToggleFavorite: (clubId: string) => void;
   showToggle?: boolean;
-  index?: number;
+  index: number;
   sx?: SxProps<Theme>;
 }
 
@@ -147,8 +147,8 @@ const ClubCard: React.FC<ClubCardProps> = ({ club, showScore, isFavorite, onTogg
     <Card sx={{ mb: 2, position: 'relative', ...sx }}>
       <CardContent>
         <Link to={`/clubs/${club.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-          <Typography variant="h6" align="left">
-            {(index || 0) + 1}. {club.club_name}
+          <Typography variant="h6" component="div">
+            #{index + 1} - {club.club_name}
           </Typography>
         </Link>
         <Typography variant="body2" align="left">{club.address}</Typography>

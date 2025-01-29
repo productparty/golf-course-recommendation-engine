@@ -36,15 +36,18 @@ interface GolfClub {
   match_percentage: number;
 }
 
-interface FavoriteItem {
-  id: string;
+interface FavoriteClub extends GolfClub {
   golfclub_id: string;
-  golfclub: GolfClub;
 }
+
+const isValidCoordinate = (lat: number, lng: number) => 
+  !isNaN(lat) && !isNaN(lng) && 
+  lat >= -90 && lat <= 90 && 
+  lng >= -180 && lng <= 180;
 
 const Favorites: React.FC = () => {
   const { session } = useAuth();
-  const [favorites, setFavorites] = useState<FavoriteItem[]>([]);
+  const [favoriteClubs, setFavoriteClubs] = useState<FavoriteClub[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -59,9 +62,20 @@ const Favorites: React.FC = () => {
     const { data, error } = await supabase
       .from('favorites')
       .select(`
-        id,
         golfclub_id,
-        golfclub:golfclub(*)
+        clubs:clubs (
+          id,
+          club_name,
+          address,
+          city,
+          state,
+          zip_code,
+          latitude,
+          longitude,
+          price_tier,
+          difficulty,
+          match_percentage
+        )
       `)
       .eq('profile_id', session.user.id);
       
@@ -70,20 +84,20 @@ const Favorites: React.FC = () => {
       return;
     }
 
-    const transformedData: FavoriteItem[] = data.map((item: any) => ({
-      id: item.id,
-      golfclub_id: item.golfclub_id,
-      golfclub: item.golfclub // No need to access [0] since it's a single object
-    }));
-    
-    setFavorites(transformedData);
-    setTotalPages(Math.ceil(transformedData.length / ITEMS_PER_PAGE));
+    if (data) {
+      const formatted = data.map(fav => ({
+        ...(fav.clubs[0] as GolfClub),
+        golfclub_id: fav.golfclub_id
+      }));
+      setFavoriteClubs(formatted);
+      setTotalPages(Math.ceil(formatted.length / ITEMS_PER_PAGE));
+    }
     setIsLoading(false);
   };
 
   const getCurrentPageFavorites = () => {
     const start = (currentPage - 1) * ITEMS_PER_PAGE;
-    return favorites.slice(start, start + ITEMS_PER_PAGE);
+    return favoriteClubs.slice(start, start + ITEMS_PER_PAGE);
   };
 
   const handlePageChange = (newPage: number) => {
@@ -108,26 +122,29 @@ const Favorites: React.FC = () => {
   }, [session?.user?.id]);
 
   useEffect(() => {
-    if (favorites.length > 0) {
+    if (favoriteClubs.length > 0) {
       const newBounds = new mapboxgl.LngLatBounds();
-      favorites.forEach(club => {
-        if (club.golfclub.longitude && club.golfclub.latitude) {
-          newBounds.extend([club.golfclub.longitude, club.golfclub.latitude]);
+      favoriteClubs.forEach(club => {
+        if (club.longitude && club.latitude) {
+          newBounds.extend([club.longitude, club.latitude]);
         }
       });
       // Update map bounds immediately
       mapRef.current?.fitBounds(newBounds, { padding: 50 });
     }
-  }, [favorites]);  // Run when favorite clubs change
+  }, [favoriteClubs]);  // Run when favorite clubs change
 
   return (
     <PageLayout title="Favorite Clubs">
       <div className="favorites-container">
-        {favorites.length > 0 ? (
+        {favoriteClubs.length > 0 ? (
           <>
             <div className="favorites-map">
               <InteractiveMap 
-                clubs={favorites.map(f => f.golfclub)}
+                clubs={favoriteClubs.filter(c => 
+                  c.latitude && c.longitude &&
+                  isValidCoordinate(c.latitude, c.longitude)
+                )}
                 center={mapCenter}
                 radius={25}
                 onMarkerClick={(clubId) => navigate(`/clubs/${clubId}`)}
@@ -137,13 +154,16 @@ const Favorites: React.FC = () => {
             </div>
             
             <div className="favorites-list">
-              {favorites.map((club) => (
+              {favoriteClubs.map((club, index) => (
                 <ClubCard 
                   key={club.id}
-                  club={club.golfclub}
+                  club={club}
                   isFavorite={true}
                   onToggleFavorite={handleToggleFavorite}
-                  showToggle={true} index={0} showScore={false}                />
+                  showToggle={true}
+                  index={(currentPage - 1) * ITEMS_PER_PAGE + index}
+                  showScore={false}
+                />
               ))}
             </div>
           </>

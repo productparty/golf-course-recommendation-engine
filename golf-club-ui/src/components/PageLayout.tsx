@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Container, Typography, Box, Paper, Button, Dialog, DialogTitle, DialogContent, List, ListItem, ListItemText, SxProps, Theme } from '@mui/material';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
+import { ScrollToTop } from './ScrollToTop';
 
 interface PageLayoutProps {
   title: string;
@@ -38,7 +39,7 @@ const PageLayout: React.FC<PageLayoutProps> = ({ children, title, titleProps }) 
   };
 
   return (
-    <div>
+    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <Container maxWidth="lg" sx={{ py: 4 }}>
         <Paper 
           elevation={3} 
@@ -83,7 +84,9 @@ const PageLayout: React.FC<PageLayoutProps> = ({ children, title, titleProps }) 
           </List>
         </DialogContent>
       </Dialog>
-    </div>
+
+      <ScrollToTop />
+    </Box>
   );
 };
 

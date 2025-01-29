@@ -42,6 +42,11 @@ interface Club {
   match_percentage: number;
 }
 
+const isValidCoordinate = (lat: number, lng: number) => 
+  !isNaN(lat) && !isNaN(lng) && 
+  lat >= -90 && lat <= 90 && 
+  lng >= -180 && lng <= 180;
+
 const RecommendClubUpdated: React.FC = () => {
   const { session } = useAuth();
   const [courses, setCourses] = useState<Club[]>([]);
@@ -96,21 +101,18 @@ const RecommendClubUpdated: React.FC = () => {
         throw new Error('Invalid response format');
       }
 
-      const coursesWithCoords = await Promise.all(data.courses.map(async (course: any) => {
+      const coursesWithCoords = await Promise.all(data.courses.map(async (course: Club) => {
         try {
-          const response = await fetch(
-            `https://api.zippopotam.us/us/${course.zip_code}`
-          );
-          const zipData = await response.json();
-          
+          const zipResponse = await fetch(`https://api.zippopotam.us/us/${course.zip_code}`);
+          const zipData = await zipResponse.json();
           return {
             ...course,
-            latitude: Number(course.lat),
-            longitude: Number(course.lng)
+            latitude: Number(zipData.places[0].latitude),
+            longitude: Number(zipData.places[0].longitude)
           };
         } catch (error) {
-          console.error(`Failed to get coordinates for ${course.zip_code}:`, error);
-          return course;
+          console.error('Failed to get coordinates:', error);
+          return course; // Return without coords if lookup fails
         }
       }));
 
@@ -211,7 +213,8 @@ const RecommendClubUpdated: React.FC = () => {
         titleProps={{ 
           sx: { 
             textAlign: 'center', 
-            color: 'primary.main' 
+            color: 'primary.main',
+            justifyContent: 'center'
           } 
         }}
       >
@@ -295,7 +298,10 @@ const RecommendClubUpdated: React.FC = () => {
               borderRadius: 1 
             }}>
               <InteractiveMap
-                clubs={getCurrentPageCourses()}
+                clubs={getCurrentPageCourses().filter(c => 
+                  c.latitude && c.longitude &&
+                  isValidCoordinate(c.latitude, c.longitude)
+                )}
                 center={mapCenter}
                 radius={parseInt(radius)}
                 onMarkerClick={(clubId) => {

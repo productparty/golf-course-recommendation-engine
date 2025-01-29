@@ -126,6 +126,8 @@ const FindClubUpdated: React.FC<Props> = ({ className, ...rest }) => {
 
   const [isSticky, setIsSticky] = useState(false);
 
+  const [filteredClubs, setFilteredClubs] = useState<Club[]>([]);
+
   const handleTextChange = (name: keyof Filters) => (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
@@ -231,6 +233,8 @@ const FindClubUpdated: React.FC<Props> = ({ className, ...rest }) => {
         radius: filters.radius,
         page: currentPage.toString()
       });
+
+      setFilteredClubs(coursesWithCoords);
     } catch (error: any) {
       console.error('Error finding clubs:', error);
       setError(error.message || 'Failed to find clubs');
@@ -680,7 +684,7 @@ const FindClubUpdated: React.FC<Props> = ({ className, ...rest }) => {
                       radius={Number(filters.radius)}
                       onMarkerClick={handleMarkerClick}
                       showNumbers={true}
-                      key={currentPage}
+                      key={JSON.stringify(filters)}
                     />
                   </Box>
                   <Grid container spacing={2}>
