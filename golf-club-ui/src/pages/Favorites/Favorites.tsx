@@ -63,7 +63,7 @@ const Favorites: React.FC = () => {
       .from('favorites')
       .select(`
         golfclub_id,
-        clubs:clubs (
+        clubs!inner(
           id,
           club_name,
           address,
@@ -74,7 +74,20 @@ const Favorites: React.FC = () => {
           longitude,
           price_tier,
           difficulty,
-          match_percentage
+          match_percentage,
+          number_of_holes,
+          club_membership,
+          driving_range,
+          putting_green,
+          chipping_green,
+          practice_bunker,
+          restaurant,
+          lodging_on_site,
+          motor_cart,
+          pull_cart,
+          golf_clubs_rental,
+          club_fitting,
+          golf_lessons
         )
       `)
       .eq('profile_id', session.user.id);
@@ -85,11 +98,14 @@ const Favorites: React.FC = () => {
     }
 
     if (data) {
-      const formatted = data.map(fav => ({
-        ...(fav.clubs[0] as GolfClub),
+      const formatted = data?.map(fav => ({
+        ...fav.clubs[0],
         golfclub_id: fav.golfclub_id
-      }));
-      setFavoriteClubs(formatted);
+      })) || [];
+      setFavoriteClubs(formatted.filter(fc => 
+        fc.id && 
+        Object.keys(fc).length === Object.keys({} as FavoriteClub).length
+      ));
       setTotalPages(Math.ceil(formatted.length / ITEMS_PER_PAGE));
     }
     setIsLoading(false);
