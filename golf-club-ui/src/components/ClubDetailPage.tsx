@@ -175,12 +175,26 @@ export const ClubDetailPage = () => {
             margin: '0 auto',
             textAlign: 'left'
         }}>
-            <IconButton 
-                onClick={() => navigate(location.state?.from || '/find-club')}
-                sx={{ position: 'absolute', top: 16, left: 16 }}
-            >
-                <ArrowBackIcon />
-            </IconButton>
+            <Box sx={{ 
+                mb: 3,
+                display: 'flex',
+                justifyContent: 'flex-start'
+            }}>
+                <Button
+                    variant="contained"
+                    onClick={() => window.history.back()}
+                    startIcon={<ArrowBackIcon />}
+                    sx={{
+                        backgroundColor: '#f5f5f5',
+                        color: 'text.primary',
+                        '&:hover': {
+                            backgroundColor: '#eeeeee'
+                        }
+                    }}
+                >
+                    Back to Results
+                </Button>
+            </Box>
 
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
                 <Typography variant="h4">{club.club_name}</Typography>
