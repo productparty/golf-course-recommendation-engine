@@ -7,23 +7,24 @@
       "config": {
         "distDir": "build",
         "cleanUrls": true,
-        "rewrites": [
-          { "source": "/(.*)", "destination": "/index.html" }
-        ]
+        "basePath": "/golf-club-ui"
       }
     }
   ],
   "routes": [
     {
-      "src": "/assets/(.*)",
+      "src": "/golf-club-ui/assets/(.*)",
       "headers": {
         "Cache-Control": "public, max-age=31536000, immutable"
       }
     },
     {
+      "src": "/golf-club-ui/(.*)",
+      "dest": "/golf-club-ui/build/$1"
+    },
+    {
       "src": "/(.*)",
-      "dest": "/index.html",
-      "check": true
+      "dest": "/golf-club-ui/build/index.html"
     }
   ],
   "env": {
