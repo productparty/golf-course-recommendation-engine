@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "build": "npm run build-frontend",
-    "build-frontend": "cd golf-club-ui && npm install && npm run build",
+    "build-frontend": "cd golf-club-ui && npm run build",
     "start": "cd golf-club-ui && npm start"
   },
   "dependencies": {
