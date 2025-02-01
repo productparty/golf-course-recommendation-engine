@@ -6,6 +6,7 @@ import { AuthProvider } from './context/AuthContext';
 import { FavoritesProvider } from './context/FavoritesContext';
 import AppRoutes from './routes/AppRoutes';
 import theme from './theme';
+import { Route } from 'react-router-dom';
 
 const App = () => {
   return (
@@ -14,6 +15,7 @@ const App = () => {
       <BrowserRouter>
         <AuthProvider>
           <FavoritesProvider>
+            <Route path="/healthcheck" element={<div>OK</div>} />
             <AppRoutes />
           </FavoritesProvider>
         </AuthProvider>

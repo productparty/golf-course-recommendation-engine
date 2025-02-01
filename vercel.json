@@ -22,7 +22,7 @@
     },
     {
       "src": "/(.*)",
-      "dest": "/golf-club-ui/build/$1",
+      "dest": "/index.html",
       "check": true
     }
   ],
