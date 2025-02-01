@@ -164,6 +164,13 @@ export const ClubDetailPage = () => {
         fetchClub();
     }, [id]);
 
+    const handleBack = () => {
+        const previousPath = location.state?.from || '/recommend-club';
+        navigate(previousPath, { 
+            state: { preserveSearch: true }
+        });
+    };
+
     if (loading) return <CircularProgress />;
     if (error) return <Typography color="error">{error}</Typography>;
     if (!club) return <Typography>Club not found</Typography>;
@@ -181,16 +188,9 @@ export const ClubDetailPage = () => {
                 justifyContent: 'flex-start'
             }}>
                 <Button
-                    variant="contained"
-                    onClick={() => window.history.back()}
-                    startIcon={<ArrowBackIcon />}
-                    sx={{
-                        backgroundColor: '#f5f5f5',
-                        color: 'text.primary',
-                        '&:hover': {
-                            backgroundColor: '#eeeeee'
-                        }
-                    }}
+                    variant="outlined"
+                    onClick={handleBack}
+                    sx={{ mt: 2 }}
                 >
                     Back to Results
                 </Button>

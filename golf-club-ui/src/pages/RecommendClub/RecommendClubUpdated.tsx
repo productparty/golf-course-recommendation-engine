@@ -9,9 +9,9 @@ import { config } from '../../config';
 import ClubCard from '../../components/ClubCard';
 import { supabase } from '../../lib/supabase';
 import { InteractiveMap } from '../../components/InteractiveMap';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Link } from 'react-router-dom';
-import { useLocation } from 'react-router-dom';
+import { useSearchState } from '../../hooks/useSearchState';
 
 interface Club {
   id: string;
@@ -49,19 +49,22 @@ const isValidCoordinate = (lat: number, lng: number) =>
 
 const RecommendClubUpdated: React.FC = () => {
   const { session } = useAuth();
-  const [courses, setCourses] = useState<Club[]>([]);
+  const [searchState, setSearchState] = useSearchState('recommendSearch');
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Initialize state from saved search
+  const [zipCode, setZipCode] = useState(searchState.zipCode);
+  const [radius, setRadius] = useState(searchState.radius);
+  const [courses, setCourses] = useState(searchState.results || []);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const [zipCode, setZipCode] = useState('');
-  const [radius, setRadius] = useState('25');
   const [hasSearched, setHasSearched] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const ITEMS_PER_PAGE = 5;
   const [favorites, setFavorites] = useState<string[]>([]);
   const [mapCenter, setMapCenter] = useState<[number, number]>([-98.5795, 39.8283]);
-  const navigate = useNavigate();
-  const location = useLocation();
 
   const handleSearch = async () => {
     if (!zipCode) {
@@ -123,6 +126,14 @@ const RecommendClubUpdated: React.FC = () => {
       if (coursesWithCoords.length === 0) {
         setError('No recommendations found for this location');
       }
+
+      // Save search state when successful
+      setSearchState({
+        zipCode,
+        radius,
+        results: coursesWithCoords,
+        filters: {} // Add any additional filters here
+      });
     } catch (error: any) {
       console.error('Error fetching recommendations:', error);
       setError(error.message || 'Failed to load recommendations');
@@ -196,6 +207,13 @@ const RecommendClubUpdated: React.FC = () => {
   useEffect(() => {
     fetchFavorites();
   }, [session?.user?.id]);
+
+  // Navigate to detail with state
+  const handleClubClick = (clubId: string) => {
+    navigate(`/clubs/${clubId}`, {
+      state: { from: location.pathname }
+    });
+  };
 
   return (
     <Box
@@ -305,7 +323,7 @@ const RecommendClubUpdated: React.FC = () => {
                 center={mapCenter}
                 radius={parseInt(radius)}
                 onMarkerClick={(clubId) => {
-                  navigate(`/clubs/${clubId}`);
+                  handleClubClick(clubId);
                 }}
                 showNumbers={true}
               />

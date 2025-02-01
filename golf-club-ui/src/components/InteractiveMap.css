@@ -1,12 +1,13 @@
 .marker {
-  width: 30px;
-  height: 30px;
+  width: 32px;
+  height: 32px;
   cursor: pointer;
+  position: relative;
 }
 
 .marker-number {
-  background: #2196f3;
-  color: white;
+  background: white;
+  color: #333;
   border-radius: 50%;
   width: 100%;
   height: 100%;
@@ -14,6 +15,6 @@
   align-items: center;
   justify-content: center;
   font-weight: bold;
-  border: 2px solid white;
   box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  font-size: 14px;
 } 
