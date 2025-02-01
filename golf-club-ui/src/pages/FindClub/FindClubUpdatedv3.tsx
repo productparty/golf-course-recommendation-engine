@@ -44,6 +44,7 @@ interface Club {
   latitude?: number;
   longitude?: number;
   match_percentage: number;
+  weather_icon?: string;
 }
 
 interface Filters {
