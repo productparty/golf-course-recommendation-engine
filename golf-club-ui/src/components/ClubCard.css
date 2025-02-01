@@ -1,0 +1,15 @@
+.weather-icon-container {
+  width: 100%;
+  max-width: 50px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.weather-icon {
+  width: auto;
+  height: 100%;
+  object-fit: contain;
+} 

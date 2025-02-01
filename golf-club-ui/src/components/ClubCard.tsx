@@ -15,6 +15,7 @@ import FavoriteIcon from '@mui/icons-material/Favorite';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import IconButton from '@mui/material/IconButton';
 import { Link } from 'react-router-dom';
+import './ClubCard.css';
 
 interface WeatherData {
   date: string;
@@ -51,6 +52,7 @@ export interface Club {
   latitude?: number;
   longitude?: number;
   match_percentage: number;
+  weather_icon: string;
 }
 
 interface WeatherResponse {
@@ -225,7 +227,13 @@ const ClubCard: React.FC<ClubCardProps> = ({ club, showScore, isFavorite, onTogg
                   <Typography variant="caption" display="block">
                     {new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' })}
                   </Typography>
-                  {getWeatherIcon(parseInt(day.description, 10))}
+                  <Box className="weather-icon-container">
+                    <img 
+                      src={club.weather_icon} 
+                      alt="Weather" 
+                      className="weather-icon"
+                    />
+                  </Box>
                   <Typography variant="caption" display="block">
                     {Math.round(day.maxTemp)}°F
                   </Typography>
