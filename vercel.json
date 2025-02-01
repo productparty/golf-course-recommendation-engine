@@ -1,28 +1,19 @@
 {
   "version": 2,
-  "buildCommand": "cd golf-club-ui && npm install && npm run build",
-  "outputDirectory": "golf-club-ui/dist",
-  "headers": [
+  "builds": [
     {
-      "source": "/api/(.*)",
-      "headers": [
-        { "key": "Access-Control-Allow-Credentials", "value": "true" },
-        { "key": "Access-Control-Allow-Origin", "value": "*" },
-        { "key": "Access-Control-Allow-Methods", "value": "GET,OPTIONS,PATCH,DELETE,POST,PUT" },
-        { "key": "Access-Control-Allow-Headers", "value": "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization" }
-      ]
+      "src": "golf-club-ui/package.json",
+      "use": "@vercel/static-build",
+      "config": { "distDir": "build" }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "golf-club-ui/build/$1"
     }
   ],
   "env": {
-    "VITE_APP_URL": "https://golf-club-ui-lac.vercel.app",
-    "VITE_API_URL": "https://golf-course-recommendation-engin-production.up.railway.app"
-  },
-  "build": {
-    "env": {
-      "NODE_ENV": "production"
-    }
-  },
-  "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
-  ]
+    "NODE_ENV": "production"
+  }
 }

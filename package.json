@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "build": "cd golf-club-ui && npm install && npm run build"
+    "build": "npm run build-frontend",
+    "build-frontend": "cd golf-club-ui && npm install && npm run build",
+    "start": "cd golf-club-ui && npm start"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
@@ -15,8 +17,7 @@
     "@vercel/analytics": "^1.4.1",
     "framer-motion": "^12.0.5",
     "lodash": "^4.17.21",
-    "lodash.debounce": "^4.0.8",
-    "vercel": "^39.2.6"
+    "lodash.debounce": "^4.0.8"
   },
   "devDependencies": {
     "@types/lodash.debounce": "^4.0.9",
@@ -25,8 +26,10 @@
     "@types/react-dom": "^19.0.3",
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.20",
-    "concurrently": "^6.2.1",
     "postcss": "^8.5.1",
     "tailwindcss": "^4.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
