@@ -2,7 +2,7 @@
   "version": 2,
   "builds": [
     {
-      "src": "golf-club-ui/vite.config.ts",
+      "src": "golf-club-ui/package.json",
       "use": "@vercel/static-build",
       "config": {
         "distDir": "golf-club-ui/build",
