@@ -5,7 +5,7 @@
       "src": "golf-club-ui/package.json",
       "use": "@vercel/static-build",
       "config": {
-        "distDir": "build",
+        "distDir": "golf-club-ui/build",
         "cleanUrls": true
       }
     }
@@ -13,11 +13,11 @@
   "routes": [
     {
       "src": "/assets/(.*)",
-      "dest": "/assets/$1"
+      "dest": "/golf-club-ui/build/assets/$1"
     },
     {
       "src": "/(.*)",
-      "dest": "/index.html"
+      "dest": "/golf-club-ui/build/index.html"
     }
   ]
 }
