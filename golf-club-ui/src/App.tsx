@@ -7,6 +7,7 @@ import { FavoritesProvider } from './context/FavoritesContext';
 import theme from './theme';
 import CircularProgress from '@mui/material/CircularProgress';
 import Box from '@mui/material/Box';
+import { Layout } from './components/Layout';
 
 // Lazy load components
 const FindClub = React.lazy(() => import('./pages/FindClub/FindClubUpdatedv3'));
@@ -36,13 +37,15 @@ const App = () => {
       <BrowserRouter>
         <AuthProvider>
           <FavoritesProvider>
-            <Suspense fallback={<LoadingFallback />}>
-              <Routes>
-                <Route path="/" element={<FindClub />} />
-                <Route path="/recommend" element={<RecommendClub />} />
-                <Route path="*" element={<Navigate to="/" replace />} />
-              </Routes>
-            </Suspense>
+            <Layout>
+              <Suspense fallback={<LoadingFallback />}>
+                <Routes>
+                  <Route path="/" element={<FindClub />} />
+                  <Route path="/recommend" element={<RecommendClub />} />
+                  <Route path="*" element={<Navigate to="/" replace />} />
+                </Routes>
+              </Suspense>
+            </Layout>
           </FavoritesProvider>
         </AuthProvider>
       </BrowserRouter>

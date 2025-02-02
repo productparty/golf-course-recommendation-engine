@@ -76,7 +76,7 @@ const GolferProfileUpdated: React.FC = () => {
     }
   }, [session?.user.id]);
 
-  const fetchProfile = async () => {
+    const fetchProfile = async () => {
     setIsLoading(true);
     try {
       const { data, error } = await supabase
@@ -116,13 +116,13 @@ const GolferProfileUpdated: React.FC = () => {
           email: session?.user.email || prev.email,
         }));
       }
-    } catch (error) {
-      console.error('Error fetching profile:', error);
+      } catch (error) {
+        console.error('Error fetching profile:', error);
       setError('Failed to load profile');
     } finally {
-      setIsLoading(false);
-    }
-  };
+        setIsLoading(false);
+      }
+    };
 
   const handleSave = async () => {
     setIsSubmitting(true);
@@ -219,34 +219,34 @@ const GolferProfileUpdated: React.FC = () => {
               <Divider sx={{ mb: 2 }} />
               <Grid container spacing={2}>
                 <Grid item xs={12}>
-                  <Typography 
-                    variant="subtitle1" 
-                    sx={{ 
-                      mb: 3, 
-                      color: 'text.secondary',
-                      wordBreak: 'break-word',
-                      overflowWrap: 'break-word',
+        <Typography 
+          variant="subtitle1" 
+          sx={{ 
+            mb: 3, 
+            color: 'text.secondary',
+            wordBreak: 'break-word',
+            overflowWrap: 'break-word',
                       maxWidth: '100%',
                       px: 2,
                       fontSize: { xs: '0.875rem', sm: '1rem' }
-                    }}
-                  >
-                    Email: {profile.email}
-                  </Typography>
+          }}
+        >
+          Email: {profile.email}
+        </Typography>
                 </Grid>
                 <Grid item xs={12} md={6}>
-                  <TextField
-                    fullWidth
-                    label="First Name"
-                    value={profile.first_name || ''}
+          <TextField
+            fullWidth
+            label="First Name"
+            value={profile.first_name || ''}
                     onChange={handleTextChange('first_name')}
-                  />
+          />
                 </Grid>
                 <Grid item xs={12} md={6}>
-                  <TextField
-                    fullWidth
-                    label="Last Name"
-                    value={profile.last_name || ''}
+          <TextField
+            fullWidth
+            label="Last Name"
+            value={profile.last_name || ''}
                     onChange={handleTextChange('last_name')}
                   />
                 </Grid>
@@ -259,18 +259,18 @@ const GolferProfileUpdated: React.FC = () => {
               <Divider sx={{ mb: 2 }} />
               <Grid container spacing={2}>
                 <Grid item xs={12} sm={6} md={3}>
-                  <TextField
-                    fullWidth
-                    label="Handicap Index"
-                    type="number"
-                    value={profile.handicap_index || ''}
+          <TextField
+            fullWidth
+            label="Handicap Index"
+            type="number"
+            value={profile.handicap_index || ''}
                     onChange={handleTextChange('handicap_index')}
                   />
                 </Grid>
                 <Grid item xs={12} sm={6} md={3}>
                   <FormControl fullWidth>
                     <InputLabel>Skill Level</InputLabel>
-                    <Select
+            <Select
                       value={profile.skill_level || ''}
                       onChange={handleSelectChange('skill_level')}
                       label="Skill Level"
@@ -279,39 +279,39 @@ const GolferProfileUpdated: React.FC = () => {
                       <MenuItem value="beginner">Beginner</MenuItem>
                       <MenuItem value="intermediate">Intermediate</MenuItem>
                       <MenuItem value="advanced">Advanced</MenuItem>
-                    </Select>
-                  </FormControl>
+            </Select>
+          </FormControl>
                 </Grid>
                 <Grid item xs={12} sm={6} md={3}>
                   <FormControl fullWidth>
-                    <InputLabel>Preferred Difficulty</InputLabel>
-                    <Select
-                      value={profile.preferred_difficulty || ''}
+            <InputLabel>Preferred Difficulty</InputLabel>
+            <Select
+              value={profile.preferred_difficulty || ''}
                       onChange={handleSelectChange('preferred_difficulty')}
-                      label="Preferred Difficulty"
-                    >
+              label="Preferred Difficulty"
+            >
                       <MenuItem value="">Select...</MenuItem>
                       <MenuItem value="easy">Easy</MenuItem>
                       <MenuItem value="medium">Medium</MenuItem>
                       <MenuItem value="hard">Hard</MenuItem>
-                    </Select>
-                  </FormControl>
+            </Select>
+          </FormControl>
                 </Grid>
                 <Grid item xs={12} sm={6} md={3}>
                   <FormControl fullWidth>
-                    <InputLabel>Play Frequency</InputLabel>
-                    <Select
-                      value={profile.play_frequency || ''}
+            <InputLabel>Play Frequency</InputLabel>
+            <Select
+              value={profile.play_frequency || ''}
                       onChange={handleSelectChange('play_frequency')}
-                      label="Play Frequency"
-                    >
+              label="Play Frequency"
+            >
                       <MenuItem value="">Select...</MenuItem>
                       <MenuItem value="rarely">Rarely</MenuItem>
                       <MenuItem value="sometimes">Sometimes</MenuItem>
                       <MenuItem value="often">Often</MenuItem>
                       <MenuItem value="very_often">Very Often</MenuItem>
-                    </Select>
-                  </FormControl>
+            </Select>
+          </FormControl>
                 </Grid>
               </Grid>
             </Grid>
@@ -323,37 +323,37 @@ const GolferProfileUpdated: React.FC = () => {
               <Grid container spacing={2}>
                 <Grid item xs={12} sm={6} md={4}>
                   <FormControl fullWidth>
-                    <InputLabel>Number of Holes</InputLabel>
-                    <Select
-                      value={profile.number_of_holes || ''}
+            <InputLabel>Number of Holes</InputLabel>
+            <Select
+              value={profile.number_of_holes || ''}
                       onChange={handleSelectChange('number_of_holes')}
-                      label="Number of Holes"
-                    >
+              label="Number of Holes"
+            >
                       <MenuItem value="9">9 Holes</MenuItem>
                       <MenuItem value="18">18 Holes</MenuItem>
                       <MenuItem value="any">Any</MenuItem>
-                    </Select>
-                  </FormControl>
+            </Select>
+          </FormControl>
                 </Grid>
                 <Grid item xs={12} sm={6} md={4}>
                   <FormControl fullWidth>
-                    <InputLabel>Club Membership</InputLabel>
-                    <Select
-                      value={profile.club_membership || ''}
+            <InputLabel>Club Membership</InputLabel>
+            <Select
+              value={profile.club_membership || ''}
                       onChange={handleSelectChange('club_membership')}
-                      label="Club Membership"
-                    >
+              label="Club Membership"
+            >
                       <MenuItem value="public">Public</MenuItem>
                       <MenuItem value="private">Private</MenuItem>
                       <MenuItem value="military">Military</MenuItem>
                       <MenuItem value="municipal">Municipal</MenuItem>
-                    </Select>
-                  </FormControl>
+            </Select>
+          </FormControl>
                 </Grid>
                 <Grid item xs={12} sm={6} md={4}>
                   <FormControl fullWidth>
                     <InputLabel>Price Range</InputLabel>
-                    <Select
+            <Select
                       value={profile.preferred_price_range || ''}
                       onChange={handleSelectChange('preferred_price_range')}
                       label="Price Range"
@@ -361,8 +361,8 @@ const GolferProfileUpdated: React.FC = () => {
                       <MenuItem value="$">$</MenuItem>
                       <MenuItem value="$$">$$</MenuItem>
                       <MenuItem value="$$$">$$$</MenuItem>
-                    </Select>
-                  </FormControl>
+            </Select>
+          </FormControl>
                 </Grid>
               </Grid>
             </Grid>
@@ -424,25 +424,25 @@ const GolferProfileUpdated: React.FC = () => {
           </Grid>
 
           <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
-            <Button
-              variant="contained"
-              color="primary"
+          <Button
+            variant="contained"
+            color="primary"
               onClick={handleSave}
-              disabled={isSubmitting}
-            >
+            disabled={isSubmitting}
+          >
               {isSubmitting ? 'Saving...' : 'Save Profile'}
-            </Button>
+          </Button>
           </Box>
         </CardContent>
       </Card>
 
       <Snackbar open={!!error} autoHideDuration={6000} onClose={() => setError('')}>
         <Alert severity="error" onClose={() => setError('')}>{error}</Alert>
-      </Snackbar>
+        </Snackbar>
 
       <Snackbar open={!!success} autoHideDuration={3000} onClose={() => setSuccess('')}>
         <Alert severity="success" onClose={() => setSuccess('')}>{success}</Alert>
-      </Snackbar>
+        </Snackbar>
     </PageLayout>
   );
 };

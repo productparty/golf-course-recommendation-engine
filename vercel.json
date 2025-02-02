@@ -9,26 +9,7 @@
       "dest": "/assets/$1"
     },
     {
-      "src": "^/manifest.json",
-      "dest": "/manifest.json"
-    },
-    {
-      "src": "^/favicon.ico",
-      "dest": "/favicon.ico"
-    },
-    {
-      "src": "^/robots.txt",
-      "dest": "/robots.txt"
-    },
-    {
-      "src": "^/golfball.jpg",
-      "dest": "/golfball.jpg"
-    },
-    {
-      "handle": "filesystem"
-    },
-    {
-      "src": ".*",
+      "src": "/(.*)",
       "dest": "/index.html"
     }
   ]

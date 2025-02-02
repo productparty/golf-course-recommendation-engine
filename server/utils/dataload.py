@@ -143,9 +143,9 @@ def test_api():
         )
         print(f"/clubs response: {response.status_code}")
         print(f"/clubs response content: {response.text[:200]}...")
-        if response.status_code == 200:
+    if response.status_code == 200:
             log_result('success', '/clubs API connection test', response.json())
-        else:
+    else:
             log_result('error', f'/clubs status {response.status_code}', {'response': response.text})
     except Exception as e:
         print(f"Connection error: {str(e)}")
@@ -221,7 +221,7 @@ def fetch_michigan_courses():
                 
                 course_data.append(course_entry)
                 print(f"Processed course: {course.get('courseName')}")
-            else:
+    else:
                 print(f"Failed to get details for course {course.get('courseName')}: {course_detail_response.status_code}")
                 
         except Exception as e:

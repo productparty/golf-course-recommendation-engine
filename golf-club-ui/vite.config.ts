@@ -41,13 +41,13 @@ export default defineConfig(({ mode }) => {
     },
     // Make env variables available
     define: {
-      __VITE_ENV__: JSON.stringify(env.VITE_ENV),
-      'process.env': Object.keys(env).reduce((prev, key) => {
-        return {
-          ...prev,
-          [key]: JSON.stringify(env[key])
-        };
-      }, {})
+      'process.env': {
+        VITE_ENV: JSON.stringify(env.VITE_ENV),
+        VITE_API_URL: JSON.stringify(env.VITE_API_URL),
+        VITE_MAPBOX_TOKEN: JSON.stringify(env.VITE_MAPBOX_TOKEN),
+        VITE_SUPABASE_URL: JSON.stringify(env.VITE_SUPABASE_URL),
+        VITE_SUPABASE_ANON_KEY: JSON.stringify(env.VITE_SUPABASE_ANON_KEY)
+      }
     }
   };
 });

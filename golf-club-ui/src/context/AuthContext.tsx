@@ -1,37 +1,47 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Session, AuthError } from '@supabase/supabase-js';
-import { supabase } from '../lib/supabase';
+import { supabase } from '../config/supabase';
 import { useNavigate } from 'react-router-dom';
 
 interface AuthContextType {
-  session: Session | null;
-  loading: boolean;
-  signOut: () => Promise<void>;
-  signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
-  getToken: () => Promise<string | null>;
+  user: any;
+  session: any;
+  initialized: boolean;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext<AuthContextType>({
+  user: null,
+  session: null,
+  initialized: false,
+});
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [session, setSession] = useState<Session | null>(null);
+export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+  const [user, setUser] = useState<any>(null);
+  const [session, setSession] = useState<any>(null);
+  const [initialized, setInitialized] = useState(false);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check active session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setLoading(false);
-    });
+    // Delay storage access until mounted
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        if (!initialized) setInitialized(true);
+      }
+    );
 
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    // Initial check after mount
+    const initAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
       setSession(session);
-      setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
+      setUser(session?.user ?? null);
+      setInitialized(true);
+    };
+    
+    initAuth();
+    return () => authListener?.subscription.unsubscribe();
   }, []);
 
   const signIn = async (email: string, password: string) => {
@@ -74,8 +84,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const value = {
+    user,
     session,
-    loading,
+    initialized,
     signIn,
     signOut,
     getToken,

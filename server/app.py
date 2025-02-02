@@ -103,10 +103,10 @@ if not supabase_url or not supabase_key:
 
 try:
     supabase = create_client(supabase_url, supabase_key)
-    logger.info("Supabase client initialized successfully")
-except Exception as e:
-    logger.error(f"Failed to initialize Supabase client: {str(e)}")
-    raise
+        logger.info("Supabase client initialized successfully")
+    except Exception as e:
+        logger.error(f"Failed to initialize Supabase client: {str(e)}")
+        raise
 
 @contextmanager
 def get_db_connection():
@@ -484,7 +484,7 @@ async def get_current_profile(request: Request):
         auth_header = request.headers.get('Authorization')
         if not auth_header or not auth_header.startswith('Bearer '):
             logger.error("Missing or invalid Authorization header")
-            raise HTTPException(
+                    raise HTTPException(
                 status_code=401,
                 detail="Missing or invalid Authorization header"
             )
@@ -497,7 +497,7 @@ async def get_current_profile(request: Request):
             user_id = user.user.id
             logger.info(f"User authenticated: {user_id}")
             
-            with get_db_connection() as conn:
+        with get_db_connection() as conn:
                 with conn.cursor(cursor_factory=RealDictCursor) as cursor:
                     cursor.execute("""
                         SELECT * FROM profiles WHERE id = %s
@@ -511,7 +511,7 @@ async def get_current_profile(request: Request):
                             VALUES (%s, %s)
                             RETURNING *
                         """, (user_id, user.user.email))
-                        conn.commit()
+                conn.commit()
                         profile = cursor.fetchone()
                     
                     logger.info("Profile retrieved successfully")
@@ -812,7 +812,7 @@ async def update_current_profile(request: Request):
                 if not updated_profile:
                     raise HTTPException(status_code=404, detail="Profile not found")
                     
-                return updated_profile
+        return updated_profile
 
     except HTTPException:
         raise
@@ -944,7 +944,7 @@ async def test_auth(request: Request):
                 "user_id": user.id,
                 "email": user.email
             }
-        except Exception as e:
+    except Exception as e:
             logger.error(f"Token validation failed: {str(e)}")
             return {"status": "error", "detail": str(e)}
             
