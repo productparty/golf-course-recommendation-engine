@@ -15,7 +15,7 @@
     "@sendgrid/mail": "^8.1.4",
     "@types/lodash": "^4.17.14",
     "@vercel/analytics": "^1.4.1",
-    "framer-motion": "^12.0.5",
+    "framer-motion": "^10.16.4",
     "lodash": "^4.17.21",
     "lodash.debounce": "^4.0.8"
   },
@@ -27,8 +27,7 @@
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.20",
     "postcss": "^8.5.1",
-    "tailwindcss": "^4.0.0",
-    "@types/framer-motion": "^12.0.0"
+    "tailwindcss": "^4.0.0"
   },
   "engines": {
     "node": ">=18.0.0"
