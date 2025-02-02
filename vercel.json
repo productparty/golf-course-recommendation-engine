@@ -4,8 +4,24 @@
   "outputDirectory": "golf-club-ui/dist",
   "routes": [
     {
-      "src": "/assets/(.*)",
+      "src": "^/assets/(.*)",
+      "headers": { "cache-control": "public, max-age=31536000, immutable" },
       "dest": "/assets/$1"
+    },
+    {
+      "src": "^/manifest.json",
+      "dest": "/manifest.json"
+    },
+    {
+      "src": "^/favicon.ico",
+      "dest": "/favicon.ico"
+    },
+    {
+      "src": "^/robots.txt",
+      "dest": "/robots.txt"
+    },
+    {
+      "handle": "filesystem"
     },
     {
       "src": "/(.*)",
