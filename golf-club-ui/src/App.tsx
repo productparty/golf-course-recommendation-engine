@@ -1,19 +1,16 @@
 import React, { Suspense } from 'react';
-import { BrowserRouter } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { AuthProvider } from './context/AuthContext';
 import { FavoritesProvider } from './context/FavoritesContext';
-import AppRoutes from './routes/AppRoutes';
 import theme from './theme';
-import { Routes, Route } from 'react-router-dom';
 import CircularProgress from '@mui/material/CircularProgress';
 import Box from '@mui/material/Box';
 
-// Import your components
+// Lazy load components
 const FindClub = React.lazy(() => import('./pages/FindClub/FindClubUpdatedv3'));
 const RecommendClub = React.lazy(() => import('./pages/RecommendClub/RecommendClubv3'));
-// Import other components...
 
 const LoadingFallback = () => (
   <Box 
@@ -43,7 +40,7 @@ const App = () => {
               <Routes>
                 <Route path="/" element={<FindClub />} />
                 <Route path="/recommend" element={<RecommendClub />} />
-                {/* Add other routes */}
+                <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </Suspense>
           </FavoritesProvider>

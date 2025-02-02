@@ -4,7 +4,7 @@
   "outputDirectory": "golf-club-ui/dist",
   "routes": [
     {
-      "src": "^/assets/(.*)",
+      "src": "/assets/(.*)",
       "headers": { "cache-control": "public, max-age=31536000, immutable" },
       "dest": "/assets/$1"
     },
@@ -23,6 +23,9 @@
     {
       "src": "^/golfball.jpg",
       "dest": "/golfball.jpg"
+    },
+    {
+      "handle": "filesystem"
     },
     {
       "src": ".*",
