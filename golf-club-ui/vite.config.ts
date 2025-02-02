@@ -23,6 +23,14 @@ export default defineConfig(({ mode }) => {
         }
       }
     },
+    optimizeDeps: {
+      esbuildOptions: {
+        target: 'es2020'
+      }
+    },
+    esbuild: {
+      target: 'es2020'
+    },
     resolve: {
       alias: {
         '@': path.resolve(__dirname, 'src')
