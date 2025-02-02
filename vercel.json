@@ -21,10 +21,11 @@
       "dest": "/robots.txt"
     },
     {
-      "handle": "filesystem"
+      "src": "^/golfball.jpg",
+      "dest": "/golfball.jpg"
     },
     {
-      "src": "/(.*)",
+      "src": ".*",
       "dest": "/index.html"
     }
   ]

@@ -11,7 +11,11 @@ export default defineConfig({
     assetsDir: 'assets',
     rollupOptions: {
       output: {
-        manualChunks: undefined
+        manualChunks: {
+          vendor: ['react', 'react-dom', 'react-router-dom'],
+          ui: ['@mui/material', '@emotion/react', '@emotion/styled'],
+          map: ['mapbox-gl']
+        }
       }
     }
   },
