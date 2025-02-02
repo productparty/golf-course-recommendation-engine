@@ -27,6 +27,12 @@ const LoadingFallback = () => (
 );
 
 const App = () => {
+  console.log('Environment:', {
+    VITE_ENV: import.meta.env.VITE_ENV,
+    VITE_API_URL: import.meta.env.VITE_API_URL,
+    VITE_MAPBOX_TOKEN: !!import.meta.env.VITE_MAPBOX_TOKEN
+  });
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />

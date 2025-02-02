@@ -41,7 +41,13 @@ export default defineConfig(({ mode }) => {
     },
     // Make env variables available
     define: {
-      'process.env': env
+      __VITE_ENV__: JSON.stringify(env.VITE_ENV),
+      'process.env': Object.keys(env).reduce((prev, key) => {
+        return {
+          ...prev,
+          [key]: JSON.stringify(env[key])
+        };
+      }, {})
     }
   };
 });

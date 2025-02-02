@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "private": true,
   "env": {
-    "VITE_ENV": "development",
     "VITE_PUBLIC_URL": "https://golf-club-ui-lac.vercel.app",
     "VITE_API_URL": "https://golf-course-recommendation-engin-production.up.railway.app",
     "VITE_MAPBOX_TOKEN": "",
