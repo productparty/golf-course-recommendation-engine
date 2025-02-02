@@ -2,10 +2,14 @@
   "name": "golf-course-recommendation-engine",
   "version": "1.0.0",
   "private": true,
-  "scripts": {
-    "build": "npm run build-frontend",
-    "build-frontend": "cd golf-club-ui && npm run build",
-    "start": "cd golf-club-ui && npm start"
+  "env": {
+    "VITE_ENV": "development",
+    "VITE_PUBLIC_URL": "https://golf-club-ui-lac.vercel.app",
+    "VITE_API_URL": "https://golf-course-recommendation-engin-production.up.railway.app",
+    "VITE_MAPBOX_TOKEN": "",
+    "VITE_SUPABASE_URL": "",
+    "VITE_SUPABASE_ANON_KEY": "",
+    "VITE_APP_URL": "https://golf-club-ui-lac.vercel.app"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",

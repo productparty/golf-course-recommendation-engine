@@ -2,6 +2,9 @@
   "version": 2,
   "buildCommand": "cd golf-club-ui && npm install && npm run build",
   "outputDirectory": "golf-club-ui/dist",
+  "env": {
+    "VITE_ENV": "production"
+  },
   "routes": [
     {
       "src": "^/assets/(.*)",
