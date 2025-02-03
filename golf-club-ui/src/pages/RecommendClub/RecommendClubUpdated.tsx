@@ -12,6 +12,7 @@ import { InteractiveMap } from '../../components/InteractiveMap';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import { useSearchState } from '../../hooks/useSearchState';
+import './RecommendClub.css';
 
 interface Club {
   id: string;

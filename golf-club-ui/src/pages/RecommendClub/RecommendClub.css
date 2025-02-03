@@ -1,0 +1,34 @@
+/* Recommendation specific styles */
+.recommendation-container {
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.recommendation-header {
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.recommendation-filters {
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+}
+
+.recommendation-results {
+    gap: 1.5rem;
+    margin-top: 2rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .recommendation-container {
+        padding: 1rem;
+    }
+    
+    .recommendation-filters {
+        padding: 1rem;
+    }
+} 

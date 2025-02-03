@@ -1,0 +1,46 @@
+/* Main container styles */
+.find-club-container {
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Filter section styles */
+.filter-section {
+    margin-bottom: 2rem;
+    padding: 1rem;
+    background-color: #f5f5f5;
+    border-radius: 8px;
+}
+
+/* Results grid styles */
+.results-grid {
+    margin-top: 2rem;
+    gap: 1.5rem;
+}
+
+/* Club card styles */
+.club-card {
+    transition: transform 0.2s ease-in-out;
+    height: 100%;
+}
+.club-card:hover {
+    transform: translateY(-4px);
+}
+
+/* Loading and error states */
+.loading-error-container {
+    text-align: center;
+    padding: 2rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .find-club-container {
+        padding: 1rem;
+    }
+    
+    .filter-section {
+        padding: 0.5rem;
+    }
+} 
