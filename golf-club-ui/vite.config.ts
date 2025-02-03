@@ -41,11 +41,7 @@ export default defineConfig(({ mode }) => {
     },
     // Make env variables available
     define: {
-      // Remove this entire block
-      // 'process.env': {
-      //   VITE_ENV: JSON.stringify(env.VITE_ENV),
-      //   ... 
-      // }
+      __APP_ENV__: JSON.stringify(env.VITE_APP_ENV),
     }
   };
 });

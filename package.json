@@ -36,7 +36,7 @@
     "node": ">=18.0.0"
   },
   "scripts": {
-    "build": "cd golf-club-ui && npm ci && npm run build",
+    "build": "npm install --prefix golf-club-ui && npm run build --prefix golf-club-ui",
     "deploy": "vercel --prod"
   }
 }
