@@ -21,16 +21,10 @@ const LogIn: React.FC = () => {
     setLoading(true);
 
     try {
-      const { error: signInError } = await signIn(email, password);
-      
-      if (signInError) {
-        setError(signInError.message);
-        return;
-      }
-
-      // Navigation is handled in AuthContext after successful sign in
+      await signIn(email, password);
     } catch (err) {
-      setError('Failed to sign in');
+      const message = err instanceof Error ? err.message : 'Failed to sign in';
+      setError(message);
       console.error('Sign in error:', err);
     } finally {
       setLoading(false);
