@@ -1,6 +1,6 @@
 // components/InteractiveMap.tsx
 import React, { useEffect, useRef } from 'react';
-import * as mapboxgl from 'mapbox-gl';
+import mapboxgl from 'mapbox-gl';
 import type { Map, Marker, Popup, LngLatBounds, LngLat } from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { Box } from '@mui/material';
