@@ -103,10 +103,10 @@ if not supabase_url or not supabase_key:
 
 try:
     supabase = create_client(supabase_url, supabase_key)
-        logger.info("Supabase client initialized successfully")
-    except Exception as e:
-        logger.error(f"Failed to initialize Supabase client: {str(e)}")
-        raise
+    logger.info("Supabase client initialized successfully")
+except Exception as e:
+    logger.error(f"Failed to initialize Supabase client: {str(e)}")
+    raise
 
 @contextmanager
 def get_db_connection():
@@ -484,19 +484,17 @@ async def get_current_profile(request: Request):
         auth_header = request.headers.get('Authorization')
         if not auth_header or not auth_header.startswith('Bearer '):
             logger.error("Missing or invalid Authorization header")
-                    raise HTTPException(
+            raise HTTPException(
                 status_code=401,
                 detail="Missing or invalid Authorization header"
             )
-        
+
         token = auth_header.split(' ')[1]
         logger.info("Token extracted from header")
         
-        try:
-            user = supabase.auth.get_user(token)
-            user_id = user.user.id
-            logger.info(f"User authenticated: {user_id}")
-            
+        user = supabase.auth.get_user(token)
+        user_id = user.user.id
+        logger.info(f"User authenticated: {user_id}")
         with get_db_connection() as conn:
                 with conn.cursor(cursor_factory=RealDictCursor) as cursor:
                     cursor.execute("""
@@ -511,19 +509,12 @@ async def get_current_profile(request: Request):
                             VALUES (%s, %s)
                             RETURNING *
                         """, (user_id, user.user.email))
-                conn.commit()
+                        conn.commit()
                         profile = cursor.fetchone()
-                    
-                    logger.info("Profile retrieved successfully")
-                    return profile
-                    
-        except Exception as e:
-            logger.error(f"Error processing profile request: {str(e)}")
-            raise HTTPException(
-                status_code=500,
-                detail=f"Error processing profile: {str(e)}"
-            )
-            
+
+                        logger.info("Profile retrieved successfully")
+                        return profile
+
     except HTTPException:
         raise
     except Exception as e:
@@ -937,11 +928,10 @@ async def test_auth(request: Request):
         token = auth_header.split(' ')[1]
         logger.info(f"Token received: {token[:10]}...")
         
-        try:
-            user = supabase.auth.get_user(token)
-            return {
-                "status": "success",
-                "user_id": user.id,
+        user = supabase.auth.get_user(token)
+        return {
+            "status": "success", 
+            "user_id": user.id,
                 "email": user.email
             }
     except Exception as e:

@@ -10,8 +10,8 @@ import Box from '@mui/material/Box';
 import { Layout } from './components/Layout';
 
 // Lazy load components
-const FindClub = React.lazy(() => import('./pages/FindClub/FindClubUpdatedv3'));
-const RecommendClub = React.lazy(() => import('./pages/RecommendClub/RecommendClubv3'));
+const FindClub = React.lazy(() => import('./pages/FindClub/FindClubUpdated'));
+const RecommendClub = React.lazy(() => import('./pages/RecommendClub/RecommendClubUpdated'));
 
 const LoadingFallback = () => (
   <Box 
