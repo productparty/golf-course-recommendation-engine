@@ -7,12 +7,20 @@ interface AuthContextType {
   user: any;
   session: any;
   initialized: boolean;
+  signIn: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string) => Promise<void>;
+  signOut: () => Promise<void>;
+  getToken: () => Promise<string | null>;
 }
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
   session: null,
   initialized: false,
+  signIn: async () => {},
+  signUp: async () => {},
+  signOut: async () => {},
+  getToken: async () => null,
 });
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
@@ -44,7 +52,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return () => authListener?.subscription.unsubscribe();
   }, []);
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (email: string, password: string): Promise<void> => {
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -56,11 +64,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (data.user) {
         navigate('/');
       }
-
-      return { error: null };
     } catch (error) {
       console.error('Sign in error:', error);
-      return { error: error as AuthError };
+      throw error;
     }
   };
 
@@ -83,6 +89,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  const signUp = async (email: string, password: string) => {
+    try {
+      const { error } = await supabase.auth.signUp({ email, password });
+      if (error) throw error;
+      // Handle successful signup
+    } catch (error) {
+      console.error('Sign up error:', error);
+    }
+  };
+
   const value = {
     user,
     session,
@@ -90,6 +106,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     signIn,
     signOut,
     getToken,
+    signUp,
   };
 
   return (
