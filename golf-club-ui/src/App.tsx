@@ -9,6 +9,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import Box from '@mui/material/Box';
 import { Layout } from './components/Layout';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { Typography, Button } from '@mui/material';
 
 // Lazy load components
 const FindClub = React.lazy(() => import('./pages/FindClub/FindClubUpdated'));
@@ -31,6 +32,17 @@ const LoadingFallback = () => (
   </Box>
 );
 
+const ErrorFallback = () => (
+  <Box p={4} role="alert">
+    <Typography variant="h4" color="error">
+      Something went wrong
+    </Typography>
+    <Button onClick={() => window.location.reload()}>
+      Refresh Page
+    </Button>
+  </Box>
+);
+
 const App = () => {
   console.log('Environment:', {
     VITE_ENV: import.meta.env.VITE_ENV,
@@ -39,26 +51,28 @@ const App = () => {
   });
 
   return (
-    <ErrorBoundary>
+    <ErrorBoundary fallback={<ErrorFallback />}>
       <ThemeProvider theme={theme}>
         <CssBaseline />
         <BrowserRouter>
           <AuthProvider>
             <FavoritesProvider>
               <Layout>
-                <Suspense fallback={<LoadingFallback />}>
-                  <Routes>
-                    <Route path="/" element={<Home />} />
-                    <Route path="/find" element={<FindClub />} />
-                    <Route path="/recommend" element={<RecommendClub />} />
-                    <Route path="/club/:id" element={<ClubDetail />} />
-                    <Route path="/create-account" element={<CreateAccount />} />
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/favorites" element={<Favorites />} />
-                    <Route path="/profile" element={<GolferProfile />} />
-                    <Route path="*" element={<Navigate to="/" replace />} />
-                  </Routes>
-                </Suspense>
+                <ErrorBoundary fallback={<ErrorFallback />}>
+                  <Suspense fallback={<LoadingFallback />}>
+                    <Routes>
+                      <Route path="/" element={<Home />} />
+                      <Route path="/find" element={<FindClub />} />
+                      <Route path="/recommend" element={<RecommendClub />} />
+                      <Route path="/club/:id" element={<ClubDetail />} />
+                      <Route path="/create-account" element={<CreateAccount />} />
+                      <Route path="/login" element={<Login />} />
+                      <Route path="/favorites" element={<Favorites />} />
+                      <Route path="/profile" element={<GolferProfile />} />
+                      <Route path="*" element={<Navigate to="/" replace />} />
+                    </Routes>
+                  </Suspense>
+                </ErrorBoundary>
               </Layout>
             </FavoritesProvider>
           </AuthProvider>

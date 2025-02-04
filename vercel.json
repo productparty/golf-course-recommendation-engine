@@ -6,5 +6,8 @@
   "cleanUrls": true,
   "trailingSlash": false,
   "regions": ["iad1"],
-  "alias": "golf-club-ui-lac.vercel.app"
+  "alias": "golf-club-ui-lac.vercel.app",
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
 }

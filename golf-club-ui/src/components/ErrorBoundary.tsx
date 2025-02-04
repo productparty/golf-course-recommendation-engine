@@ -3,6 +3,7 @@ import { Box, Typography } from '@mui/material';
 
 interface Props {
   children: React.ReactNode;
+  fallback?: React.ReactNode;
 }
 
 interface State {
@@ -26,7 +27,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
 
   render() {
     if (this.state.hasError) {
-      return (
+      return this.props.fallback || (
         <Box p={3}>
           <Typography variant="h6" color="error">Something went wrong</Typography>
         </Box>
