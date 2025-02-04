@@ -2,11 +2,9 @@
   "version": 2,
   "buildCommand": "npm run build",
   "outputDirectory": "golf-club-ui/dist",
-  "routes": [
-    { "src": "/.*", "dest": "/index.html" }
-  ],
   "public": true,
   "cleanUrls": true,
+  "trailingSlash": false,
   "regions": ["iad1"],
-  "alias": "https://golf-club-ui-lac.vercel.app/"
+  "alias": "golf-club-ui-lac.vercel.app"
 }
