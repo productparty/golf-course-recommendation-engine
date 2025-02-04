@@ -31,6 +31,7 @@
     "build": "npm run build --prefix golf-club-ui",
     "deploy": "vercel deploy --prod --yes",
     "dev": "npm run dev --prefix golf-club-ui",
-    "start": "npm run start --prefix golf-club-ui"
+    "start": "npm run start --prefix golf-club-ui",
+    "postinstall": "npm install --prefix golf-club-ui"
   }
 }
