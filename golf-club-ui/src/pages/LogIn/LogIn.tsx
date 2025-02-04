@@ -5,7 +5,7 @@ import { TextField, Button, Box, Typography, Alert, Link } from '@mui/material';
 import { config } from '../../config';
 import PageLayout from '../../components/PageLayout';
 
-const LogIn: React.FC = () => {
+const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -89,4 +89,4 @@ const LogIn: React.FC = () => {
   );
 };
 
-export default LogIn;
+export default Login;

@@ -14,5 +14,7 @@
     "resolveJsonModule": true,
     "types": ["vite/client", "node"]
   },
-  "include": ["src", "src/main.tsx", "Archive/GolferProfile.tsx"]
+  "include": [
+    "src/**/*"
+  ]
 }
