@@ -1,9 +1,9 @@
-import { AppBar, Toolbar, Typography, Button } from '@mui/material';
+import { AppBar, Toolbar, Typography, Button, Box } from '@mui/material';
 import { useAuth } from '../context/AuthContext';
 import { Link } from 'react-router-dom';
 
 export default function Header() {
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   
   return (
     <AppBar position="static">
@@ -16,8 +16,21 @@ export default function Header() {
         ) : (
           <Button color="inherit">Login</Button>
         )}
-        <Button component={Link} to="/">Find Clubs</Button>
-        <Button component={Link} to="/recommend">Recommendations</Button>
+        <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'flex-end' }}>
+          {session ? (
+            <>
+              <Button component={Link} to="/find" color="inherit">Find Clubs</Button>
+              <Button component={Link} to="/recommend" color="inherit">Recommendations</Button>
+              <Button component={Link} to="/favorites" color="inherit">Favorites</Button>
+              <Button component={Link} to="/profile" color="inherit">Profile</Button>
+            </>
+          ) : (
+            <>
+              <Button component={Link} to="/create-account" color="inherit">Get Started</Button>
+              <Button component={Link} to="/login" color="inherit">Sign In</Button>
+            </>
+          )}
+        </Box>
       </Toolbar>
     </AppBar>
   );

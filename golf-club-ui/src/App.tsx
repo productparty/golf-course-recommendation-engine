@@ -13,6 +13,12 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 // Lazy load components
 const FindClub = React.lazy(() => import('./pages/FindClub/FindClubUpdated'));
 const RecommendClub = React.lazy(() => import('./pages/RecommendClub/RecommendClubUpdated'));
+const ClubDetail = React.lazy(() => import('./pages/ClubDetail/ClubDetail'));
+const CreateAccount = React.lazy(() => import('./pages/CreateAccount/CreateAccount'));
+const Favorites = React.lazy(() => import('./pages/Favorites/Favorites'));
+const GolferProfile = React.lazy(() => import('./pages/GolferProfile/GolferProfileUpdated'));
+const Home = React.lazy(() => import('./pages/Home/LandingPage'));
+const Login = React.lazy(() => import('./pages/login/Login'));
 
 const LoadingFallback = () => (
   <Box 
@@ -42,8 +48,14 @@ const App = () => {
               <Layout>
                 <Suspense fallback={<LoadingFallback />}>
                   <Routes>
-                    <Route path="/" element={<FindClub />} />
+                    <Route path="/" element={<Home />} />
+                    <Route path="/find" element={<FindClub />} />
                     <Route path="/recommend" element={<RecommendClub />} />
+                    <Route path="/club/:id" element={<ClubDetail />} />
+                    <Route path="/create-account" element={<CreateAccount />} />
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/favorites" element={<Favorites />} />
+                    <Route path="/profile" element={<GolferProfile />} />
                     <Route path="*" element={<Navigate to="/" replace />} />
                   </Routes>
                 </Suspense>

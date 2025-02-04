@@ -469,7 +469,7 @@ async def get_current_user(
         user = supabase.auth.get_user(credentials.credentials)
         return user.user
     except Exception as e:
-        raise HTTPException(
+                    raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid authentication credentials"
         )
@@ -509,12 +509,11 @@ async def get_current_profile(request: Request):
                             VALUES (%s, %s)
                             RETURNING *
                         """, (user_id, user.user.email))
-                        conn.commit()
-                        profile = cursor.fetchone()
-
-                        logger.info("Profile retrieved successfully")
-                        return profile
-
+                conn.commit()
+                profile = cursor.fetchone()
+                logger.info("Profile retrieved successfully")
+                return profile
+        
     except HTTPException:
         raise
     except Exception as e:
