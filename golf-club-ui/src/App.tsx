@@ -58,21 +58,19 @@ const App = () => {
           <AuthProvider>
             <FavoritesProvider>
               <Layout>
-                <ErrorBoundary fallback={<ErrorFallback />}>
-                  <Suspense fallback={<LoadingFallback />}>
-                    <Routes>
-                      <Route path="/" element={<Home />} />
-                      <Route path="/find" element={<FindClub />} />
-                      <Route path="/recommend" element={<RecommendClub />} />
-                      <Route path="/club/:id" element={<ClubDetail />} />
-                      <Route path="/create-account" element={<CreateAccount />} />
-                      <Route path="/login" element={<Login />} />
-                      <Route path="/favorites" element={<Favorites />} />
-                      <Route path="/profile" element={<GolferProfile />} />
-                      <Route path="*" element={<Navigate to="/" replace />} />
-                    </Routes>
-                  </Suspense>
-                </ErrorBoundary>
+                <Suspense fallback={<LoadingFallback />}>
+                  <Routes>
+                    <Route path="/" element={<Home />} />
+                    <Route path="/find" element={<FindClub />} />
+                    <Route path="/recommend" element={<RecommendClub />} />
+                    <Route path="/club/:id" element={<ClubDetail />} />
+                    <Route path="/create-account" element={<CreateAccount />} />
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/favorites" element={<Favorites />} />
+                    <Route path="/profile" element={<GolferProfile />} />
+                    <Route path="*" element={<Navigate to="/" replace />} />
+                  </Routes>
+                </Suspense>
               </Layout>
             </FavoritesProvider>
           </AuthProvider>

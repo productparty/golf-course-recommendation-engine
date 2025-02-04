@@ -27,6 +27,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
 
   render() {
     if (this.state.hasError) {
+      console.error('ErrorBoundary caught:', this.state.error)
       return this.props.fallback || (
         <Box p={3}>
           <Typography variant="h6" color="error">Something went wrong</Typography>
