@@ -4,5 +4,9 @@
   "outputDirectory": "golf-club-ui/dist",
   "routes": [
     { "src": "/.*", "dest": "/index.html" }
-  ]
+  ],
+  "public": true,
+  "cleanUrls": true,
+  "regions": ["iad1"],
+  "alias": "https://golf-club-ui-lac.vercel.app/"
 }
