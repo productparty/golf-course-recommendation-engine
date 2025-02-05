@@ -5,13 +5,14 @@ import path from 'path';
 export default defineConfig(({ mode }) => {
   // Load env file based on `mode` in the current working directory.
   const env = loadEnv(mode, process.cwd(), '');
+  const isProd = mode === 'production';
   
   return {
     base: '/',
     plugins: [react()],
     build: {
       outDir: 'dist',
-      sourcemap: true,
+      sourcemap: !isProd,
       assetsDir: 'assets',
       rollupOptions: {
         output: {
