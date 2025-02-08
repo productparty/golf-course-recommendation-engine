@@ -1,7 +1,26 @@
 import { createBrowserRouter } from 'react-router-dom';
-import { lazy } from 'react';
+import { lazy, Suspense } from 'react';
 import Layout from './components/Layout';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import CircularProgress from '@mui/material/CircularProgress';
+import Box from '@mui/material/Box';
+
+const LoadingFallback = () => (
+  <Box 
+    display="flex" 
+    justifyContent="center" 
+    alignItems="center" 
+    minHeight="100vh"
+  >
+    <CircularProgress />
+  </Box>
+);
+
+const withSuspense = (Component: React.ComponentType) => (
+  <Suspense fallback={<LoadingFallback />}>
+    <Component />
+  </Suspense>
+);
 
 const Home = lazy(() => import('./pages/Home/home'));
 const Dashboard = lazy(() => import('./pages/Home/Dashboard'));
@@ -21,51 +40,51 @@ export const router = createBrowserRouter([
   {
     path: '/',
     element: <Layout />,
-    errorElement: <NotFound />,
+    errorElement: withSuspense(NotFound),
     children: [
       {
         path: '/',
-        element: <LandingPage />
+        element: withSuspense(LandingPage)
       },
       {
         path: '/dashboard',
-        element: <ProtectedRoute><Dashboard /></ProtectedRoute>
+        element: <ProtectedRoute>{withSuspense(Dashboard)}</ProtectedRoute>
       },
       {
         path: '/find',
-        element: <ProtectedRoute><FindClubUpdated /></ProtectedRoute>
+        element: <ProtectedRoute>{withSuspense(FindClubUpdated)}</ProtectedRoute>
       },
       {
         path: '/recommend',
-        element: <ProtectedRoute><RecommendClubUpdated /></ProtectedRoute>
+        element: <ProtectedRoute>{withSuspense(RecommendClubUpdated)}</ProtectedRoute>
       },
       {
         path: '/favorites',
-        element: <ProtectedRoute><Favorites /></ProtectedRoute>
+        element: <ProtectedRoute>{withSuspense(Favorites)}</ProtectedRoute>
       },
       {
         path: '/profile',
-        element: <ProtectedRoute><GolferProfileUpdated /></ProtectedRoute>
+        element: <ProtectedRoute>{withSuspense(GolferProfileUpdated)}</ProtectedRoute>
       },
       {
         path: '/login',
-        element: <Login />
+        element: withSuspense(Login)
       },
       {
         path: '/create-account',
-        element: <CreateAccount />
+        element: withSuspense(CreateAccount)
       },
       {
         path: '/password-reset',
-        element: <PasswordResetRequest />
+        element: withSuspense(PasswordResetRequest)
       },
       {
         path: '/password-reset-confirm',
-        element: <PasswordResetConfirm />
+        element: withSuspense(PasswordResetConfirm)
       },
       {
         path: '/clubs/:id',
-        element: <ProtectedRoute><ClubDetail /></ProtectedRoute>
+        element: <ProtectedRoute>{withSuspense(ClubDetail)}</ProtectedRoute>
       }
     ]
   }
