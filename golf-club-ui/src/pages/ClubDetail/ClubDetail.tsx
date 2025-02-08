@@ -92,10 +92,13 @@ export const ClubDetail: React.FC = () => {
 
                 <Typography variant="h4" gutterBottom>{club.club_name}</Typography>
 
-                <Box sx={{ mb: 4 }}>
+                <Box sx={{ mb: 4, height: '400px' }}>
                     <InteractiveMap 
                         clubs={[club]}
-                        center={[club.longitude || 0, club.latitude || 0]}
+                        center={[
+                            club.longitude || -98.5795, // Default to US center if no coords
+                            club.latitude || 39.8283
+                        ]}
                         radius={0}
                         onMarkerClick={(clubId) => {
                             console.log(`Marker clicked for club ID: ${clubId}`);
@@ -105,17 +108,36 @@ export const ClubDetail: React.FC = () => {
 
                 <Paper sx={{ p: 3, mb: 3 }}>
                     <Typography variant="h6" gutterBottom>Club Details</Typography>
-                    <Typography><strong>Address:</strong> {club.address}</Typography>
-                    <Typography><strong>City:</strong> {club.city}</Typography>
-                    <Typography><strong>State:</strong> {club.state}</Typography>
-                    <Typography><strong>Zip Code:</strong> {club.zip_code}</Typography>
-                    <Typography><strong>Price Tier:</strong> {club.price_tier}</Typography>
-                    <Typography><strong>Difficulty:</strong> {club.difficulty}</Typography>
-                    <Typography><strong>Number of Holes:</strong> {club.number_of_holes}</Typography>
+                    <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
+                        <Typography><strong>Address:</strong> {club.address}</Typography>
+                        <Typography><strong>City:</strong> {club.city}</Typography>
+                        <Typography><strong>State:</strong> {club.state}</Typography>
+                        <Typography><strong>Zip Code:</strong> {club.zip_code}</Typography>
+                        <Typography><strong>Price Tier:</strong> {club.price_tier}</Typography>
+                        <Typography><strong>Difficulty:</strong> {club.difficulty}</Typography>
+                        <Typography><strong>Number of Holes:</strong> {club.number_of_holes}</Typography>
+                    </Box>
+                </Paper>
+
+                <Paper sx={{ p: 3, mb: 3 }}>
+                    <Typography variant="h6" gutterBottom>Amenities</Typography>
+                    <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
+                        {club.driving_range && <Typography>✓ Driving Range</Typography>}
+                        {club.putting_green && <Typography>✓ Putting Green</Typography>}
+                        {club.chipping_green && <Typography>✓ Chipping Green</Typography>}
+                        {club.practice_bunker && <Typography>✓ Practice Bunker</Typography>}
+                        {club.restaurant && <Typography>✓ Restaurant</Typography>}
+                        {club.lodging_on_site && <Typography>✓ Lodging On-Site</Typography>}
+                        {club.motor_cart && <Typography>✓ Motor Cart</Typography>}
+                        {club.pull_cart && <Typography>✓ Pull Cart</Typography>}
+                        {club.golf_clubs_rental && <Typography>✓ Club Rental</Typography>}
+                        {club.club_fitting && <Typography>✓ Club Fitting</Typography>}
+                        {club.golf_lessons && <Typography>✓ Golf Lessons</Typography>}
+                    </Box>
                 </Paper>
             </Box>
         </PageLayout>
     );
 };
 
-export default ClubDetail; 
+export default ClubDetail;

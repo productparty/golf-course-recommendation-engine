@@ -330,34 +330,88 @@ const FindClubUpdated: React.FC<Props> = ({ className }) => {
     setTotalPages(Math.ceil(filteredClubs.length / ITEMS_PER_PAGE));
   }, [clubs, showOnlyFavorites, favorites]);
 
+  // Load search state from localStorage on component mount
   useEffect(() => {
-    const searchParams = new URLSearchParams(location.search);
-    const initialFilters = {
-      zipCode: searchParams.get('zipCode') || '',
-      radius: searchParams.get('radius') || '25',
-      preferred_price_range: searchParams.get('preferred_price_range') || '',
-      preferred_difficulty: searchParams.get('preferred_difficulty') || '',
-      number_of_holes: searchParams.get('number_of_holes') || '',
-      club_membership: searchParams.get('club_membership') || '',
-      driving_range: searchParams.get('driving_range') === 'true',
-      putting_green: searchParams.get('putting_green') === 'true',
-      chipping_green: searchParams.get('chipping_green') === 'true',
-      practice_bunker: searchParams.get('practice_bunker') === 'true',
-      restaurant: searchParams.get('restaurant') === 'true',
-      lodging_on_site: searchParams.get('lodging_on_site') === 'true',
-      motor_cart: searchParams.get('motor_cart') === 'true',
-      pull_cart: searchParams.get('pull_cart') === 'true',
-      golf_clubs_rental: searchParams.get('golf_clubs_rental') === 'true',
-      club_fitting: searchParams.get('club_fitting') === 'true',
-      golf_lessons: searchParams.get('golf_lessons') === 'true',
-    };
-    setFilters(initialFilters);
-    setCurrentPage(Number(searchParams.get('page')) || 1);
-    
-    if (initialFilters.zipCode) {
-      handleSearch();
+    const savedState = localStorage.getItem('findClubState');
+    if (savedState) {
+      const { savedFilters, savedClubs, savedPage, savedSortBy } = JSON.parse(savedState);
+      setFilters(savedFilters);
+      setClubs(savedClubs);
+      setCurrentPage(savedPage);
+      setSortBy(savedSortBy);
+      setFilteredClubs(savedClubs);
+    } else {
+      // If no saved state, initialize from URL params
+      const searchParams = new URLSearchParams(location.search);
+      const initialFilters = {
+        zipCode: searchParams.get('zipCode') || '',
+        radius: searchParams.get('radius') || '25',
+        preferred_price_range: searchParams.get('preferred_price_range') || '',
+        preferred_difficulty: searchParams.get('preferred_difficulty') || '',
+        number_of_holes: searchParams.get('number_of_holes') || '',
+        club_membership: searchParams.get('club_membership') || '',
+        driving_range: searchParams.get('driving_range') === 'true',
+        putting_green: searchParams.get('putting_green') === 'true',
+        chipping_green: searchParams.get('chipping_green') === 'true',
+        practice_bunker: searchParams.get('practice_bunker') === 'true',
+        restaurant: searchParams.get('restaurant') === 'true',
+        lodging_on_site: searchParams.get('lodging_on_site') === 'true',
+        motor_cart: searchParams.get('motor_cart') === 'true',
+        pull_cart: searchParams.get('pull_cart') === 'true',
+        golf_clubs_rental: searchParams.get('golf_clubs_rental') === 'true',
+        club_fitting: searchParams.get('club_fitting') === 'true',
+        golf_lessons: searchParams.get('golf_lessons') === 'true',
+      };
+      setFilters(initialFilters);
+      setCurrentPage(Number(searchParams.get('page')) || 1);
+      
+      if (initialFilters.zipCode) {
+        handleSearch();
+      }
     }
-  }, [location.search]);
+  }, []);
+
+  // Save search state to localStorage whenever it changes
+  useEffect(() => {
+    if (clubs.length > 0) {
+      const stateToSave = {
+        savedFilters: filters,
+        savedClubs: clubs,
+        savedPage: currentPage,
+        savedSortBy: sortBy
+      };
+      localStorage.setItem('findClubState', JSON.stringify(stateToSave));
+    }
+  }, [filters, clubs, currentPage, sortBy]);
+
+  // Clear saved state when filters are reset
+  const handleClearSearch = () => {
+    localStorage.removeItem('findClubState');
+    setFilters({
+      zipCode: '',
+      radius: '25',
+      preferred_price_range: '',
+      preferred_difficulty: '',
+      number_of_holes: '',
+      club_membership: '',
+      driving_range: false,
+      putting_green: false,
+      chipping_green: false,
+      practice_bunker: false,
+      restaurant: false,
+      lodging_on_site: false,
+      motor_cart: false,
+      pull_cart: false,
+      golf_clubs_rental: false,
+      club_fitting: false,
+      golf_lessons: false,
+    });
+    setClubs([]);
+    setCurrentPage(1);
+    setSortBy('');
+    setFilteredClubs([]);
+    navigate('.');
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -602,7 +656,19 @@ const FindClubUpdated: React.FC<Props> = ({ className }) => {
                 flexDirection: { xs: 'column', sm: 'row' },
                 gap: { xs: 2, sm: 0 }
               }}>
-                <Typography variant="h6">Search Results</Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Typography variant="h6">Search Results</Typography>
+                  {clubs.length > 0 && (
+                    <Button
+                      variant="outlined"
+                      color="secondary"
+                      size="small"
+                      onClick={handleClearSearch}
+                    >
+                      Clear Search
+                    </Button>
+                  )}
+                </Box>
                 <FormControl sx={{ 
                   minWidth: { xs: '100%', sm: 200 }
                 }}>
