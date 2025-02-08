@@ -16,32 +16,17 @@ export default defineConfig(({ mode }) => {
       assetsDir: 'assets',
       rollupOptions: {
         output: {
-          manualChunks: {
-            vendor: ['react', 'react-dom', 'react-router-dom'],
-            ui: ['@mui/material', '@emotion/react', '@emotion/styled']
-          }
+          manualChunks(id) {
+            if (id.includes('node_modules/supabase')) return 'supabase';
+            if (id.includes('node_modules/@supabase')) return 'supabase';
+            if (id.includes('node_modules/mapbox-gl')) return 'mapbox-gl';
+            if (id.includes('node_modules/@mui')) return 'mui';
+            if (id.includes('node_modules/@emotion')) return 'emotion';
+            if (id.includes('node_modules/react')) return 'react';
+            if (id.includes('node_modules/react-dom')) return 'react-dom';
+            if (id.includes('node_modules/react-router-dom')) return 'react-router-dom';
+            return undefined; // Let Vite handle other modules
+          },
         }
       }
     },
-    optimizeDeps: {
-      esbuildOptions: {
-        target: 'es2020'
-      }
-    },
-    esbuild: {
-      target: 'es2020'
-    },
-    resolve: {
-      alias: {
-        '@': path.resolve(__dirname, 'src')
-      }
-    },
-    server: {
-      port: 3000
-    },
-    // Make env variables available
-    define: {
-      __APP_ENV__: JSON.stringify(env.VITE_APP_ENV),
-    }
-  };
-});
