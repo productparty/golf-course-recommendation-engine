@@ -10,8 +10,7 @@ import Box from '@mui/material/Box';
 import { Layout } from './components/Layout';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { Typography, Button } from '@mui/material';
-import ClubDetailPage from './pages/ClubDetail/ClubDetailPage';
-import { ClubDetailPage as ClubDetailPageComponent } from './components/ClubDetailPage';
+import { ClubDetailPage } from './components/ClubDetailPage';
 
 // Lazy load components
 const FindClub = React.lazy(() => import('./pages/FindClub/FindClubUpdated'));
