@@ -19,7 +19,7 @@ const CreateAccount = React.lazy(() => import('./pages/CreateAccount/CreateAccou
 const Favorites = React.lazy(() => import('./pages/Favorites/Favorites'));
 const GolferProfile = React.lazy(() => import('./pages/GolferProfile/GolferProfileUpdated'));
 const Home = React.lazy(() => import('./pages/Home/LandingPage'));
-const Login = React.lazy(() => import('./pages/Login/Login'));
+const Login = React.lazy(() => import('./pages/login/Login'));
 
 const LoadingFallback = () => (
   <Box 
