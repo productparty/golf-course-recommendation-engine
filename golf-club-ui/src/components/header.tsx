@@ -36,7 +36,7 @@ export default function Header() {
         <Box sx={{ flexGrow: 1, display: 'flex', gap: 1 }}>
           {session && (
             <>
-              <Button component={Link} to="/dashboard" color="inherit">Home</Button>
+              <Button component={Link} to="/" color="inherit">Home</Button>
               <Button component={Link} to="/find" color="inherit">Find Clubs</Button>
               <Button component={Link} to="/recommend" color="inherit">Recommendations</Button>
               <Button component={Link} to="/favorites" color="inherit">Favorites</Button>

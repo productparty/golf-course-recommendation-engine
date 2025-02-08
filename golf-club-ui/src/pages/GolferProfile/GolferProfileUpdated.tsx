@@ -208,17 +208,16 @@ const GolferProfileUpdated: React.FC = () => {
     );
   }
   return (
-    <PageLayout title="My Profile">
-      <Typography 
-        variant="h4" 
-        align="center"
-        sx={{
+    <PageLayout 
+      title="My Profile"
+      titleProps={{ 
+        sx: { 
+          textAlign: 'center', 
           color: 'primary.main',
-          mb: 3
-        }}
-      >
-        My Profile
-      </Typography>
+          justifyContent: 'center'
+        } 
+      }}
+    >
       <Card>
         <CardContent>
           <Grid container spacing={3}>

@@ -10,11 +10,12 @@ import Box from '@mui/material/Box';
 import { Layout } from './components/Layout';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { Typography, Button } from '@mui/material';
+import ClubDetailPage from './pages/ClubDetail/ClubDetailPage';
+import { ClubDetailPage as ClubDetailPageComponent } from './components/ClubDetailPage';
 
 // Lazy load components
 const FindClub = React.lazy(() => import('./pages/FindClub/FindClubUpdated'));
 const RecommendClub = React.lazy(() => import('./pages/RecommendClub/RecommendClubUpdated'));
-const ClubDetail = React.lazy(() => import('./pages/ClubDetail/ClubDetail'));
 const CreateAccount = React.lazy(() => import('./pages/CreateAccount/CreateAccount'));
 const Favorites = React.lazy(() => import('./pages/Favorites/Favorites'));
 const GolferProfile = React.lazy(() => import('./pages/GolferProfile/GolferProfileUpdated'));
@@ -63,7 +64,7 @@ const App = () => {
                     <Route path="/" element={<Home />} />
                     <Route path="/find" element={<FindClub />} />
                     <Route path="/recommend" element={<RecommendClub />} />
-                    <Route path="/clubs/:id" element={<ClubDetail />} />
+                    <Route path="/clubs/:id" element={<ClubDetailPage />} />
                     <Route path="/create-account" element={<CreateAccount />} />
                     <Route path="/login" element={<Login />} />
                     <Route path="/favorites" element={<Favorites />} />
