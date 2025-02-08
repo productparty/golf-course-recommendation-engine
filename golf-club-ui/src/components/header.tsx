@@ -45,7 +45,21 @@ export default function Header() {
             </>
           )}
           {session ? (
-            <Button color="inherit" onClick={handleLogout}>Logout</Button>
+            <Typography 
+              component="span" 
+              onClick={handleLogout}
+              sx={{
+                cursor: 'pointer',
+                '&:hover': { textDecoration: 'underline' },
+                color: 'inherit',
+                padding: '6px 8px'
+              }}
+              role="button"
+              tabIndex={0}
+              onKeyPress={(e) => e.key === 'Enter' && handleLogout()}
+            >
+              Logout
+            </Typography>
           ) : (
             <>
               <Button component={Link} to="/create-account" color="inherit">Get Started</Button>
