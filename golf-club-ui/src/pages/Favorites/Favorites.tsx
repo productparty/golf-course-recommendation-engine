@@ -146,8 +146,7 @@ const Favorites: React.FC = () => {
       }
     } catch (error: unknown) {
       console.error('Error fetching favorites:', error);
-      setError(String(error) || 'Failed to load favorites');
-    } finally {
+      setError(error instanceof Error ? error.message : 'An unexpected error occurred');
       setIsLoading(false);
     }
   };

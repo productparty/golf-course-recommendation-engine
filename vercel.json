@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "buildCommand": "npm run build",
+  "buildCommand": "cd golf-club-ui && npm install && npm run build",
   "outputDirectory": "golf-club-ui/dist",
   "public": true,
   "cleanUrls": true,
