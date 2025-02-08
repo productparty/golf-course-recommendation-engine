@@ -1,5 +1,6 @@
 import React, { Suspense } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { RouterProvider } from 'react-router-dom';
+import { router } from './router';
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { AuthProvider } from './context/AuthContext';
@@ -54,27 +55,13 @@ const App = () => {
     <ErrorBoundary fallback={<ErrorFallback />}>
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        <BrowserRouter>
-          <AuthProvider>
-            <FavoritesProvider>
-              <Layout>
-                <Suspense fallback={<LoadingFallback />}>
-                  <Routes>
-                    <Route path="/" element={<Home />} />
-                    <Route path="/find" element={<FindClub />} />
-                    <Route path="/recommend" element={<RecommendClub />} />
-                    <Route path="/clubs/:id" element={<ClubDetail />} />
-                    <Route path="/create-account" element={<CreateAccount />} />
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/favorites" element={<Favorites />} />
-                    <Route path="/profile" element={<GolferProfile />} />
-                    <Route path="*" element={<Navigate to="/" replace />} />
-                  </Routes>
-                </Suspense>
-              </Layout>
-            </FavoritesProvider>
-          </AuthProvider>
-        </BrowserRouter>
+        <AuthProvider>
+          <FavoritesProvider>
+            <Suspense fallback={<LoadingFallback />}>
+              <RouterProvider router={router} />
+            </Suspense>
+          </FavoritesProvider>
+        </AuthProvider>
       </ThemeProvider>
     </ErrorBoundary>
   );

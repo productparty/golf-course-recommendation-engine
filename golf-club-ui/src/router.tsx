@@ -26,7 +26,7 @@ export const router = createBrowserRouter([
       },
       {
         path: '/find',
-        element: <FindClubUpdated />
+        element: <ProtectedRoute><FindClubUpdated /></ProtectedRoute>
       },
       {
         path: '/recommend',
@@ -58,7 +58,7 @@ export const router = createBrowserRouter([
       },
       {
         path: '/clubs/:id',
-        element: <ClubDetail />
+        element: <ProtectedRoute><ClubDetail /></ProtectedRoute>
       }
     ]
   }
