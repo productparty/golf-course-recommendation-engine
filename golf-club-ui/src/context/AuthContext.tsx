@@ -66,6 +66,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (error) throw error;
 
       if (data.user) {
+        // Fetch the session after successful sign-in to ensure the session state is updated
+        const { data: { session } } = await supabase.auth.getSession();
+        setSession(session);
         navigate('/');
       }
     } catch (error) {
