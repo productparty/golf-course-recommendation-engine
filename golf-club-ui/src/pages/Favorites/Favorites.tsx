@@ -41,10 +41,8 @@ interface FavoriteClub extends GolfClub {
   golfclub_id: string;
 }
 
-const isValidCoordinate = (lat: number, lng: number) => 
-  !isNaN(lat) && !isNaN(lng) && 
-  lat >= -90 && lat <= 90 && 
-  lng >= -180 && lng <= 180;
+const isValidCoordinate = (lat: number, lng: number): boolean =>
+  !isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180;
 
 const Favorites: React.FC = () => {
   const { session } = useAuth();
@@ -53,7 +51,7 @@ const Favorites: React.FC = () => {
   const [error, setError] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const ITEMS_PER_PAGE = 10;  // Show 10 items per page to match FindClub
+  const ITEMS_PER_PAGE = 10;
   const [mapCenter, setMapCenter] = useState<[number, number]>([-98.5795, 39.8283]);
   const navigate = useNavigate();
   const mapRef = React.useRef<mapboxgl.Map | null>(null);
@@ -65,104 +63,98 @@ const Favorites: React.FC = () => {
       setIsLoading(false);
       return;
     }
-    
+
     setIsLoading(true);
-    
+
     try {
-      // First get the favorite golf club IDs
       const { data: favoritesData, error: favoritesError } = await supabase
         .from('favorites')
         .select('golfclub_id')
         .eq('profile_id', session.user.id)
-        .order('created_at', { ascending: false }); // Show newest favorites first
+        .order('created_at', { ascending: false });
 
-      if (favoritesError) throw favoritesError;
+      if (favoritesError) {
+        console.error('Error fetching favorites:', favoritesError);
+        setError('Failed to fetch favorites. Please try again later.');
+        setIsLoading(false);
+        return;
+      }
 
       if (!favoritesData || favoritesData.length === 0) {
         setFavoriteClubs([]);
         setTotalPages(0);
+        setIsLoading(false);
         return;
       }
 
-      // Then get the club details from the API
-      const clubIds = favoritesData.map(f => f.golfclub_id).join(',');
-      const response = await fetch(
-        `${config.API_URL}/api/clubs/?ids=${clubIds}`,
-        {
-          headers: {
-            'Authorization': `Bearer ${session?.access_token}`,
-            'Content-Type': 'application/json'
-          },
-          credentials: 'include'
-        }
-      );
+      const clubIds = favoritesData.map((f) => f.golfclub_id).join(',');
+      const response = await fetch(`${config.API_URL}/api/clubs/?ids=${clubIds}`, {
+        headers: {
+          Authorization: `Bearer ${session?.access_token}`,
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+      });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.detail || 'Failed to fetch club details');
+        setError(errorData.detail || `Failed to fetch club details: ${response.status}`);
+        setIsLoading(false);
+        return;
       }
 
       const clubsData = await response.json();
 
       if (clubsData && clubsData.results) {
-        // Get coordinates for each club
-        const clubsWithCoords = await Promise.all(clubsData.results.map(async (club: GolfClub) => {
-          try {
-            const response = await fetch(`https://api.zippopotam.us/us/${club.zip_code}`);
-            if (!response.ok) {
-              throw new Error(`Failed to get coordinates for ${club.zip_code}`);
+        const clubsWithCoords = await Promise.all(
+          clubsData.results.map(async (club: GolfClub) => {
+            try {
+              const response = await fetch(`https://api.zippopotam.us/us/${club.zip_code}`);
+              if (!response.ok) {
+                throw new Error(`Failed to get coordinates for ${club.zip_code}`);
+              }
+              const zipData = await response.json();
+              return {
+                ...club,
+                latitude: Number(zipData.places[0].latitude),
+                longitude: Number(zipData.places[0].longitude),
+                golfclub_id: club.id,
+              };
+            } catch (error: unknown) {
+              console.error(`Failed to get coordinates for ${club.zip_code}:`, error);
+              return { ...club, golfclub_id: club.id };
             }
-            const zipData = await response.json();
-            return {
-              ...club,
-              latitude: Number(zipData.places[0].latitude),
-              longitude: Number(zipData.places[0].longitude),
-              golfclub_id: club.id
-            };
-          } catch (error) {
-            console.error(`Failed to get coordinates for ${club.zip_code}:`, error);
-            // Return club without coordinates rather than failing completely
-            return {
-              ...club,
-              golfclub_id: club.id
-            };
-          }
-        }));
+          })
+        );
 
-        // Filter out clubs without valid coordinates before setting state
-        const validClubs = clubsWithCoords.filter(club => 
-          club.latitude && club.longitude && 
-          isValidCoordinate(club.latitude, club.longitude)
+        const validClubs = clubsWithCoords.filter((club) =>
+          club.latitude && club.longitude && isValidCoordinate(club.latitude, club.longitude)
         );
 
         setFavoriteClubs(validClubs);
         setTotalPages(Math.ceil(validClubs.length / ITEMS_PER_PAGE));
 
-        // Update map bounds if we have valid clubs
         if (validClubs.length > 0) {
           const bounds = new mapboxgl.LngLatBounds();
-          validClubs.forEach(club => {
+          validClubs.forEach((club) => {
             if (club.longitude && club.latitude) {
               bounds.extend([club.longitude, club.latitude]);
             }
           });
-          mapRef.current?.fitBounds(bounds, { 
-            padding: 50,
-            maxZoom: 12 // Prevent zooming in too far if only one club
-          });
+          mapRef.current?.fitBounds(bounds, { padding: 50, maxZoom: 12 });
         }
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error fetching favorites:', error);
-      setError(error.message || 'Failed to load favorites');
+      setError(String(error) || 'Failed to load favorites');
     } finally {
       setIsLoading(false);
     }
   };
 
   const getCurrentPageFavorites = () => {
-    const start = (currentPage - 1) * ITEMS_PER_PAGE;
-    return favoriteClubs.slice(start, start + ITEMS_PER_PAGE);
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    return favoriteClubs.slice(startIndex, startIndex + ITEMS_PER_PAGE);
   };
 
   const handlePageChange = (newPage: number) => {
@@ -171,14 +163,13 @@ const Favorites: React.FC = () => {
 
   const handleToggleFavorite = async (clubId: string) => {
     if (!session?.user?.id) return;
-    
+
     await supabase
       .from('favorites')
       .delete()
       .eq('profile_id', session.user.id)
       .eq('golfclub_id', clubId);
-      
-    // Refresh favorites after removing
+
     fetchFavorites();
   };
 
@@ -186,20 +177,19 @@ const Favorites: React.FC = () => {
     if (session) {
       fetchFavorites();
     }
-  }, [session, location.pathname]); // Re-fetch when navigating to the page
+  }, [session, location.pathname]);
 
   useEffect(() => {
     if (favoriteClubs.length > 0) {
       const newBounds = new mapboxgl.LngLatBounds();
-      favoriteClubs.forEach(club => {
+      favoriteClubs.forEach((club) => {
         if (club.longitude && club.latitude) {
           newBounds.extend([club.longitude, club.latitude]);
         }
       });
-      // Update map bounds immediately
       mapRef.current?.fitBounds(newBounds, { padding: 50 });
     }
-  }, [favoriteClubs]);  // Run when favorite clubs change
+  }, [favoriteClubs]);
 
   return (
     <PageLayout title="Favorite Clubs">
@@ -209,7 +199,7 @@ const Favorites: React.FC = () => {
             {error}
           </Alert>
         )}
-        
+
         {isLoading ? (
           <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
             <CircularProgress />
@@ -217,11 +207,8 @@ const Favorites: React.FC = () => {
         ) : favoriteClubs.length > 0 ? (
           <>
             <Box sx={{ mb: 4 }}>
-              <InteractiveMap 
-                clubs={favoriteClubs.filter(c => 
-                  c.latitude && c.longitude &&
-                  isValidCoordinate(c.latitude, c.longitude)
-                )}
+              <InteractiveMap
+                clubs={favoriteClubs.filter((c) => c.latitude && c.longitude && isValidCoordinate(c.latitude, c.longitude))}
                 center={mapCenter}
                 radius={25}
                 onMarkerClick={(clubId) => navigate(`/clubs/${clubId}`)}
@@ -229,18 +216,20 @@ const Favorites: React.FC = () => {
                 key="favorites-map"
               />
             </Box>
-            
+
             <Grid container spacing={2}>
               {getCurrentPageFavorites().map((club, index) => (
                 <Grid item xs={12} key={club.id}>
-                  <Box sx={{
-                    backgroundColor: 'white',
-                    borderRadius: 1,
-                    boxShadow: 1,
-                    padding: 2,
-                    position: 'relative'
-                  }}>
-                    <ClubCard 
+                  <Box
+                    sx={{
+                      backgroundColor: 'white',
+                      borderRadius: 1,
+                      boxShadow: 1,
+                      padding: 2,
+                      position: 'relative',
+                    }}
+                  >
+                    <ClubCard
                       club={club}
                       isFavorite={true}
                       onToggleFavorite={() => handleToggleFavorite(club.id)}
@@ -248,11 +237,11 @@ const Favorites: React.FC = () => {
                       index={(currentPage - 1) * ITEMS_PER_PAGE + index}
                       showScore={false}
                       onClick={() => navigate(`/clubs/${club.id}`)}
-                      sx={{ 
+                      sx={{
                         cursor: 'pointer',
                         '&:hover': {
-                          boxShadow: 3
-                        }
+                          boxShadow: 3,
+                        },
                       }}
                     />
                   </Box>
@@ -263,21 +252,13 @@ const Favorites: React.FC = () => {
             {totalPages > 1 && (
               <>
                 <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center', gap: 1 }}>
-                  <Button
-                    onClick={() => handlePageChange(1)}
-                    disabled={currentPage === 1}
-                    variant="outlined"
-                  >
+                  <Button onClick={() => handlePageChange(1)} disabled={currentPage === 1} variant="outlined">
                     First
                   </Button>
-                  <Button
-                    onClick={() => handlePageChange(currentPage - 1)}
-                    disabled={currentPage === 1}
-                    variant="outlined"
-                  >
+                  <Button onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1} variant="outlined">
                     Previous
                   </Button>
-                  
+
                   {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                     const pageNum = currentPage - 2 + i;
                     if (pageNum > 0 && pageNum <= totalPages) {
@@ -285,7 +266,7 @@ const Favorites: React.FC = () => {
                         <Button
                           key={pageNum}
                           onClick={() => handlePageChange(pageNum)}
-                          variant={pageNum === currentPage ? "contained" : "outlined"}
+                          variant={pageNum === currentPage ? 'contained' : 'outlined'}
                         >
                           {pageNum}
                         </Button>
@@ -293,7 +274,7 @@ const Favorites: React.FC = () => {
                     }
                     return null;
                   })}
-                  
+
                   <Button
                     onClick={() => handlePageChange(currentPage + 1)}
                     disabled={currentPage === totalPages}
@@ -301,27 +282,18 @@ const Favorites: React.FC = () => {
                   >
                     Next
                   </Button>
-                  <Button
-                    onClick={() => handlePageChange(totalPages)}
-                    disabled={currentPage === totalPages}
-                    variant="outlined"
-                  >
+                  <Button onClick={() => handlePageChange(totalPages)} disabled={currentPage === totalPages} variant="outlined">
                     Last
                   </Button>
                 </Box>
-                <Typography 
-                  variant="body2" 
-                  sx={{ mt: 1, textAlign: 'center' }}
-                >
+                <Typography variant="body2" sx={{ mt: 1, textAlign: 'center' }}>
                   Page {currentPage} of {totalPages}
                 </Typography>
               </>
             )}
           </>
         ) : (
-          <Alert severity="info">
-            You haven't added any clubs to your favorites yet.
-          </Alert>
+          <Alert severity="info">You haven't added any clubs to your favorites yet.</Alert>
         )}
       </Box>
     </PageLayout>

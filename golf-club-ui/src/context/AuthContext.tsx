@@ -31,29 +31,31 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Delay storage access until mounted
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
-        if (!initialized) setInitialized(true);
+        setInitialized(true);
       }
     );
 
-    // Initial check after mount
     const initAuth = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         setSession(session);
         setUser(session?.user ?? null);
         setInitialized(true);
-      } finally {
-        setLoading(false);  // Always set loading to false after initialization
+      } catch (error) {
+        console.error('Error during initial auth check:', error);
+        setInitialized(true);
+        setLoading(false);
       }
     };
-    
+
     initAuth();
-    return () => authListener?.subscription.unsubscribe();
+    return () => {
+      if (authListener) authListener.subscription.unsubscribe();
+    };
   }, []);
 
   const signIn = async (email: string, password: string): Promise<void> => {
@@ -62,11 +64,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         email,
         password,
       });
-
       if (error) throw error;
-
       if (data.user) {
-        // Fetch the session after successful sign-in to ensure the session state is updated
         const { data: { session } } = await supabase.auth.getSession();
         setSession(session);
         navigate('/');
@@ -100,7 +99,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       const { error } = await supabase.auth.signUp({ email, password });
       if (error) throw error;
-      // Handle successful signup
     } catch (error) {
       console.error('Sign up error:', error);
     }

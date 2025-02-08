@@ -11,10 +11,12 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase environment variables');
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: true
+export const supabase = (() => {
+  try {
+    return createClient(supabaseUrl, supabaseAnonKey, {
+    });
+  } catch (error) {
+    console.error('Supabase client initialization failed:', error);
+    throw new Error('Failed to initialize Supabase client');
   }
-})
+})();
