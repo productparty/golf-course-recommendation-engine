@@ -242,7 +242,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
                 map.current = null;
             }
         };
-    }, [containerRef.current]);
+    }, [containerRef.current, clubs, center, showNumbers]);
 
     return (
         <Box ref={containerRef} sx={{ height: '100%', width: '100%' }}>

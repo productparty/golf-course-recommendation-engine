@@ -282,35 +282,42 @@ const FindClubUpdated: React.FC<Props> = ({ className }) => {
 
     const isFavorite = favorites.includes(clubId);
     
-    if (isFavorite) {
-      const { error } = await supabase
+    try {
+      if (isFavorite) {
+        const { error } = await supabase
+          .from('favorites')
+          .delete()
+          .eq('profile_id', session.user.id)
+          .eq('golfclub_id', clubId);
+          
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('favorites')
+          .insert([
+            { 
+              profile_id: session.user.id,
+              golfclub_id: clubId
+            }
+          ]);
+          
+        if (error) throw error;
+      }
+      
+      // Fetch updated favorites after successful toggle
+      const { data, error } = await supabase
         .from('favorites')
-        .delete()
-        .eq('profile_id', session.user.id)
-        .eq('golfclub_id', clubId);
+        .select('golfclub_id')
+        .eq('profile_id', session.user.id);
         
       if (error) {
-        console.error('Error removing favorite:', error);
+        console.error('Error fetching updated favorites:', error);
         return;
       }
       
-      setFavorites(prev => prev.filter(id => id !== clubId));
-    } else {
-      const { error } = await supabase
-        .from('favorites')
-        .insert([
-          { 
-            profile_id: session.user.id,
-            golfclub_id: clubId
-          }
-        ]);
-        
-      if (error) {
-        console.error('Error adding favorite:', error);
-        return;
-      }
-      
-      setFavorites(prev => [...prev, clubId]);
+      setFavorites(data.map(fav => fav.golfclub_id));
+    } catch (error) {
+      console.error('Error toggling favorite:', error);
     }
   };
 

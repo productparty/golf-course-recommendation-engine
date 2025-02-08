@@ -132,7 +132,7 @@ const Favorites: React.FC = () => {
     if (session) {
       fetchFavorites();
     }
-  }, [session]);
+  }, [session, location.pathname]); // Re-fetch when navigating to the page
 
   useEffect(() => {
     if (favoriteClubs.length > 0) {
@@ -191,4 +191,4 @@ const Favorites: React.FC = () => {
   );
 };
 
-export default Favorites; 
+export default Favorites;
