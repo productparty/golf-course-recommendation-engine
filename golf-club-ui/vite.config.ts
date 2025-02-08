@@ -17,18 +17,26 @@ export default defineConfig(({ mode }) => {
       rollupOptions: {
         output: {
           manualChunks(id) {
-            if (id.includes('node_modules/supabase')) return 'supabase';
-            if (id.includes('node_modules/@supabase')) return 'supabase';
-            if (id.includes('node_modules/mapbox-gl')) return 'mapbox-gl';
-            if (id.includes('node_modules/@mui')) return 'mui';
-            if (id.includes('node_modules/@emotion')) return 'emotion';
-            if (id.includes('node_modules/react')) return 'react';
-            if (id.includes('node_modules/react-dom')) return 'react-dom';
-            if (id.includes('node_modules/react-router-dom')) return 'react-router-dom';
-            return undefined; // Let Vite handle other modules
+            if (id.includes('node_modules')) {
+              if (id.includes('@mui') || id.includes('@emotion')) return 'mui';
+              if (id.includes('mapbox-gl')) return 'mapbox-gl';
+              if (id.includes('supabase')) return 'supabase';
+              return 'vendor';
+            }
           }
         }
       }
+    },
+    optimizeDeps: {
+      include: [
+        '@emotion/react',
+        '@emotion/styled',
+        '@mui/material/Button',
+        '@mui/material/AppBar',
+        '@mui/material/Toolbar',
+        '@mui/material/Typography',
+        '@mui/material/Box'
+      ]
     }
   };
 });

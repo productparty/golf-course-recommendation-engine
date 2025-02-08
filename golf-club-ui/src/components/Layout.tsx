@@ -16,7 +16,7 @@ const LoadingFallback = () => (
   </Box>
 );
 
-export const Layout = forwardRef<HTMLDivElement, { children?: React.ReactNode }>(
+const Layout = forwardRef<HTMLDivElement, { children?: React.ReactNode }>(
   ({ children }, ref) => {
     return (
       <Box 
@@ -42,3 +42,5 @@ export const Layout = forwardRef<HTMLDivElement, { children?: React.ReactNode }>
 );
 
 Layout.displayName = 'Layout';
+
+export default Layout;

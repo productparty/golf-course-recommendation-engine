@@ -1,6 +1,6 @@
 import { createBrowserRouter } from 'react-router-dom';
 import { lazy } from 'react';
-import { Layout } from './components/Layout';
+import Layout from './components/Layout';
 import { ProtectedRoute } from './components/ProtectedRoute';
 
 const Home = lazy(() => import('./pages/Home/home'));
