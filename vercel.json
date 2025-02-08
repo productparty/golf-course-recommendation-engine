@@ -1,5 +1,8 @@
 {
   "version": 2,
+  "engines": {
+    "node": "18.x"
+  },
   "buildCommand": "npm run build",
   "outputDirectory": "golf-club-ui/dist",
   "public": true,
