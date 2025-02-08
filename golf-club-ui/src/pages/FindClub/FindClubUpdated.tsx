@@ -340,7 +340,10 @@ const FindClubUpdated: React.FC<Props> = ({ className }) => {
 
   // Load search state from localStorage on component mount
   useEffect(() => {
-    const savedState = localStorage.getItem('findClubState');
+    let savedState = null;
+    if (typeof localStorage !== 'undefined') {
+      savedState = localStorage.getItem('findClubState');
+    }
     if (savedState) {
       const { savedFilters, savedClubs, savedPage, savedSortBy } = JSON.parse(savedState);
       setFilters(savedFilters);
@@ -388,7 +391,9 @@ const FindClubUpdated: React.FC<Props> = ({ className }) => {
         savedPage: currentPage,
         savedSortBy: sortBy
       };
-      localStorage.setItem('findClubState', JSON.stringify(stateToSave));
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('findClubState', JSON.stringify(stateToSave));
+      }
     }
   }, [filters, clubs, currentPage, sortBy]);
 
