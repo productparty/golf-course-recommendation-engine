@@ -1,5 +1,5 @@
 import './FindClub.css';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Grid, TextField, Button, FormControl, InputLabel, Select, MenuItem, 
   Box, Alert, CircularProgress, SelectChangeEvent, Typography, Card,
@@ -49,9 +49,7 @@ const FindClubUpdated: React.FC<Props> = ({ className }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const ITEMS_PER_PAGE = 10;
-  
   const [sortBy, setSortBy] = useState<SortOption>('');
-  
   const [filters, setFilters] = useState<Filters>({
     zipCode: '',
     radius: '25',
@@ -71,22 +69,17 @@ const FindClubUpdated: React.FC<Props> = ({ className }) => {
     club_fitting: false,
     golf_lessons: false,
   });
-
   const [favorites, setFavorites] = useState<string[]>([]);
   const [showOnlyFavorites, setShowOnlyFavorites] = useState(false);
   const [mapCenter, setMapCenter] = useState<[number, number]>([-98.5795, 39.8283]);
   const [isSticky, setIsSticky] = useState(false);
   const [filteredClubs, setFilteredClubs] = useState<Club[]>([]);
 
-  const handleTextChange = (name: keyof Filters) => (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleTextChange = (name: keyof Filters) => (event: React.ChangeEvent<HTMLInputElement>) => {
     setFilters(prev => ({ ...prev, [name]: event.target.value }));
   };
 
-  const handleSelectChange = (name: keyof Filters) => (
-    event: SelectChangeEvent
-  ) => {
+  const handleSelectChange = (name: keyof Filters) => (event: SelectChangeEvent) => {
     setFilters(prev => ({ ...prev, [name]: event.target.value }));
   };
 
@@ -218,11 +211,11 @@ const FindClubUpdated: React.FC<Props> = ({ className }) => {
     return filteredClubs;
   };
 
-  const getPaginatedClubs = () => {
+  const getPaginatedClubs = useMemo(() => {
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
     const endIndex = startIndex + ITEMS_PER_PAGE;
     return getCurrentPageClubs().slice(startIndex, endIndex);
-  };
+  }, [currentPage, getCurrentPageClubs, clubs, showOnlyFavorites, sortBy]);
 
   const handlePageChange = (newPage: number) => {
     setCurrentPage(Math.max(1, Math.min(newPage, totalPages)));
@@ -711,18 +704,18 @@ const FindClubUpdated: React.FC<Props> = ({ className }) => {
               {clubs.length > 0 && (
                 <>
                   <Box sx={{ mb: 4, mt: 2 }}>
-                  <InteractiveMap 
+                    <InteractiveMap 
                       clubs={getPaginatedClubs()}
                       center={[mapCenter[0], mapCenter[1]]}
                       radius={Number(filters.radius)}
                       onMarkerClick={handleMarkerClick}
                       showNumbers={true}
-                      initialZoom={4} // Start more zoomed out to show the whole US
-                      key={`map-${filters.zipCode}-${filters.radius}`} // Only recreate when location changes
+                      initialZoom={4} 
+                      key={`map-${filters.zipCode}-${filters.radius}`} 
                     />
                   </Box>
                   <Grid container spacing={2}>
-                    {getPaginatedClubs().map((club, index) => (
+                    {getPaginatedClubs().map((club: Club, index: number) => (
                       <Grid item xs={12} key={club.id}>
                         <Box
                           sx={{
