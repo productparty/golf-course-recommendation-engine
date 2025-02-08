@@ -1,8 +1,9 @@
+import React, { forwardRef } from 'react';
 import { AppBar, Toolbar, Typography, Button, Box } from '@mui/material';
 import { useAuth } from '../context/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
 
-export default function Header() {
+const Header = forwardRef<HTMLDivElement>((props, ref) => {
   const { user, session, signOut } = useAuth();
   const navigate = useNavigate();
 
@@ -16,7 +17,7 @@ export default function Header() {
   };
 
   return (
-    <AppBar position="static" sx={{ bgcolor: 'primary.main', color: 'white' }}>
+    <AppBar ref={ref} position="static" sx={{ bgcolor: 'primary.main', color: 'white' }}>
       <Toolbar>
         <Typography 
           variant="h6" 
@@ -70,4 +71,8 @@ export default function Header() {
       </Toolbar>
     </AppBar>
   );
-}
+});
+
+Header.displayName = 'Header';
+
+export default Header;

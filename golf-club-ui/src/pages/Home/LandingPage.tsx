@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, forwardRef } from 'react';
 import { Container, Typography, Box, Button, Grid } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '@mui/material/styles';
@@ -8,10 +8,8 @@ import RecommendIcon from '@mui/icons-material/Recommend';
 import StorageIcon from '@mui/icons-material/Storage';
 import AddLocationIcon from '@mui/icons-material/AddLocation';
 import StatisticBox from '../../components/StatisticBox';
-import Screenshots from '../../components/Screenshots';
-import { alpha } from '@mui/material/styles';
 
-const LandingPage = () => {
+const LandingPage = forwardRef<HTMLDivElement>((props, ref) => {
   const navigate = useNavigate();
   const theme = useTheme();
   const [isLoaded, setIsLoaded] = useState(false);
@@ -57,58 +55,8 @@ const LandingPage = () => {
     { number: '108', label: 'Data Points per Club', color: 'transparent' }
   ];
 
-  const screenshotData = [
-    {
-      src: '/find-club.jpeg',
-      title: 'Advanced Search & Filtering',
-      description: (
-        <Grid container spacing={4}>
-          <Grid item xs={12} md={6}>
-            <Typography variant="h6" fontWeight="bold">Location & Contact Details</Typography>
-            <ul style={{ paddingLeft: '16px', marginBottom: '16px' }}>
-              <li>Address and Directions</li>
-              <li>Phone Numbers</li>
-              <li>Operating Hours</li>
-              <li>Website Links</li>
-            </ul>
-            <Typography variant="h6" fontWeight="bold">Available Amenities</Typography>
-            <ul style={{ paddingLeft: '16px' }}>
-              <li>Practice Facilities</li>
-              <li>Pro Shop</li>
-              <li>Restaurant/Bar</li>
-              <li>Locker Rooms</li>
-            </ul>
-          </Grid>
-          {/* Add more details as needed */}
-        </Grid>
-      ),
-      align: 'left' as 'left' | 'right'
-    },
-    {
-      src: '/recommendations.jpg',
-      title: 'Comprehensive Course Data',
-      description: (
-        <Grid container spacing={4}>
-          {/* ... existing content ... */}
-        </Grid>
-      ),
-      align: 'right' as 'left' | 'right'
-    },
-    {
-      src: '/submit-club.jpg',
-      title: 'Easy Club Management',
-      description: (
-        <Grid container spacing={4}>
-          {/* ... existing content ... */}
-        </Grid>
-      ),
-      align: 'left' as 'left' | 'right'
-    },
-  ];
-
   return (
-    <Container maxWidth="xl" sx={{ minHeight: '100vh', p: 0 }}>
-      {/* Hero Section with Background Image */}
+    <Container ref={ref} maxWidth="xl" sx={{ minHeight: '100vh', p: 0 }}>
       <Box
         sx={{
           position: 'relative',
@@ -199,7 +147,6 @@ const LandingPage = () => {
         </Container>
       </Box>
 
-      {/* Features Section */}
       <Box sx={{ py: 8, bgcolor: 'grey.50' }}>
         <Container maxWidth="lg">
           <Typography variant="h3" textAlign="center" gutterBottom sx={{ fontSize: { xs: '2rem', sm: '3rem', md: '4rem' }, color: 'black', mb: 6 }}>
@@ -225,7 +172,6 @@ const LandingPage = () => {
         </Container>
       </Box>
 
-      {/* Minimized CTA Section */}
       <Box 
         sx={{ 
           py: 1,
@@ -265,6 +211,8 @@ const LandingPage = () => {
       </Box>
     </Container>
   );
-};
+});
 
-export default LandingPage; 
+LandingPage.displayName = 'LandingPage';
+
+export default LandingPage;

@@ -1,5 +1,5 @@
 // components/InteractiveMap.tsx
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, forwardRef } from 'react';
 import mapboxgl from 'mapbox-gl';
 import type { Map, Marker, Popup, LngLatBounds, LngLat } from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
@@ -43,7 +43,7 @@ const isValidCoordinate = (lat: number, lng: number) =>
   lat >= -90 && lat <= 90 && 
   lng >= -180 && lng <= 180;
 
-export const InteractiveMap: React.FC<InteractiveMapProps> = ({
+export const InteractiveMap = forwardRef<HTMLDivElement, InteractiveMapProps>(({
   clubs,
   center,
   radius,
@@ -51,7 +51,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
   onMarkerClick,
   showNumbers = false,
   initialZoom = 14
-}) => {
+}, ref) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const mapContainer = useRef<HTMLDivElement>(null);
     const map = useRef<Map | null>(null);
@@ -245,7 +245,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
     }, [containerRef.current, clubs, center, showNumbers]);
 
     return (
-        <Box ref={containerRef} sx={{ height: '100%', width: '100%' }}>
+        <Box ref={ref} sx={{ height: '100%', width: '100%' }}>
             <Box
                 ref={mapContainer}
                 sx={{
@@ -261,4 +261,8 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
             />
         </Box>
     );
-};
+});
+
+InteractiveMap.displayName = 'InteractiveMap';
+
+export default InteractiveMap;

@@ -1,5 +1,5 @@
 import './FindClub.css';
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, forwardRef } from 'react';
 import { 
   Grid, TextField, Button, FormControl, InputLabel, Select, MenuItem, 
   Box, Alert, CircularProgress, SelectChangeEvent, Typography, Card,
@@ -39,7 +39,7 @@ interface Props {
   className?: string;
 }
 
-const FindClubUpdated: React.FC<Props> = ({ className }) => {
+const FindClubUpdated = forwardRef<HTMLDivElement, Props>(({ className }, ref) => {
   const { session } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -215,7 +215,7 @@ const FindClubUpdated: React.FC<Props> = ({ className }) => {
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
     const endIndex = startIndex + ITEMS_PER_PAGE;
     return getCurrentPageClubs().slice(startIndex, endIndex);
-  }, [currentPage, getCurrentPageClubs, clubs, showOnlyFavorites, sortBy]);
+  }, [currentPage, clubs, showOnlyFavorites, sortBy]);
 
   const handlePageChange = (newPage: number) => {
     setCurrentPage(Math.max(1, Math.min(newPage, totalPages)));
@@ -326,6 +326,34 @@ const FindClubUpdated: React.FC<Props> = ({ className }) => {
     navigate(`/clubs/${clubId}`);
   };
 
+  const handleClearSearch = () => {
+    localStorage.removeItem('findClubState');
+    setFilters({
+      zipCode: '',
+      radius: '25',
+      preferred_price_range: '',
+      preferred_difficulty: '',
+      number_of_holes: '',
+      club_membership: '',
+      driving_range: false,
+      putting_green: false,
+      chipping_green: false,
+      practice_bunker: false,
+      restaurant: false,
+      lodging_on_site: false,
+      motor_cart: false,
+      pull_cart: false,
+      golf_clubs_rental: false,
+      club_fitting: false,
+      golf_lessons: false,
+    });
+    setClubs([]);
+    setCurrentPage(1);
+    setSortBy('');
+    setFilteredClubs([]);
+    navigate('.');
+  };
+
   useEffect(() => {
     fetchFavorites();
   }, [session?.user?.id]);
@@ -338,7 +366,6 @@ const FindClubUpdated: React.FC<Props> = ({ className }) => {
     setTotalPages(Math.ceil(filteredClubs.length / ITEMS_PER_PAGE));
   }, [clubs, showOnlyFavorites, favorites]);
 
-  // Load search state from localStorage on component mount
   useEffect(() => {
     let savedState = null;
     if (typeof localStorage !== 'undefined') {
@@ -382,7 +409,6 @@ const FindClubUpdated: React.FC<Props> = ({ className }) => {
     }
   }, []);
 
-  // Save search state to localStorage whenever it changes
   useEffect(() => {
     if (clubs.length > 0) {
       const stateToSave = {
@@ -397,35 +423,6 @@ const FindClubUpdated: React.FC<Props> = ({ className }) => {
     }
   }, [filters, clubs, currentPage, sortBy]);
 
-  // Clear saved state when filters are reset
-  const handleClearSearch = () => {
-    localStorage.removeItem('findClubState');
-    setFilters({
-      zipCode: '',
-      radius: '25',
-      preferred_price_range: '',
-      preferred_difficulty: '',
-      number_of_holes: '',
-      club_membership: '',
-      driving_range: false,
-      putting_green: false,
-      chipping_green: false,
-      practice_bunker: false,
-      restaurant: false,
-      lodging_on_site: false,
-      motor_cart: false,
-      pull_cart: false,
-      golf_clubs_rental: false,
-      club_fitting: false,
-      golf_lessons: false,
-    });
-    setClubs([]);
-    setCurrentPage(1);
-    setSortBy('');
-    setFilteredClubs([]);
-    navigate('.');
-  };
-
   useEffect(() => {
     const handleScroll = () => {
       setIsSticky(window.scrollY > 100);
@@ -436,6 +433,7 @@ const FindClubUpdated: React.FC<Props> = ({ className }) => {
 
   return (
     <Box
+      ref={ref}
       sx={{
         display: 'flex',
         flexDirection: 'column',
@@ -812,6 +810,8 @@ const FindClubUpdated: React.FC<Props> = ({ className }) => {
       </PageLayout>
     </Box>
   );
-};
+});
+
+FindClubUpdated.displayName = 'FindClubUpdated';
 
 export default FindClubUpdated;

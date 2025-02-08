@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, forwardRef } from 'react';
 import { Card, CardContent, Typography, Chip, Box, Divider, Grid, CircularProgress, Icon, FormControl, Select, SxProps, Theme } from '@mui/material';
 import GolfCourseIcon from '@mui/icons-material/GolfCourse';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
@@ -107,7 +107,16 @@ const getWeatherIcon = (weatherCode: number) => {
   }
 };
 
-const ClubCard: React.FC<ClubCardProps> = ({ club, showScore, isFavorite, onToggleFavorite, showToggle, index, sx, onClick }) => {
+const ClubCard = forwardRef<HTMLDivElement, ClubCardProps>(({
+  club,
+  showScore,
+  isFavorite,
+  onToggleFavorite,
+  showToggle,
+  index,
+  sx,
+  onClick
+}, ref) => {
   const [weather, setWeather] = useState<WeatherData[]>([]);
   const [isLoadingWeather, setIsLoadingWeather] = useState(false);
 
@@ -137,6 +146,7 @@ const ClubCard: React.FC<ClubCardProps> = ({ club, showScore, isFavorite, onTogg
 
   return (
     <Card 
+      ref={ref}
       sx={{ mb: 2, position: 'relative', ...sx }}
       onClick={onClick}
     >
@@ -245,6 +255,8 @@ const ClubCard: React.FC<ClubCardProps> = ({ club, showScore, isFavorite, onTogg
       </CardContent>
     </Card>
   );
-};
+});
+
+ClubCard.displayName = 'ClubCard';
 
 export default ClubCard;

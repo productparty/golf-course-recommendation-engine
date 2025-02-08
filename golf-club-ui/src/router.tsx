@@ -15,6 +15,7 @@ const PasswordResetRequest = lazy(() => import('./pages/PasswordResetRequest/Pas
 const PasswordResetConfirm = lazy(() => import('./pages/PasswordResetConfirm/PasswordResetConfirm'));
 const ClubDetail = lazy(() => import('./pages/ClubDetail/ClubDetail'));
 const NotFound = lazy(() => import('./pages/NotFound/NotFound'));
+const LandingPage = lazy(() => import('./pages/Home/LandingPage'));
 
 export const router = createBrowserRouter([
   {
@@ -24,6 +25,10 @@ export const router = createBrowserRouter([
     children: [
       {
         path: '/',
+        element: <LandingPage />
+      },
+      {
+        path: '/dashboard',
         element: <ProtectedRoute><Dashboard /></ProtectedRoute>
       },
       {
