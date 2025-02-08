@@ -1,4 +1,4 @@
-import React, { Suspense } from 'react';
+import React, { Suspense, lazy } from 'react';
 import { RouterProvider } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -32,6 +32,9 @@ const ErrorFallback = () => (
     </Button>
   </Box>
 );
+
+const Layout = lazy(() => import('./components/Layout'));
+const Home = lazy(() => import('./pages/Home/home'));
 
 const App = () => {
   return (

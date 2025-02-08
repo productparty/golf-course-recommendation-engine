@@ -3,7 +3,7 @@ import { AppBar, Toolbar, Typography, Button, Box } from '@mui/material';
 import { useAuth } from '../context/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
 
-const Header = forwardRef<HTMLDivElement>((props, ref) => {
+const Header = forwardRef<HTMLDivElement, {}>((props, ref) => {
   const { user, session, signOut } = useAuth();
   const navigate = useNavigate();
 
