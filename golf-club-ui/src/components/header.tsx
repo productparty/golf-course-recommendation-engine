@@ -33,7 +33,8 @@ export default function Header() {
         >
           Find My Club
         </Typography>
-        <Box sx={{ flexGrow: 1, display: 'flex', gap: 1 }}>
+        <Box sx={{ flexGrow: 1 }} />
+        <Box sx={{ display: 'flex', gap: 1 }}>
           {session && (
             <>
               <Button component={Link} to="/" color="inherit">Home</Button>
@@ -43,8 +44,6 @@ export default function Header() {
               <Button component={Link} to="/profile" color="inherit">Profile</Button>
             </>
           )}
-        </Box>
-        <Box>
           {session ? (
             <Button color="inherit" onClick={handleLogout}>Logout</Button>
           ) : (

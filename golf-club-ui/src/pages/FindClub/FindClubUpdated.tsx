@@ -703,13 +703,14 @@ const FindClubUpdated: React.FC<Props> = ({ className }) => {
               {clubs.length > 0 && (
                 <>
                   <Box sx={{ mb: 4, mt: 2 }}>
-                    <InteractiveMap 
-                      clubs={getPaginatedClubs()} // Show only current page's clubs (10 per page)
+                  <InteractiveMap 
+                      clubs={getPaginatedClubs()}
                       center={[mapCenter[0], mapCenter[1]]}
                       radius={Number(filters.radius)}
                       onMarkerClick={handleMarkerClick}
                       showNumbers={true}
-                      key={JSON.stringify(filters)} // Remove currentPage from key to prevent unnecessary re-renders
+                      initialZoom={4} // Start more zoomed out to show the whole US
+                      key={JSON.stringify(filters)}
                     />
                   </Box>
                   <Grid container spacing={2}>
