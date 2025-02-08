@@ -8,7 +8,7 @@ interface ProtectedRouteProps {
 export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const { session } = useAuth();
 
-  if (!session) {
+  if (!session || !session.access_token) {
     return <LandingPage />;
   }
 
