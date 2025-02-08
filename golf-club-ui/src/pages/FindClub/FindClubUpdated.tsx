@@ -709,7 +709,7 @@ const FindClubUpdated: React.FC<Props> = ({ className }) => {
                       radius={Number(filters.radius)}
                       onMarkerClick={handleMarkerClick}
                       showNumbers={true}
-                      key={JSON.stringify(filters) + currentPage} // Add currentPage to key to ensure map updates on page change
+                      key={JSON.stringify(filters)} // Remove currentPage from key to prevent unnecessary re-renders
                     />
                   </Box>
                   <Grid container spacing={2}>

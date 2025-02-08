@@ -317,16 +317,15 @@ const RecommendClubUpdated: React.FC = () => {
               borderRadius: 1 
             }}>
               <InteractiveMap
-                clubs={getCurrentPageCourses().filter(c => 
+                clubs={courses.filter(c => 
                   c.latitude && c.longitude &&
                   isValidCoordinate(c.latitude, c.longitude)
                 )}
                 center={mapCenter}
                 radius={parseInt(radius)}
-                onMarkerClick={(clubId) => {
-                  handleClubClick(clubId);
-                }}
+                onMarkerClick={handleClubClick}
                 showNumbers={true}
+                initialZoom={4} // Start zoomed out to see more context
               />
             </Box>
 

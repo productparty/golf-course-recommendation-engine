@@ -59,49 +59,53 @@ const Favorites: React.FC = () => {
   const fetchFavorites = async () => {
     if (!session?.user?.id) return;
     
-    const { data, error } = await supabase
-      .from('favorites')
-      .select(`
-        golfclub_id,
-        clubs (
-          id,
-          club_name,
-          address,
-          city,
-          state,
-          zip_code,
-          latitude,
-          longitude,
-          price_tier,
-          difficulty,
-          match_percentage,
-          number_of_holes,
-          club_membership,
-          driving_range,
-          putting_green,
-          chipping_green,
-          practice_bunker,
-          restaurant,
-          lodging_on_site,
-          motor_cart,
-          pull_cart,
-          golf_clubs_rental,
-          club_fitting,
-          golf_lessons
-        )
-      `)
-      .eq('profile_id', session.user.id);
+    try {
+      // First get the favorite golf club IDs
+      const { data: favoritesData, error: favoritesError } = await supabase
+        .from('favorites')
+        .select('golfclub_id')
+        .eq('profile_id', session.user.id);
 
-    if (data) {
-      const validFavorites = data
-        .filter(fav => fav.clubs && fav.clubs.length > 0)
-        .map(fav => ({
-          ...fav.clubs[0],
-          golfclub_id: fav.golfclub_id
+      if (favoritesError) throw favoritesError;
+
+      if (!favoritesData || favoritesData.length === 0) {
+        setFavoriteClubs([]);
+        setTotalPages(0);
+        return;
+      }
+
+      // Then get the club details for each favorite
+      const { data: clubsData, error: clubsError } = await supabase
+        .from('clubs')
+        .select('*')
+        .in('id', favoritesData.map(f => f.golfclub_id));
+
+      if (clubsError) throw clubsError;
+
+      if (clubsData) {
+        // Get coordinates for each club
+        const clubsWithCoords = await Promise.all(clubsData.map(async (club) => {
+          try {
+            const response = await fetch(`https://api.zippopotam.us/us/${club.zip_code}`);
+            const zipData = await response.json();
+            return {
+              ...club,
+              latitude: Number(zipData.places[0].latitude),
+              longitude: Number(zipData.places[0].longitude),
+              golfclub_id: club.id
+            };
+          } catch (error) {
+            console.error(`Failed to get coordinates for ${club.zip_code}:`, error);
+            return club;
+          }
         }));
-      
-      setFavoriteClubs(validFavorites);
-      setTotalPages(Math.ceil(validFavorites.length / ITEMS_PER_PAGE));
+
+        setFavoriteClubs(clubsWithCoords);
+        setTotalPages(Math.ceil(clubsWithCoords.length / ITEMS_PER_PAGE));
+      }
+    } catch (error) {
+      console.error('Error fetching favorites:', error);
+      setIsLoading(false);
     }
     setIsLoading(false);
   };
