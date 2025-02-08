@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Typography, Grid, Button, Alert } from '@mui/material';
+import { Box, Typography, Grid, Button, Alert, CircularProgress } from '@mui/material';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
+import { config } from '../../config';
 import ClubCard from '../../components/ClubCard';
 import PageLayout from '../../components/PageLayout';
 import { InteractiveMap } from '../../components/InteractiveMap';
@@ -74,17 +75,28 @@ const Favorites: React.FC = () => {
         return;
       }
 
-      // Then get the club details for each favorite
-      const { data: clubsData, error: clubsError } = await supabase
-        .from('clubs')
-        .select('*')
-        .in('id', favoritesData.map(f => f.golfclub_id));
+      // Then get the club details from the API
+      const clubIds = favoritesData.map(f => f.golfclub_id).join(',');
+      const response = await fetch(
+        `${config.API_URL}/api/clubs/?ids=${clubIds}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${session?.access_token}`,
+            'Content-Type': 'application/json'
+          },
+          credentials: 'include'
+        }
+      );
 
-      if (clubsError) throw clubsError;
+      if (!response.ok) {
+        throw new Error('Failed to fetch club details');
+      }
+
+      const clubsData = await response.json();
 
       if (clubsData) {
         // Get coordinates for each club
-        const clubsWithCoords = await Promise.all(clubsData.map(async (club) => {
+        const clubsWithCoords = await Promise.all(clubsData.results.map(async (club: GolfClub) => {
           try {
             const response = await fetch(`https://api.zippopotam.us/us/${club.zip_code}`);
             const zipData = await response.json();
@@ -154,7 +166,11 @@ const Favorites: React.FC = () => {
   return (
     <PageLayout title="Favorite Clubs">
       <div className="favorites-container">
-        {favoriteClubs.length > 0 ? (
+        {isLoading ? (
+          <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
+            <CircularProgress />
+          </Box>
+        ) : favoriteClubs.length > 0 ? (
           <>
             <div className="favorites-map">
               <InteractiveMap 
