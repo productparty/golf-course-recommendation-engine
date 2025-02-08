@@ -697,12 +697,12 @@ const FindClubUpdated: React.FC<Props> = ({ className }) => {
                 <>
                   <Box sx={{ mb: 4, mt: 2 }}>
                     <InteractiveMap 
-                      clubs={getPaginatedClubs()}
+                      clubs={getPaginatedClubs()} // Show only current page's clubs (10 per page)
                       center={[mapCenter[0], mapCenter[1]]}
                       radius={Number(filters.radius)}
                       onMarkerClick={handleMarkerClick}
                       showNumbers={true}
-                      key={JSON.stringify(filters)}
+                      key={JSON.stringify(filters) + currentPage} // Add currentPage to key to ensure map updates on page change
                     />
                   </Box>
                   <Grid container spacing={2}>

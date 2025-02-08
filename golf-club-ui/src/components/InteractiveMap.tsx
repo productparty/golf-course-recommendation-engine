@@ -132,37 +132,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
                                 }
                             }))
                         },
-                        cluster: true,
-                        clusterMaxZoom: 14,
-                        clusterRadius: 50
-                    });
-
-                    // Add cluster layers
-                    map.current.addLayer({
-                        id: 'clusters',
-                        type: 'circle',
-                        source: 'clubs',
-                        filter: ['has', 'point_count'],
-                        paint: {
-                            'circle-color': [
-                                'step',
-                                ['get', 'point_count'],
-                                '#51bbd6',
-                                10,
-                                '#f1f075',
-                                30,
-                                '#f28cb1'
-                            ],
-                            'circle-radius': [
-                                'step',
-                                ['get', 'point_count'],
-                                20,
-                                10,
-                                30,
-                                30,
-                                40
-                            ]
-                        }
+                        cluster: false
                     });
 
                     // Add individual markers
