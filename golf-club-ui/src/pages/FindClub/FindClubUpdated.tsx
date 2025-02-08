@@ -705,17 +705,17 @@ const FindClubUpdated: React.FC<Props> = ({ className }) => {
                 <>
                   <Box sx={{ mb: 4, mt: 2 }}>
                     <InteractiveMap 
-                      clubs={getPaginatedClubs()}
+                      clubs={getPaginatedClubs}
                       center={[mapCenter[0], mapCenter[1]]}
                       radius={Number(filters.radius)}
                       onMarkerClick={handleMarkerClick}
                       showNumbers={true}
-                      initialZoom={4} 
-                      key={`map-${filters.zipCode}-${filters.radius}`} 
+                      initialZoom={4}
+                      key={`map-${filters.zipCode}-${filters.radius}`}
                     />
                   </Box>
                   <Grid container spacing={2}>
-                    {getPaginatedClubs().map((club: Club, index: number) => (
+                    {getPaginatedClubs.map((club: Club, index: number) => (
                       <Grid item xs={12} key={club.id}>
                         <Box
                           sx={{
