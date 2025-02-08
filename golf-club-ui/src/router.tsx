@@ -6,7 +6,7 @@ import FindClubUpdated from './pages/FindClub/FindClubUpdated';
 import RecommendClubUpdated from './pages/RecommendClub/RecommendClubUpdated';
 import Favorites from './pages/Favorites/Favorites';
 import GolferProfileUpdated from './pages/GolferProfile/GolferProfileUpdated';
-import Login from './pages/login/Login';
+import Login from './pages/Login/Login';
 import CreateAccount from './pages/CreateAccount/CreateAccount';
 import PasswordResetRequest from './pages/PasswordResetRequest/PasswordResetRequest';
 import PasswordResetConfirm from './pages/PasswordResetConfirm/PasswordResetConfirm';
