@@ -10,7 +10,7 @@ import Box from '@mui/material/Box';
 import { Layout } from './components/Layout';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { Typography, Button } from '@mui/material';
-import { ClubDetailPage } from './components/ClubDetailPage';
+import { ClubDetail } from './pages/ClubDetail/ClubDetail';
 
 // Lazy load components
 const FindClub = React.lazy(() => import('./pages/FindClub/FindClubUpdated'));
@@ -63,7 +63,7 @@ const App = () => {
                     <Route path="/" element={<Home />} />
                     <Route path="/find" element={<FindClub />} />
                     <Route path="/recommend" element={<RecommendClub />} />
-                    <Route path="/clubs/:id" element={<ClubDetailPage />} />
+                    <Route path="/clubs/:id" element={<ClubDetail />} />
                     <Route path="/create-account" element={<CreateAccount />} />
                     <Route path="/login" element={<Login />} />
                     <Route path="/favorites" element={<Favorites />} />
