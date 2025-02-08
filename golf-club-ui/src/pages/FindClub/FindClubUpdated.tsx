@@ -6,49 +6,12 @@ import {
   FormControlLabel, Switch, Divider, CardContent
 } from '@mui/material';
 import PageLayout from '../../components/PageLayout';
-import ClubCard from '../../components/ClubCard';
+import ClubCard, { Club } from '../../components/ClubCard';
 import { useAuth } from '../../context/AuthContext';
 import { config } from '../../config';
-import './FindClub.css';
-import { 
-  Cloud, 
-  Umbrella, 
-  AcUnit, 
-  Thunderstorm, 
-  WbSunny 
-} from '@mui/icons-material';
 import { supabase } from '../../lib/supabase';
 import { InteractiveMap } from '../../components/InteractiveMap';
-import { useNavigate, Link } from 'react-router-dom';
-
-interface Club {
-  id: string;
-  club_name: string;
-  address: string;
-  city: string;
-  state: string;
-  zip_code: string;
-  distance_miles: number;
-  price_tier: string;
-  difficulty: string;
-  number_of_holes: string;
-  club_membership: string;
-  driving_range: boolean;
-  putting_green: boolean;
-  chipping_green: boolean;
-  practice_bunker: boolean;
-  restaurant: boolean;
-  lodging_on_site: boolean;
-  motor_cart: boolean;
-  pull_cart: boolean;
-  golf_clubs_rental: boolean;
-  club_fitting: boolean;
-  golf_lessons: boolean;
-  latitude?: number;
-  longitude?: number;
-  match_percentage: number;
-  weather_icon?: string;
-}
+import { useNavigate, useLocation } from 'react-router-dom';
 
 interface Filters {
   zipCode: string;
@@ -72,20 +35,14 @@ interface Filters {
 
 type SortOption = 'distance' | 'price' | 'difficulty' | '';
 
-interface WeatherData {
-  date: string;
-  maxTemp: number;
-  minTemp: number;
-  precipitation: number;
-  description: string;
-}
-
-interface Props extends React.HTMLProps<HTMLDivElement> {
+interface Props {
   className?: string;
 }
 
-const FindClubUpdated: React.FC<Props> = ({ className, ...rest }) => {
+const FindClubUpdated: React.FC<Props> = ({ className }) => {
   const { session } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [clubs, setClubs] = useState<Club[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -115,19 +72,10 @@ const FindClubUpdated: React.FC<Props> = ({ className, ...rest }) => {
     golf_lessons: false,
   });
 
-  const [weather, setWeather] = useState<WeatherData[]>([]);
-  const [isLoadingWeather, setIsLoadingWeather] = useState(false);
-
   const [favorites, setFavorites] = useState<string[]>([]);
-
   const [showOnlyFavorites, setShowOnlyFavorites] = useState(false);
-
-  const navigate = useNavigate();
-
   const [mapCenter, setMapCenter] = useState<[number, number]>([-98.5795, 39.8283]);
-
   const [isSticky, setIsSticky] = useState(false);
-
   const [filteredClubs, setFilteredClubs] = useState<Club[]>([]);
 
   const handleTextChange = (name: keyof Filters) => (
@@ -256,7 +204,7 @@ const FindClubUpdated: React.FC<Props> = ({ className, ...rest }) => {
       filteredClubs.sort((a, b) => {
         switch (sortBy) {
           case 'distance':
-            return a.distance_miles - b.distance_miles;
+            return (a.distance_miles || 0) - (b.distance_miles || 0);
           case 'price':
             return a.price_tier.localeCompare(b.price_tier);
           case 'difficulty':
@@ -292,7 +240,7 @@ const FindClubUpdated: React.FC<Props> = ({ className, ...rest }) => {
     const sortedClubs = [...clubs].sort((a, b) => {
       switch (value) {
         case 'distance':
-          return a.distance_miles - b.distance_miles;
+          return (a.distance_miles || 0) - (b.distance_miles || 0);
         case 'price':
           const priceOrder: Record<string, number> = { '$': 1, '$$': 2, '$$$': 3 };
           return (priceOrder[a.price_tier] || 0) - (priceOrder[b.price_tier] || 0);
@@ -451,16 +399,18 @@ const FindClubUpdated: React.FC<Props> = ({ className, ...rest }) => {
             overflow: 'hidden'
           }}>
             <aside className="filters" style={{
-              flex: '0 0 300px',
+              width: '300px',
               position: 'sticky',
               top: '1rem',
-              height: 'calc(100vh - 2rem)',
+              alignSelf: 'flex-start',
+              maxHeight: 'calc(100vh - 2rem)',
               overflowY: 'auto',
               zIndex: 1,
               transition: 'all 0.3s ease',
               backgroundColor: 'white',
               padding: '16px',
-              boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+              boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+              borderRadius: '4px'
             }}>
               <Typography variant="h6" gutterBottom>Filters</Typography>
               <Box sx={{ 
@@ -654,7 +604,7 @@ const FindClubUpdated: React.FC<Props> = ({ className, ...rest }) => {
               }}>
                 <Typography variant="h6">Search Results</Typography>
                 <FormControl sx={{ 
-                  minWidth: { xs: '100%', sm: 200 }  // Full width on mobile
+                  minWidth: { xs: '100%', sm: 200 }
                 }}>
                   <InputLabel>Sort By</InputLabel>
                   <Select
@@ -701,26 +651,26 @@ const FindClubUpdated: React.FC<Props> = ({ className, ...rest }) => {
                             position: 'relative',
                           }}
                         >
-                          <Link 
-                            to={`/clubs/${club.id}`} 
-                            state={{ from: location.pathname + location.search }}
-                            style={{ textDecoration: 'none', color: 'inherit' }}
-                          >
-                            <ClubCard 
-                              club={club}
-                              isFavorite={favorites.includes(club.id)}
-                              onToggleFavorite={handleToggleFavorite}
-                              showToggle={true}
-                              index={index}
-                              showScore={true}
-                            />
-                          </Link>
+                          <ClubCard 
+                            club={club}
+                            isFavorite={favorites.includes(club.id)}
+                            onToggleFavorite={handleToggleFavorite}
+                            showToggle={true}
+                            index={index}
+                            showScore={true}
+                            sx={{ 
+                              cursor: 'pointer',
+                              '&:hover': {
+                                boxShadow: 3
+                              }
+                            }}
+                            onClick={() => navigate(`/clubs/${club.id}`)}
+                          />
                         </Box>
                       </Grid>
                     ))}
                   </Grid>
 
-                  {/* Pagination Controls */}
                   <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center', gap: 1 }}>
                     <Button
                       onClick={() => handlePageChange(1)}
@@ -784,4 +734,4 @@ const FindClubUpdated: React.FC<Props> = ({ className, ...rest }) => {
   );
 };
 
-export default FindClubUpdated; 
+export default FindClubUpdated;

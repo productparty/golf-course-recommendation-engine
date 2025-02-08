@@ -14,7 +14,6 @@ import { SvgIcon } from '@mui/material';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import IconButton from '@mui/material/IconButton';
-import { Link } from 'react-router-dom';
 import './ClubCard.css';
 
 interface WeatherData {
@@ -55,16 +54,6 @@ export interface Club {
   weather_icon?: string;
 }
 
-interface WeatherResponse {
-  daily: {
-    time: string[];
-    temperature_2m_max: number[];
-    temperature_2m_min: number[];
-    precipitation_probability_max: number[];
-    weathercode: number[];
-  };
-}
-
 interface ClubCardProps {
   club: Club;
   showScore?: boolean;
@@ -73,6 +62,7 @@ interface ClubCardProps {
   showToggle?: boolean;
   index: number;
   sx?: SxProps<Theme>;
+  onClick?: () => void;
 }
 
 const FeatureChip: React.FC<{ label: string; isMatch?: boolean }> = ({ label, isMatch = false }) => (
@@ -117,7 +107,7 @@ const getWeatherIcon = (weatherCode: number) => {
   }
 };
 
-const ClubCard: React.FC<ClubCardProps> = ({ club, showScore, isFavorite, onToggleFavorite, showToggle, index, sx }) => {
+const ClubCard: React.FC<ClubCardProps> = ({ club, showScore, isFavorite, onToggleFavorite, showToggle, index, sx, onClick }) => {
   const [weather, setWeather] = useState<WeatherData[]>([]);
   const [isLoadingWeather, setIsLoadingWeather] = useState(false);
 
@@ -146,13 +136,14 @@ const ClubCard: React.FC<ClubCardProps> = ({ club, showScore, isFavorite, onTogg
   }, [club.latitude, club.longitude]);
 
   return (
-    <Card sx={{ mb: 2, position: 'relative', ...sx }}>
+    <Card 
+      sx={{ mb: 2, position: 'relative', ...sx }}
+      onClick={onClick}
+    >
       <CardContent>
-        <Link to={`/clubs/${club.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-          <Typography variant="h6" component="div">
-            #{index + 1} - {club.club_name}
-          </Typography>
-        </Link>
+        <Typography variant="h6" component="div">
+          #{index + 1} - {club.club_name}
+        </Typography>
         <Typography variant="body2" align="left">{club.address}</Typography>
         <Typography variant="body2" align="left">{club.city}, {club.state} {club.zip_code}</Typography>
         <Typography variant="body2" align="left">
@@ -162,7 +153,7 @@ const ClubCard: React.FC<ClubCardProps> = ({ club, showScore, isFavorite, onTogg
         {showToggle && onToggleFavorite && (
           <IconButton
             onClick={(e) => {
-              e.preventDefault();
+              e.stopPropagation();
               onToggleFavorite(club.id);
             }}
             className="heart-button"
@@ -228,11 +219,7 @@ const ClubCard: React.FC<ClubCardProps> = ({ club, showScore, isFavorite, onTogg
                     {new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' })}
                   </Typography>
                   <Box className="weather-icon-container">
-                    <img 
-                      src={club.weather_icon} 
-                      alt="Weather" 
-                      className="weather-icon"
-                    />
+                    {getWeatherIcon(parseInt(day.description))}
                   </Box>
                   <Typography variant="caption" display="block">
                     {Math.round(day.maxTemp)}°F
