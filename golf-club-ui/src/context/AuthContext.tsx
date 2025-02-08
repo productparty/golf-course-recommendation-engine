@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Session, AuthError } from '@supabase/supabase-js';
-import { supabase } from '../config/supabase';
+import { supabase } from '../supabaseClient';
 import { useNavigate } from 'react-router-dom';
 
 interface AuthContextType {
