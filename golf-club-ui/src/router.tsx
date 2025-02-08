@@ -1,18 +1,20 @@
 import { createBrowserRouter } from 'react-router-dom';
+import { lazy } from 'react';
 import { Layout } from './components/Layout';
-import Home from './pages/Home/home';
-import Dashboard from './pages/Home/Dashboard';
-import FindClubUpdated from './pages/FindClub/FindClubUpdated';
-import RecommendClubUpdated from './pages/RecommendClub/RecommendClubUpdated';
-import Favorites from './pages/Favorites/Favorites';
-import GolferProfileUpdated from './pages/GolferProfile/GolferProfileUpdated';
-import Login from './pages/login/Login';
-import CreateAccount from './pages/CreateAccount/CreateAccount';
-import PasswordResetRequest from './pages/PasswordResetRequest/PasswordResetRequest';
-import PasswordResetConfirm from './pages/PasswordResetConfirm/PasswordResetConfirm';
-import ClubDetail from './pages/ClubDetail/ClubDetail';
-import NotFound from './pages/NotFound/NotFound';
 import { ProtectedRoute } from './components/ProtectedRoute';
+
+const Home = lazy(() => import('./pages/Home/home'));
+const Dashboard = lazy(() => import('./pages/Home/Dashboard'));
+const FindClubUpdated = lazy(() => import('./pages/FindClub/FindClubUpdated'));
+const RecommendClubUpdated = lazy(() => import('./pages/RecommendClub/RecommendClubUpdated'));
+const Favorites = lazy(() => import('./pages/Favorites/Favorites'));
+const GolferProfileUpdated = lazy(() => import('./pages/GolferProfile/GolferProfileUpdated'));
+const Login = lazy(() => import('./pages/login/Login'));
+const CreateAccount = lazy(() => import('./pages/CreateAccount/CreateAccount'));
+const PasswordResetRequest = lazy(() => import('./pages/PasswordResetRequest/PasswordResetRequest'));
+const PasswordResetConfirm = lazy(() => import('./pages/PasswordResetConfirm/PasswordResetConfirm'));
+const ClubDetail = lazy(() => import('./pages/ClubDetail/ClubDetail'));
+const NotFound = lazy(() => import('./pages/NotFound/NotFound'));
 
 export const router = createBrowserRouter([
   {

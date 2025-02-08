@@ -1,8 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, forwardRef } from 'react';
 import { Box, Button, Zoom } from '@mui/material';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 
-export const ScrollToTop = () => {
+interface ScrollToTopProps {}
+
+export const ScrollToTop = forwardRef<HTMLDivElement, ScrollToTopProps>((props, ref) => {
   const [visible, setVisible] = useState(false);
 
   const toggleVisibility = () => {
@@ -24,6 +26,7 @@ export const ScrollToTop = () => {
   return (
     <Zoom in={visible}>
       <Box
+        ref={ref}
         onClick={scrollToTop}
         sx={{
           position: 'fixed',
@@ -53,4 +56,4 @@ export const ScrollToTop = () => {
       </Box>
     </Zoom>
   );
-}; 
+});
