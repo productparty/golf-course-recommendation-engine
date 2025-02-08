@@ -140,8 +140,8 @@ export const ClubDetailPage = () => {
                         golf_clubs_rental,
                         club_fitting,
                         golf_lessons,
-                        lat,
-                        lng
+                        latitude,
+                        longitude
                     `)
                     .eq('global_id', id)
                     .single();
@@ -149,9 +149,15 @@ export const ClubDetailPage = () => {
                 if (error) throw error;
                 if (!data) throw new Error('Club not found');
                 
+                if (!data.latitude || !data.longitude) {
+                    throw new Error('Club coordinates not available');
+                }
+                
                 setClub({
                     id: data.global_id,
-                    ...data
+                    ...data,
+                    lat: data.latitude,
+                    lng: data.longitude
                 });
             } catch (err: any) {
                 setError(err.message);
@@ -215,9 +221,7 @@ export const ClubDetailPage = () => {
                     center={[club.lng || 0, club.lat || 0]}
                     radius={500}
                     initialZoom={14}
-                    onMarkerClick={(clubId) => {
-                        // Handle marker click if needed
-                    }}
+                    onMarkerClick={() => {}}
                 />
             </Box>
 
