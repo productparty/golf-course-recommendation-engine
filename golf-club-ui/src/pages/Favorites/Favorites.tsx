@@ -50,22 +50,31 @@ const Favorites: React.FC = () => {
   const { session } = useAuth();
   const [favoriteClubs, setFavoriteClubs] = useState<FavoriteClub[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const ITEMS_PER_PAGE = 5;  // Show 5 items per page
+  const ITEMS_PER_PAGE = 10;  // Show 10 items per page to match FindClub
   const [mapCenter, setMapCenter] = useState<[number, number]>([-98.5795, 39.8283]);
   const navigate = useNavigate();
   const mapRef = React.useRef<mapboxgl.Map | null>(null);
 
   const fetchFavorites = async () => {
-    if (!session?.user?.id) return;
+    if (!session?.user?.id) {
+      setFavoriteClubs([]);
+      setTotalPages(0);
+      setIsLoading(false);
+      return;
+    }
+    
+    setIsLoading(true);
     
     try {
       // First get the favorite golf club IDs
       const { data: favoritesData, error: favoritesError } = await supabase
         .from('favorites')
         .select('golfclub_id')
-        .eq('profile_id', session.user.id);
+        .eq('profile_id', session.user.id)
+        .order('created_at', { ascending: false }); // Show newest favorites first
 
       if (favoritesError) throw favoritesError;
 
@@ -89,16 +98,20 @@ const Favorites: React.FC = () => {
       );
 
       if (!response.ok) {
-        throw new Error('Failed to fetch club details');
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Failed to fetch club details');
       }
 
       const clubsData = await response.json();
 
-      if (clubsData) {
+      if (clubsData && clubsData.results) {
         // Get coordinates for each club
         const clubsWithCoords = await Promise.all(clubsData.results.map(async (club: GolfClub) => {
           try {
             const response = await fetch(`https://api.zippopotam.us/us/${club.zip_code}`);
+            if (!response.ok) {
+              throw new Error(`Failed to get coordinates for ${club.zip_code}`);
+            }
             const zipData = await response.json();
             return {
               ...club,
@@ -108,18 +121,43 @@ const Favorites: React.FC = () => {
             };
           } catch (error) {
             console.error(`Failed to get coordinates for ${club.zip_code}:`, error);
-            return club;
+            // Return club without coordinates rather than failing completely
+            return {
+              ...club,
+              golfclub_id: club.id
+            };
           }
         }));
 
-        setFavoriteClubs(clubsWithCoords);
-        setTotalPages(Math.ceil(clubsWithCoords.length / ITEMS_PER_PAGE));
+        // Filter out clubs without valid coordinates before setting state
+        const validClubs = clubsWithCoords.filter(club => 
+          club.latitude && club.longitude && 
+          isValidCoordinate(club.latitude, club.longitude)
+        );
+
+        setFavoriteClubs(validClubs);
+        setTotalPages(Math.ceil(validClubs.length / ITEMS_PER_PAGE));
+
+        // Update map bounds if we have valid clubs
+        if (validClubs.length > 0) {
+          const bounds = new mapboxgl.LngLatBounds();
+          validClubs.forEach(club => {
+            if (club.longitude && club.latitude) {
+              bounds.extend([club.longitude, club.latitude]);
+            }
+          });
+          mapRef.current?.fitBounds(bounds, { 
+            padding: 50,
+            maxZoom: 12 // Prevent zooming in too far if only one club
+          });
+        }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching favorites:', error);
+      setError(error.message || 'Failed to load favorites');
+    } finally {
       setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
   const getCurrentPageFavorites = () => {
@@ -165,14 +203,20 @@ const Favorites: React.FC = () => {
 
   return (
     <PageLayout title="Favorite Clubs">
-      <div className="favorites-container">
+      <Box sx={{ maxWidth: '1440px', margin: '0 auto', padding: '1rem' }}>
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
+        
         {isLoading ? (
           <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
             <CircularProgress />
           </Box>
         ) : favoriteClubs.length > 0 ? (
           <>
-            <div className="favorites-map">
+            <Box sx={{ mb: 4 }}>
               <InteractiveMap 
                 clubs={favoriteClubs.filter(c => 
                   c.latitude && c.longitude &&
@@ -184,29 +228,102 @@ const Favorites: React.FC = () => {
                 showNumbers={false}
                 key="favorites-map"
               />
-            </div>
+            </Box>
             
-            <div className="favorites-list">
-              {favoriteClubs.map((club, index) => (
-                <ClubCard 
-                  key={club.id}
-                  club={club}
-                  isFavorite={true}
-                  onToggleFavorite={() => handleToggleFavorite(club.id)}
-                  showToggle={true}
-                  index={(currentPage - 1) * ITEMS_PER_PAGE + index}
-                  showScore={false}
-                  onClick={() => navigate(`/clubs/${club.id}`)}
-                />
+            <Grid container spacing={2}>
+              {getCurrentPageFavorites().map((club, index) => (
+                <Grid item xs={12} key={club.id}>
+                  <Box sx={{
+                    backgroundColor: 'white',
+                    borderRadius: 1,
+                    boxShadow: 1,
+                    padding: 2,
+                    position: 'relative'
+                  }}>
+                    <ClubCard 
+                      club={club}
+                      isFavorite={true}
+                      onToggleFavorite={() => handleToggleFavorite(club.id)}
+                      showToggle={true}
+                      index={(currentPage - 1) * ITEMS_PER_PAGE + index}
+                      showScore={false}
+                      onClick={() => navigate(`/clubs/${club.id}`)}
+                      sx={{ 
+                        cursor: 'pointer',
+                        '&:hover': {
+                          boxShadow: 3
+                        }
+                      }}
+                    />
+                  </Box>
+                </Grid>
               ))}
-            </div>
+            </Grid>
+
+            {totalPages > 1 && (
+              <>
+                <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center', gap: 1 }}>
+                  <Button
+                    onClick={() => handlePageChange(1)}
+                    disabled={currentPage === 1}
+                    variant="outlined"
+                  >
+                    First
+                  </Button>
+                  <Button
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    variant="outlined"
+                  >
+                    Previous
+                  </Button>
+                  
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    const pageNum = currentPage - 2 + i;
+                    if (pageNum > 0 && pageNum <= totalPages) {
+                      return (
+                        <Button
+                          key={pageNum}
+                          onClick={() => handlePageChange(pageNum)}
+                          variant={pageNum === currentPage ? "contained" : "outlined"}
+                        >
+                          {pageNum}
+                        </Button>
+                      );
+                    }
+                    return null;
+                  })}
+                  
+                  <Button
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    variant="outlined"
+                  >
+                    Next
+                  </Button>
+                  <Button
+                    onClick={() => handlePageChange(totalPages)}
+                    disabled={currentPage === totalPages}
+                    variant="outlined"
+                  >
+                    Last
+                  </Button>
+                </Box>
+                <Typography 
+                  variant="body2" 
+                  sx={{ mt: 1, textAlign: 'center' }}
+                >
+                  Page {currentPage} of {totalPages}
+                </Typography>
+              </>
+            )}
           </>
         ) : (
           <Alert severity="info">
             You haven't added any clubs to your favorites yet.
           </Alert>
         )}
-      </div>
+      </Box>
     </PageLayout>
   );
 };

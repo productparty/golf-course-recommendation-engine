@@ -278,9 +278,13 @@ const FindClubUpdated: React.FC<Props> = ({ className }) => {
   };
 
   const handleToggleFavorite = async (clubId: string) => {
-    if (!session?.user?.id) return;
+    if (!session?.user?.id) {
+      setError('Please log in to save favorites');
+      return;
+    }
 
     const isFavorite = favorites.includes(clubId);
+    setIsLoading(true);
     
     try {
       if (isFavorite) {
@@ -297,7 +301,8 @@ const FindClubUpdated: React.FC<Props> = ({ className }) => {
           .insert([
             { 
               profile_id: session.user.id,
-              golfclub_id: clubId
+              golfclub_id: clubId,
+              created_at: new Date().toISOString()
             }
           ]);
           
@@ -311,13 +316,16 @@ const FindClubUpdated: React.FC<Props> = ({ className }) => {
         .eq('profile_id', session.user.id);
         
       if (error) {
-        console.error('Error fetching updated favorites:', error);
-        return;
+        throw error;
       }
       
       setFavorites(data.map(fav => fav.golfclub_id));
-    } catch (error) {
+      setError(''); // Clear any previous errors
+    } catch (error: any) {
       console.error('Error toggling favorite:', error);
+      setError(error.message || 'Failed to update favorite');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -710,7 +718,7 @@ const FindClubUpdated: React.FC<Props> = ({ className }) => {
                       onMarkerClick={handleMarkerClick}
                       showNumbers={true}
                       initialZoom={4} // Start more zoomed out to show the whole US
-                      key={JSON.stringify(filters)}
+                      key={`map-${filters.zipCode}-${filters.radius}`} // Only recreate when location changes
                     />
                   </Box>
                   <Grid container spacing={2}>
