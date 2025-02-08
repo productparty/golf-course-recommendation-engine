@@ -42,10 +42,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     // Initial check after mount
     const initAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setSession(session);
-      setUser(session?.user ?? null);
-      setInitialized(true);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        setSession(session);
+        setUser(session?.user ?? null);
+        setInitialized(true);
+      } finally {
+        setLoading(false);  // Always set loading to false after initialization
+      }
     };
     
     initAuth();
