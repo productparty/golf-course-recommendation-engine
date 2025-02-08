@@ -63,7 +63,7 @@ const Favorites: React.FC = () => {
       .from('favorites')
       .select(`
         golfclub_id,
-        clubs!inner(
+        clubs (
           id,
           club_name,
           address,
@@ -91,22 +91,17 @@ const Favorites: React.FC = () => {
         )
       `)
       .eq('profile_id', session.user.id);
-      
-    if (error) {
-      console.error('Error fetching favorites:', error);
-      return;
-    }
 
     if (data) {
-      const formatted = data?.map(fav => ({
-        ...fav.clubs[0],
-        golfclub_id: fav.golfclub_id
-      })) || [];
-      setFavoriteClubs(formatted.filter(fc => 
-        fc.id && 
-        Object.keys(fc).length === Object.keys({} as FavoriteClub).length
-      ));
-      setTotalPages(Math.ceil(formatted.length / ITEMS_PER_PAGE));
+      const validFavorites = data
+        .filter(fav => fav.clubs && fav.clubs.length > 0)
+        .map(fav => ({
+          ...fav.clubs[0],
+          golfclub_id: fav.golfclub_id
+        }));
+      
+      setFavoriteClubs(validFavorites);
+      setTotalPages(Math.ceil(validFavorites.length / ITEMS_PER_PAGE));
     }
     setIsLoading(false);
   };
@@ -134,8 +129,10 @@ const Favorites: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchFavorites();
-  }, [session?.user?.id]);
+    if (session) {
+      fetchFavorites();
+    }
+  }, [session]);
 
   useEffect(() => {
     if (favoriteClubs.length > 0) {
@@ -175,10 +172,11 @@ const Favorites: React.FC = () => {
                   key={club.id}
                   club={club}
                   isFavorite={true}
-                  onToggleFavorite={handleToggleFavorite}
+                  onToggleFavorite={() => handleToggleFavorite(club.id)}
                   showToggle={true}
                   index={(currentPage - 1) * ITEMS_PER_PAGE + index}
                   showScore={false}
+                  onClick={() => navigate(`/clubs/${club.id}`)}
                 />
               ))}
             </div>

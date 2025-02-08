@@ -16,14 +16,21 @@ export default function Header() {
   };
 
   return (
-    <AppBar position="static">
+    <AppBar position="static" sx={{ bgcolor: 'primary.main', color: 'white' }}>
       <Toolbar>
-        <Typography variant="h6" component={Link} to="/" sx={{ 
-          flexGrow: 0, 
-          textDecoration: 'none', 
-          color: 'inherit',
-          marginRight: 2
-        }}>
+        <Typography 
+          variant="h6" 
+          component={Link} 
+          to="/" 
+          sx={{ 
+            flexGrow: 0,
+            textDecoration: 'none', 
+            color: 'inherit',
+            marginRight: 2,
+            fontWeight: 'bold',
+            letterSpacing: 1.1
+          }}
+        >
           Find My Club
         </Typography>
         <Box sx={{ flexGrow: 1, display: 'flex', gap: 1 }}>

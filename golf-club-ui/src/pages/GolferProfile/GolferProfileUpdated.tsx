@@ -209,7 +209,16 @@ const GolferProfileUpdated: React.FC = () => {
   }
   return (
     <PageLayout title="My Profile">
-      <Typography variant="h4" align="center">My Profile</Typography>
+      <Typography 
+        variant="h4" 
+        align="center"
+        sx={{
+          color: 'primary.main',
+          mb: 3
+        }}
+      >
+        My Profile
+      </Typography>
       <Card>
         <CardContent>
           <Grid container spacing={3}>
