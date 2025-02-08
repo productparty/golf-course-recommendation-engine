@@ -348,7 +348,6 @@ const RecommendClubUpdated: React.FC = () => {
                       <Link 
                         to={`/clubs/${club.id}`} 
                         state={{ from: location.pathname + location.search }}
-                        style={{ textDecoration: 'none', color: 'inherit' }}
                       >
                         <ClubCard 
                           club={club}

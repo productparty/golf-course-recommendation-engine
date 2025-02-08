@@ -118,11 +118,11 @@ const LandingPage = () => {
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           display: 'flex',
-          alignItems: 'center',
+          alignItems: { xs: 'flex-start', md: 'center' },
           justifyContent: 'center',
           flexDirection: 'column',
           textAlign: 'center',
-          paddingTop: { xs: '40%', md: 0 },
+          paddingTop: { xs: '20%', md: '15%' },
           '&::before': {
             content: '""',
             position: 'absolute',
