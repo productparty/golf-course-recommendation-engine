@@ -7,6 +7,20 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
   const isProd = mode === 'production';
   
+  // Validate required environment variables
+  const requiredVars = [
+    'VITE_SUPABASE_URL',
+    'VITE_SUPABASE_ANON_KEY',
+    'VITE_API_URL',
+    'VITE_MAPBOX_TOKEN'
+  ];
+
+  requiredVars.forEach(varName => {
+    if (!env[varName]) {
+      throw new Error(`Missing required environment variable: ${varName}`);
+    }
+  });
+  
   return {
     base: '/',
     plugins: [react()],

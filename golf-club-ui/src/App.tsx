@@ -22,19 +22,29 @@ const LoadingFallback = () => (
 );
 
 const App = () => (
-  <ErrorBoundary>
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <AuthProvider>
-        <FavoritesProvider>
+  <ThemeProvider theme={theme}>
+    <CssBaseline />
+    <AuthProvider>
+      <FavoritesProvider>
+        <ErrorBoundary>
           <RouterProvider 
             router={router} 
             fallbackElement={<LoadingFallback />}
+            onError={(error) => {
+              console.error('Router Error:', error);
+              // Log additional error context
+              console.log('Router State:', router.state);
+              console.log('Environment Variables:', {
+                VITE_SUPABASE_URL: !!import.meta.env.VITE_SUPABASE_URL,
+                VITE_API_URL: !!import.meta.env.VITE_API_URL,
+                VITE_APP_URL: import.meta.env.VITE_APP_URL
+              });
+            }}
           />
-        </FavoritesProvider>
-      </AuthProvider>
-    </ThemeProvider>
-  </ErrorBoundary>
+        </ErrorBoundary>
+      </FavoritesProvider>
+    </AuthProvider>
+  </ThemeProvider>
 );
 
 export default App;

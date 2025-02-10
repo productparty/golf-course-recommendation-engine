@@ -4,7 +4,7 @@ console.log('Environment Variables:', {
   ALL_ENV: import.meta.env
 });
 
-console.log('Mapbox Token Available:', !!import.meta.env.VITE_MAPBOX_TOKEN);
+console.log('Mapbox Token Available:', !!(import.meta.env.VITE_MAPBOX_TOKEN || import.meta.env.VITE_MAPBOX_ACCESS_TOKEN));
 
 // Get API URL from environment
 const VITE_API_URL = import.meta.env.VITE_API_URL;
@@ -24,7 +24,9 @@ const formatApiUrl = (url: string) => {
 // Export configuration object
 export const config = {
   API_URL: import.meta.env.VITE_API_URL || 'https://golf-course-recommendation-engin-production.up.railway.app',
-  MAPBOX_TOKEN: import.meta.env.VITE_MAPBOX_TOKEN || '',
+  MAPBOX_TOKEN: import.meta.env.VITE_MAPBOX_TOKEN || (() => {
+    throw new Error('Either VITE_MAPBOX_TOKEN must be set in environment variables');
+  })(),
   SUPABASE_URL: import.meta.env.VITE_SUPABASE_URL,
   SUPABASE_ANON_KEY: import.meta.env.VITE_SUPABASE_ANON_KEY,
   APP_URL: import.meta.env.VITE_APP_URL

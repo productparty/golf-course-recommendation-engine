@@ -28,11 +28,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<any>(null);
   const [initialized, setInitialized] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        // Check storage access before proceeding
+        try {
+          localStorage.setItem('sb-storage-test', 'test');
+          localStorage.removeItem('sb-storage-test');
+        } catch (e) {
+          console.error('LocalStorage access denied:', e);
+          setError(new Error('Browser storage access is required for authentication'));
+          return;
+        }
+        
         setSession(session);
         setUser(session?.user ?? null);
         setInitialized(true);

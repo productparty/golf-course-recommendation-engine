@@ -1,13 +1,18 @@
 // components/InteractiveMap.tsx
 import React, { useEffect, useRef, forwardRef } from 'react';
-import mapboxgl from 'mapbox-gl';
-import type { Map, Marker, Popup, LngLatBounds, LngLat } from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
-import { Box } from '@mui/material';
 import { config } from '../config';
 
-// Add type assertion for mapboxgl access
-(mapboxgl as any).accessToken = config.MAPBOX_TOKEN;
+import mapboxgl from 'mapbox-gl';
+import type { Map, Marker, Popup, LngLatBounds, LngLat } from 'mapbox-gl';
+
+// Set the token if it exists
+try {
+    (mapboxgl as any).accessToken = config.MAPBOX_TOKEN;
+} catch (error) {
+    console.error('Failed to set Mapbox token:', error);
+}
+import 'mapbox-gl/dist/mapbox-gl.css';
+import { Box } from '@mui/material';
 
 interface Club {
     id: string;
@@ -61,13 +66,14 @@ export const InteractiveMap = forwardRef<HTMLDivElement, InteractiveMapProps>(({
     useEffect(() => {
         if (!containerRef.current) return;
         if (!mapContainer.current) return;
-        if (!(mapboxgl as any).accessToken) {
-            console.error('Mapbox token is not set');
-            return;
-        }
+        
+        try {
+            if (!(mapboxgl as any).accessToken) {
+                throw new Error('Mapbox token is not set');
+            }
 
-        // Filter out clubs without valid coordinates
-        const validClubs = clubs.filter(club => 
+            // Filter out clubs without valid coordinates
+            const validClubs = clubs.filter(club => 
             club.latitude != null && 
             club.longitude != null && 
             !isNaN(club.latitude) && 
@@ -236,12 +242,16 @@ export const InteractiveMap = forwardRef<HTMLDivElement, InteractiveMapProps>(({
             }
         }
 
-        return () => {
-            if (map.current) {
-                map.current.remove();
-                map.current = null;
-            }
-        };
+            return () => {
+                if (map.current) {
+                    map.current.remove();
+                    map.current = null;
+                }
+            };
+        } catch (error) {
+            console.error('Error initializing map:', error);
+            return () => {};
+        }
     }, [containerRef.current, clubs, center, showNumbers]);
 
     return (
