@@ -1,5 +1,4 @@
 import { createBrowserRouter } from 'react-router-dom';
-import { Suspense } from 'react';
 import Layout from './components/Layout';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import CircularProgress from '@mui/material/CircularProgress';
@@ -29,17 +28,11 @@ const LoadingFallback = () => (
   </Box>
 );
 
-const withSuspense = (Component: React.ComponentType) => (
-  <Suspense fallback={<LoadingFallback />}>
-    <Component />
-  </Suspense>
-);
-
 export const router = createBrowserRouter([
   {
     path: '/',
     element: <Layout />,
-    errorElement: withSuspense(NotFound),
+    errorElement: <NotFound />,
     children: [
       {
         path: '/',
