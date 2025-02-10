@@ -41,10 +41,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     const initAuth = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        setSession(session);
-        setUser(session?.user ?? null);
-        setInitialized(true);
+        if (supabase) {
+          const { data: { session } } = await supabase.auth.getSession();
+          setSession(session);
+          setUser(session?.user ?? null);
+          setInitialized(true);
+        } else {
+          console.warn('Supabase client not initialized');
+          setInitialized(true);
+          setLoading(false);
+        }
       } catch (error) {
         console.error('Error during initial auth check:', error);
         setInitialized(true);
