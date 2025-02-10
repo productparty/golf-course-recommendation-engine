@@ -26,7 +26,18 @@ const App = () => (
     <CssBaseline />
     <AuthProvider>
       <FavoritesProvider>
-        <ErrorBoundary>
+        <ErrorBoundary 
+          fallback={(error) => (
+            <div className="p-4 text-red-500">
+              <h2>Critical Error</h2>
+              <p>{error.message}</p>
+              <p>Please refresh the page or contact support</p>
+              <button onClick={() => window.location.reload()}>
+                Refresh Page
+              </button>
+            </div>
+          )}
+        >
           <RouterProvider 
             router={router} 
             fallbackElement={<LoadingFallback />}

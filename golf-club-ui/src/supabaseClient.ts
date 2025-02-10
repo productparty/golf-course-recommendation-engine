@@ -17,33 +17,39 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase environment variables');
 }
 
-export const supabase = (() => {
-  try {
-    const client = createClient(supabaseUrl, supabaseAnonKey, {
-      auth: {
-        persistSession: true,
-        autoRefreshToken: true,
-        detectSessionInUrl: true,
-        storage: {
-          getItem: (key) => {
-            try { return localStorage.getItem(key) }
-            catch (e) { return null }
-          },
-          setItem: (key, value) => {
-            try { localStorage.setItem(key, value) }
-            catch (e) { console.warn('Storage setItem error:', e) }
-          },
-          removeItem: (key) => {
-            try { localStorage.removeItem(key) }
-            catch (e) { console.warn('Storage removeItem error:', e) }
-          }
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: false,
+    storage: {
+      getItem: (key) => {
+        try {
+          return localStorage.getItem(key);
+        } catch (e) {
+          console.error('LocalStorage access failed:', e);
+          return sessionStorage.getItem(key); // Fallback
+        }
+      },
+      setItem: (key, value) => {
+        try { localStorage.setItem(key, value) }
+        catch (e) { 
+          console.error('Storage setItem error:', e);
+          sessionStorage.setItem(key, value);
+        }
+      },
+      removeItem: (key) => {
+        try { localStorage.removeItem(key) }
+        catch (e) { 
+          console.error('Storage removeItem error:', e);
+          sessionStorage.removeItem(key);
         }
       }
-    });
-    console.log('Supabase client initialized successfully');
-    return client;
-  } catch (error) {
-    console.error('Supabase client initialization failed:', error);
-    throw new Error('Failed to initialize Supabase client');
+    }
   }
-})();
+});
+
+// Add initialization check
+if (!supabase) {
+  throw new Error('Supabase client failed to initialize! Check env variables');
+}

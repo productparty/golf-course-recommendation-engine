@@ -34,26 +34,50 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        // Check storage access before proceeding
         try {
-          localStorage.setItem('sb-storage-test', 'test');
-          localStorage.removeItem('sb-storage-test');
-        } catch (e) {
-          console.error('LocalStorage access denied:', e);
-          setError(new Error('Browser storage access is required for authentication'));
-          return;
+          // Enhanced storage check with timeout
+          let storageAvailable = false;
+          try {
+            const testKey = `sb-storage-test-${Date.now()}`;
+            localStorage.setItem(testKey, "test");
+            localStorage.removeItem(testKey);
+            storageAvailable = true;
+          } catch (e) {
+            console.error('Storage access error:', e);
+            setError(new Error('Please enable browser storage/cookies for proper functionality'));
+            setInitialized(true);
+            setLoading(false);
+            return;
+          }
+
+          if (!storageAvailable) {
+            console.error('Storage persistently unavailable');
+            return;
+          }
+          
+          // Safely handle session data
+          const safeUser = session?.user ? { 
+            ...session.user,
+            // Optional: Add null checks for nested properties
+            email: session.user.email ?? null 
+          } : null;
+
+          setSession(session);
+          setUser(safeUser);
+          setInitialized(true);
+        } catch (error) {
+          console.error('Auth state change error:', error);
+          setError(error instanceof Error ? error : new Error('Auth update failed'));
         }
-        
-        setSession(session);
-        setUser(session?.user ?? null);
-        setInitialized(true);
       }
     );
 
     const initAuth = async () => {
       try {
         if (supabase) {
-          const { data: { session } } = await supabase.auth.getSession();
+          const { data: { session }, error } = await supabase.auth.getSession();
+          if (error) throw error;
+          
           setSession(session);
           setUser(session?.user ?? null);
           setInitialized(true);
@@ -63,7 +87,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           setLoading(false);
         }
       } catch (error) {
-        console.error('Error during initial auth check:', error);
+        console.error('Auth initialization error:', error);
+        setError(error instanceof Error ? error : new Error('Authentication failed'));
         setInitialized(true);
         setLoading(false);
       }
