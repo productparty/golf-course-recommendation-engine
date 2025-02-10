@@ -44,47 +44,47 @@ export const router = createBrowserRouter([
     children: [
       {
         path: '/',
-        element: withSuspense(LandingPage)
+        element: <LandingPage />
       },
       {
         path: '/dashboard',
-        element: <ProtectedRoute>{withSuspense(Dashboard)}</ProtectedRoute>
+        element: <ProtectedRoute><Dashboard /></ProtectedRoute>
       },
       {
         path: '/find',
-        element: <ProtectedRoute>{withSuspense(FindClubUpdated)}</ProtectedRoute>
+        element: <ProtectedRoute><FindClubUpdated /></ProtectedRoute>
       },
       {
         path: '/recommend',
-        element: <ProtectedRoute>{withSuspense(RecommendClubUpdated)}</ProtectedRoute>
+        element: <ProtectedRoute><RecommendClubUpdated /></ProtectedRoute>
       },
       {
         path: '/favorites',
-        element: <ProtectedRoute>{withSuspense(Favorites)}</ProtectedRoute>
+        element: <ProtectedRoute><Favorites /></ProtectedRoute>
       },
       {
         path: '/profile',
-        element: <ProtectedRoute>{withSuspense(GolferProfileUpdated)}</ProtectedRoute>
+        element: <ProtectedRoute><GolferProfileUpdated /></ProtectedRoute>
       },
       {
         path: '/login',
-        element: withSuspense(Login)
+        element: <Login />
       },
       {
         path: '/create-account',
-        element: withSuspense(CreateAccount)
+        element: <CreateAccount />
       },
       {
         path: '/password-reset',
-        element: withSuspense(PasswordResetRequest)
+        element: <PasswordResetRequest />
       },
       {
         path: '/password-reset-confirm',
-        element: withSuspense(PasswordResetConfirm)
+        element: <PasswordResetConfirm />
       },
       {
         path: '/clubs/:id',
-        element: <ProtectedRoute>{withSuspense(ClubDetail)}</ProtectedRoute>
+        element: <ProtectedRoute><ClubDetail /></ProtectedRoute>
       }
     ]
   }
