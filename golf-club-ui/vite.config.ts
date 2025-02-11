@@ -49,7 +49,6 @@ export default defineConfig(({ mode }) => {
           manualChunks(id) {
             if (id.includes('node_modules')) {
               if (id.includes('@mui') || id.includes('@emotion')) return 'mui';
-              if (id.includes('mapbox-gl')) return 'mapbox-gl';
               if (id.includes('supabase')) return 'supabase';
               return 'vendor';
             }
@@ -66,7 +65,8 @@ export default defineConfig(({ mode }) => {
         '@mui/material/Toolbar',
         '@mui/material/Typography',
         '@mui/material/Box'
-      ]
+      ],
+      exclude: ['mapbox-gl']
     }
   };
 });

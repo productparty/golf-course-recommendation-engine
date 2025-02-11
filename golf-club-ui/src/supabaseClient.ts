@@ -23,6 +23,7 @@ const memoryStorage = new Map<string, string>();
 // Custom storage implementation with fallbacks
 const customStorage = {
   getItem: (key: string): string | null => {
+    console.log('customStorage.getItem:', key);
     try {
       // Try localStorage first
       const localValue = localStorage.getItem(key);
@@ -35,7 +36,7 @@ const customStorage = {
       // Use in-memory storage as final fallback
       return memoryStorage.get(key) || null;
     } catch (e) {
-      console.error('Storage access failed, using in-memory storage:', e);
+      console.error('Storage access failed (getItem):', e);
       return memoryStorage.get(key) || null;
     }
   },

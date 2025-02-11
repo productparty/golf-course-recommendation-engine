@@ -34,6 +34,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('onAuthStateChange - Event:', event, 'Session:', session);
         try {
           // Safely handle session data
           const safeUser = session?.user ? {
@@ -59,9 +60,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     );
 
     const initAuth = async () => {
+      console.log('initAuth - Start');
       try {
         if (supabase) {
           const { data: { session }, error } = await supabase.auth.getSession();
+          console.log('initAuth - getSession Result:', { session, error });
           if (error) {
             console.error('Supabase getSession error:', error); // Log specific error
             throw error; // Re-throw to be caught in the outer try...catch
@@ -123,12 +126,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const getToken = async () => {
+    console.log('getToken - Start');
     try {
       const { data: { session }, error } = await supabase.auth.getSession();
-       if (error) {
-          console.error('Supabase getToken error:', error); // Log specific error
-          throw error; // Re-throw to be caught in the outer try...catch
-        }
+      console.log('getToken - getSession Result:', { session, error });
+      if (error) {
+        console.error('Supabase getToken error:', error); // Log specific error
+        throw error; // Re-throw to be caught in the outer try...catch
+      }
       return session?.access_token || null;
     } catch (error) {
       console.error('Get token error:', error);

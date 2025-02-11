@@ -71,12 +71,11 @@ const App: React.FC = () => {
       console.error('Global Error:', event.error);
       console.error('Error Message:', event.message);
       console.error('Error Stack:', event.error?.stack);
-      console.log('Environment Check:', {
-        VITE_SUPABASE_URL: !!import.meta.env.VITE_SUPABASE_URL,
-        VITE_SUPABASE_ANON_KEY: !!import.meta.env.VITE_SUPABASE_ANON_KEY,
-        VITE_API_URL: !!import.meta.env.VITE_API_URL,
+      console.log('Vercel Environment Variables:', {
+        VITE_SUPABASE_URL: import.meta.env.VITE_SUPABASE_URL,
+        VITE_SUPABASE_ANON_KEY: import.meta.env.VITE_SUPABASE_ANON_KEY,
+        VITE_API_URL: import.meta.env.VITE_API_URL,
         VITE_APP_URL: import.meta.env.VITE_APP_URL,
-        NODE_ENV: import.meta.env.MODE
       });
     };
 
