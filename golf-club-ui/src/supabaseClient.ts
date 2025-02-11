@@ -24,42 +24,61 @@ const memoryStorage = new Map<string, string>();
 const customStorage = {
   getItem: (key: string): string | null => {
     console.log('customStorage.getItem:', key);
+    let value: string | null = null;
     try {
       // Try localStorage first
-      const localValue = localStorage.getItem(key);
-      if (localValue !== null) return localValue;
+      console.log('Trying localStorage.getItem:', key);
+      value = localStorage.getItem(key);
+      console.log('localStorage.getItem result:', key, value);
+      if (value !== null) return value;
       
       // Try sessionStorage as first fallback
-      const sessionValue = sessionStorage.getItem(key);
-      if (sessionValue !== null) return sessionValue;
+      console.log('Trying sessionStorage.getItem:', key);
+      value = sessionStorage.getItem(key);
+      console.log('sessionStorage.getItem result:', key, value);
+      if (value !== null) return value;
       
       // Use in-memory storage as final fallback
-      return memoryStorage.get(key) || null;
+      console.log('Trying memoryStorage.get:', key);
+      value = memoryStorage.get(key) || null;
+      console.log('memoryStorage.get result:', key, value);
+      return value;
     } catch (e) {
       console.error('Storage access failed (getItem):', e);
-      return memoryStorage.get(key) || null;
+      console.log('Falling back to memoryStorage (getItem):', key);
+      return memoryStorage.get(key) || null; // Ensure a fallback
     }
   },
   setItem: (key: string, value: string) => {
+    console.log('customStorage.setItem:', key, value);
     try {
+      console.log('Trying localStorage.setItem:', key, value);
       localStorage.setItem(key, value);
     } catch (e1) {
+      console.error('localStorage.setItem failed:', e1);
       try {
+        console.log('Trying sessionStorage.setItem:', key, value);
         sessionStorage.setItem(key, value);
       } catch (e2) {
-        console.error('Falling back to in-memory storage:', e2);
+        console.error('sessionStorage.setItem failed:', e2);
+        console.log('Falling back to memoryStorage.setItem:', key, value);
         memoryStorage.set(key, value);
       }
     }
   },
   removeItem: (key: string) => {
+    console.log('customStorage.removeItem:', key);
     try {
+      console.log('Trying localStorage.removeItem:', key);
       localStorage.removeItem(key);
     } catch (e1) {
+      console.error('localStorage.removeItem failed:', e1);
       try {
+        console.log('Trying sessionStorage.removeItem:', key);
         sessionStorage.removeItem(key);
       } catch (e2) {
-        console.error('Removing from in-memory storage:', e2);
+        console.error('sessionStorage.removeItem failed:', e2);
+        console.log('Falling back to memoryStorage.removeItem:', key);
         memoryStorage.delete(key);
       }
     }

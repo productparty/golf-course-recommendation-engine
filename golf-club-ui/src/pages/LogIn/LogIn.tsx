@@ -20,14 +20,18 @@ const Login: React.FC = () => {
     setError('');
     setLoading(true);
 
+    console.log('handleSubmit - Start', { email, password }); // Log values
+
     try {
       await signIn(email, password);
+      console.log('handleSubmit - signIn successful'); // Log after signIn
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to sign in';
       setError(message);
       console.error('Sign in error:', err);
     } finally {
       setLoading(false);
+      console.log('handleSubmit - End'); // Log at the end
     }
   };
 

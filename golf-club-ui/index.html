@@ -22,30 +22,6 @@
     <!-- Vite automatically injects compiled JS/CSS in production. 
          For dev, it references /src/main.tsx. -->
     <script type="module" src="/src/main.tsx"></script>
-    <script>
-      window.onerror = function(msg, url, lineNo, columnNo, error) {
-        console.error('Window Error:', { msg, url, lineNo, columnNo, error });
-        // Display error in DOM if app fails to mount
-        if (!document.getElementById('root').children.length) {
-          const errorDiv = document.createElement('div');
-          errorDiv.style.padding = '20px';
-          errorDiv.style.color = 'red';
-          errorDiv.innerHTML = `
-            <h2>Application Error</h2>
-            <p>Please check the console for details.</p>
-            <pre>${msg}</pre>
-          `;
-          document.getElementById('root').appendChild(errorDiv);
-        }
-        return false;
-      };
-    </script>
-    <script type="module" crossorigin src="/assets/index-VDxNlPFo.js"></script>
-    <link rel="modulepreload" crossorigin href="/assets/vendor-DQpUjwts.js">
-    <link rel="modulepreload" crossorigin href="/assets/supabase-CSOzlVCl.js">
-    <link rel="modulepreload" crossorigin href="/assets/mui-Nshr_U6c.js">
-    <link rel="stylesheet" crossorigin href="/assets/vendor-Dgihpmma.css">
-    <link rel="stylesheet" crossorigin href="/assets/index-B6wVtgmz.css">
   </head>
   <body>
     <div id="root"></div>
