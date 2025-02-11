@@ -12,7 +12,6 @@ export default defineConfig(({ mode }) => {
     VITE_SUPABASE_URL: !!env.VITE_SUPABASE_URL,
     VITE_SUPABASE_ANON_KEY: !!env.VITE_SUPABASE_ANON_KEY,
     VITE_API_URL: !!env.VITE_API_URL,
-    VITE_MAPBOX_TOKEN: !!env.VITE_MAPBOX_TOKEN,
     NODE_ENV: env.NODE_ENV,
     MODE: mode
   });
@@ -20,7 +19,6 @@ export default defineConfig(({ mode }) => {
   // Define default values for required environment variables
   const defaults = {
     VITE_API_URL: 'https://golf-course-recommendation-engin-production.up.railway.app',
-    VITE_MAPBOX_TOKEN: process.env.VITE_MAPBOX_TOKEN || env.VITE_MAPBOX_TOKEN
   };
 
   // Merge environment variables with defaults
@@ -28,7 +26,6 @@ export default defineConfig(({ mode }) => {
     VITE_SUPABASE_URL: env.VITE_SUPABASE_URL,
     VITE_SUPABASE_ANON_KEY: env.VITE_SUPABASE_ANON_KEY,
     VITE_API_URL: env.VITE_API_URL || defaults.VITE_API_URL,
-    VITE_MAPBOX_TOKEN: env.VITE_MAPBOX_TOKEN || defaults.VITE_MAPBOX_TOKEN
   };
 
   // Validate critical environment variables

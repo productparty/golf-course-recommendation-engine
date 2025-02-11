@@ -35,7 +35,6 @@ const formatApiUrl = (url: string) => {
 // Export configuration object
 export const config = {
   API_URL: formatApiUrl(env.API_URL || defaults.API_URL),
-  MAPBOX_TOKEN: env.MAPBOX_TOKEN || defaults.MAPBOX_TOKEN,
   SUPABASE_URL: env.SUPABASE_URL,
   SUPABASE_ANON_KEY: env.SUPABASE_ANON_KEY,
   APP_URL: env.APP_URL

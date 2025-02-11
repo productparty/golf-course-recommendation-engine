@@ -69,6 +69,7 @@ const App: React.FC = () => {
     // Add global error handler
     const handleGlobalError = (event: ErrorEvent) => {
       console.error('Global Error:', event.error);
+      console.error('Error Message:', event.message);
       console.error('Error Stack:', event.error?.stack);
       console.log('Environment Check:', {
         VITE_SUPABASE_URL: !!import.meta.env.VITE_SUPABASE_URL,

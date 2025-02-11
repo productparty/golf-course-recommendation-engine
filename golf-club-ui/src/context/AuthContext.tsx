@@ -93,24 +93,30 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         email,
         password,
       });
-      if (error) throw error;
-      if (data.user) {
-        const { data: { session } } = await supabase.auth.getSession();
-        setSession(session);
-        navigate('/');
+      if (error) {
+        console.error('Supabase sign-in error:', error);
+        throw new Error(error.message || 'Sign-in failed');
       }
-    } catch (error) {
-      console.error('Sign in error:', error);
-      throw error;
+      setUser(data.user);
+      setSession(data.session);
+      navigate('/');
+    } catch (error:any) {
+      console.error('Sign-in error:', error);
     }
   };
 
   const signOut = async () => {
     try {
-      await supabase.auth.signOut();
-      navigate('/');
-    } catch (error) {
-      console.error('Sign out error:', error);
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error('Supabase sign-out error:', error);
+        throw new Error(error.message || 'Sign out failed');
+      }
+      setUser(null);
+      setSession(null);
+      navigate('/login');
+    } catch (error:any) {
+      console.error('Sign-out error:', error);
     }
   };
 
@@ -126,10 +132,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signUp = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signUp({ email, password });
-      if (error) throw error;
-    } catch (error) {
-      console.error('Sign up error:', error);
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+      });
+      if (error) {
+        console.error('Supabase sign-up error:', error);
+        throw new Error(error.message || 'Sign-up failed');
+      }
+      setUser(data.user);
+      setSession(data.session);
+    } catch (error:any) {
+      console.error('Sign-up error:', error);
     }
   };
 
