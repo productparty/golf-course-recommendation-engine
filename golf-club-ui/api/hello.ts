@@ -1,8 +1,8 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import { supabase } from '../src/supabaseClient'; // Import your Supabase client
 
-export default async (req: VercelRequest, res: VercelResponse) => {
-  console.log('Hello from serverless function!'); // This will show in Vercel logs
+export default async (_req: VercelRequest, res: VercelResponse) => {
+  console.log('Hello from serverless function!');
 
   try {
     const { data, error } = await supabase.from('some_table').select('*');

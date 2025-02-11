@@ -1,22 +1,26 @@
-import React, { forwardRef } from 'react';
+import React from 'react';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Box } from '@mui/material';
-import { Navigate } from 'react-router-dom';
+import CircularProgress from '@mui/material/CircularProgress';
+import Box from '@mui/material/Box';
 
-interface ProtectedRouteProps {
-  children: React.ReactNode;
-}
+export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const { user, initialized } = useAuth();
+  const location = useLocation();
 
-export const ProtectedRoute = forwardRef<HTMLDivElement, ProtectedRouteProps>(
-  ({ children }, ref) => {
-    const { session } = useAuth();
-
-    if (!session || !session.access_token) {
-      return <Navigate to="/" replace />;
-    }
-
-    return <Box ref={ref}>{children}</Box>;
+  // Show loading indicator while waiting for authentication to initialize
+  if (!initialized) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
+        <CircularProgress />
+      </Box>
+    );
   }
-);
 
-ProtectedRoute.displayName = 'ProtectedRoute';
+  // Redirect to login if not authenticated
+  if (!user) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  return <>{children}</>;
+};
