@@ -35,26 +35,25 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         try {
-          // Safely handle session data regardless of storage availability
-          const safeUser = session?.user ? { 
+          // Safely handle session data
+          const safeUser = session?.user ? {
             ...session.user,
-            email: session.user.email ?? null 
+            email: session.user.email ?? null
           } : null;
 
           setSession(session);
           setUser(safeUser);
-          setInitialized(true);
+          setInitialized(true); // Set initialized *after* setting user/session
           setLoading(false);
 
-          // Log auth state change for debugging
-          console.log('Auth state changed:', {
-            event,
-            hasUser: !!safeUser,
-            hasSession: !!session
-          });
+          // Log auth state change
+          console.log('Auth state changed:', { event, hasUser: !!safeUser, hasSession: !!session });
+
         } catch (error) {
           console.error('Auth state change error:', error);
           setError(error instanceof Error ? error : new Error('Auth update failed'));
+          setInitialized(true); // Ensure initialized is set even on error
+          setLoading(false);
         }
       }
     );
@@ -63,11 +62,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       try {
         if (supabase) {
           const { data: { session }, error } = await supabase.auth.getSession();
-          if (error) throw error;
-          
+          if (error) {
+            console.error('Supabase getSession error:', error); // Log specific error
+            throw error; // Re-throw to be caught in the outer try...catch
+          }
+
           setSession(session);
           setUser(session?.user ?? null);
-          setInitialized(true);
+          setInitialized(true); // Set initialized *after* setting user/session
         } else {
           console.warn('Supabase client not initialized');
           setInitialized(true);
@@ -76,7 +78,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       } catch (error) {
         console.error('Auth initialization error:', error);
         setError(error instanceof Error ? error : new Error('Authentication failed'));
-        setInitialized(true);
+        setInitialized(true); // Ensure initialized is set even on error
         setLoading(false);
       }
     };
@@ -122,7 +124,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const getToken = async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session }, error } = await supabase.auth.getSession();
+       if (error) {
+          console.error('Supabase getToken error:', error); // Log specific error
+          throw error; // Re-throw to be caught in the outer try...catch
+        }
       return session?.access_token || null;
     } catch (error) {
       console.error('Get token error:', error);

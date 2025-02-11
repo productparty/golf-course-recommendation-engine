@@ -35,7 +35,7 @@ const customStorage = {
       // Use in-memory storage as final fallback
       return memoryStorage.get(key) || null;
     } catch (e) {
-      console.warn('Storage access failed, using in-memory storage:', e);
+      console.error('Storage access failed, using in-memory storage:', e);
       return memoryStorage.get(key) || null;
     }
   },
@@ -46,7 +46,7 @@ const customStorage = {
       try {
         sessionStorage.setItem(key, value);
       } catch (e2) {
-        console.warn('Falling back to in-memory storage:', e2);
+        console.error('Falling back to in-memory storage:', e2);
         memoryStorage.set(key, value);
       }
     }
@@ -58,7 +58,7 @@ const customStorage = {
       try {
         sessionStorage.removeItem(key);
       } catch (e2) {
-        console.warn('Removing from in-memory storage:', e2);
+        console.error('Removing from in-memory storage:', e2);
         memoryStorage.delete(key);
       }
     }

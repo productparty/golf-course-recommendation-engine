@@ -52,10 +52,12 @@ export const InteractiveMap = forwardRef<HTMLDivElement, InteractiveMapProps>(({
     const markers = useRef<L.Marker[]>([]);
 
     useEffect(() => {
+        console.log("InteractiveMap useEffect - mapContainer:", mapContainer.current);
         if (!mapContainer.current) return;
 
         // Initialize map if it doesn't exist
         if (!map.current) {
+            console.log("InteractiveMap - Initializing map");
             map.current = L.map(mapContainer.current, {
                 center: [center[1], center[0]], // Leaflet uses [lat, long]
                 zoom: initialZoom,
@@ -105,6 +107,7 @@ export const InteractiveMap = forwardRef<HTMLDivElement, InteractiveMapProps>(({
 
         return () => {
             if (map.current) {
+                console.log("InteractiveMap - Removing map");
                 map.current.remove();
                 map.current = null;
             }
