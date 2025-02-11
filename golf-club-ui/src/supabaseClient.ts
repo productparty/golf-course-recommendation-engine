@@ -17,35 +17,60 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase environment variables');
 }
 
+// Create an in-memory storage implementation
+const memoryStorage = new Map<string, string>();
+
+// Custom storage implementation with fallbacks
+const customStorage = {
+  getItem: (key: string): string | null => {
+    try {
+      // Try localStorage first
+      const localValue = localStorage.getItem(key);
+      if (localValue !== null) return localValue;
+      
+      // Try sessionStorage as first fallback
+      const sessionValue = sessionStorage.getItem(key);
+      if (sessionValue !== null) return sessionValue;
+      
+      // Use in-memory storage as final fallback
+      return memoryStorage.get(key) || null;
+    } catch (e) {
+      console.warn('Storage access failed, using in-memory storage:', e);
+      return memoryStorage.get(key) || null;
+    }
+  },
+  setItem: (key: string, value: string) => {
+    try {
+      localStorage.setItem(key, value);
+    } catch (e1) {
+      try {
+        sessionStorage.setItem(key, value);
+      } catch (e2) {
+        console.warn('Falling back to in-memory storage:', e2);
+        memoryStorage.set(key, value);
+      }
+    }
+  },
+  removeItem: (key: string) => {
+    try {
+      localStorage.removeItem(key);
+    } catch (e1) {
+      try {
+        sessionStorage.removeItem(key);
+      } catch (e2) {
+        console.warn('Removing from in-memory storage:', e2);
+        memoryStorage.delete(key);
+      }
+    }
+  }
+};
+
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: false,
-    storage: {
-      getItem: (key) => {
-        try {
-          return localStorage.getItem(key);
-        } catch (e) {
-          console.error('LocalStorage access failed:', e);
-          return sessionStorage.getItem(key); // Fallback
-        }
-      },
-      setItem: (key, value) => {
-        try { localStorage.setItem(key, value) }
-        catch (e) { 
-          console.error('Storage setItem error:', e);
-          sessionStorage.setItem(key, value);
-        }
-      },
-      removeItem: (key) => {
-        try { localStorage.removeItem(key) }
-        catch (e) { 
-          console.error('Storage removeItem error:', e);
-          sessionStorage.removeItem(key);
-        }
-      }
-    }
+    storage: customStorage
   }
 });
 

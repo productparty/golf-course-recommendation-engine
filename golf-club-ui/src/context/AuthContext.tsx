@@ -35,36 +35,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         try {
-          // Enhanced storage check with timeout
-          let storageAvailable = false;
-          try {
-            const testKey = `sb-storage-test-${Date.now()}`;
-            localStorage.setItem(testKey, "test");
-            localStorage.removeItem(testKey);
-            storageAvailable = true;
-          } catch (e) {
-            console.error('Storage access error:', e);
-            setError(new Error('Please enable browser storage/cookies for proper functionality'));
-            setInitialized(true);
-            setLoading(false);
-            return;
-          }
-
-          if (!storageAvailable) {
-            console.error('Storage persistently unavailable');
-            return;
-          }
-          
-          // Safely handle session data
+          // Safely handle session data regardless of storage availability
           const safeUser = session?.user ? { 
             ...session.user,
-            // Optional: Add null checks for nested properties
             email: session.user.email ?? null 
           } : null;
 
           setSession(session);
           setUser(safeUser);
           setInitialized(true);
+          setLoading(false);
+
+          // Log auth state change for debugging
+          console.log('Auth state changed:', {
+            event,
+            hasUser: !!safeUser,
+            hasSession: !!session
+          });
         } catch (error) {
           console.error('Auth state change error:', error);
           setError(error instanceof Error ? error : new Error('Auth update failed'));

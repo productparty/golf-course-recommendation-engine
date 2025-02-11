@@ -21,41 +21,83 @@ const LoadingFallback = () => (
   </Box>
 );
 
-const App = () => (
-  <ThemeProvider theme={theme}>
-    <CssBaseline />
-    <AuthProvider>
-      <FavoritesProvider>
-        <ErrorBoundary 
-          fallback={(error) => (
-            <div className="p-4 text-red-500">
-              <h2>Critical Error</h2>
-              <p>{error.message}</p>
-              <p>Please refresh the page or contact support</p>
-              <button onClick={() => window.location.reload()}>
-                Refresh Page
-              </button>
-            </div>
-          )}
-        >
-          <RouterProvider 
-            router={router} 
-            fallbackElement={<LoadingFallback />}
-            onError={(error) => {
-              console.error('Router Error:', error);
-              // Log additional error context
-              console.log('Router State:', router.state);
-              console.log('Environment Variables:', {
-                VITE_SUPABASE_URL: !!import.meta.env.VITE_SUPABASE_URL,
-                VITE_API_URL: !!import.meta.env.VITE_API_URL,
-                VITE_APP_URL: import.meta.env.VITE_APP_URL
-              });
-            }}
-          />
-        </ErrorBoundary>
-      </FavoritesProvider>
-    </AuthProvider>
-  </ThemeProvider>
-);
+const App: React.FC = () => {
+  // Create error fallback element
+  const errorFallback = (
+    <Box 
+      display="flex" 
+      flexDirection="column" 
+      alignItems="center" 
+      justifyContent="center" 
+      minHeight="100vh"
+      p={4}
+    >
+      <h2 style={{ color: '#d32f2f', marginBottom: '1rem' }}>Application Error</h2>
+      <p style={{ color: '#666', marginBottom: '1rem' }}>
+        An unexpected error occurred. Please try refreshing the page.
+      </p>
+      <button 
+        onClick={() => window.location.reload()}
+        style={{
+          backgroundColor: '#1976d2',
+          color: 'white',
+          padding: '8px 16px',
+          border: 'none',
+          borderRadius: '4px',
+          cursor: 'pointer'
+        }}
+      >
+        Refresh Page
+      </button>
+    </Box>
+  );
+
+  // Add error handling for initialization
+  React.useEffect(() => {
+    const checkEnvironment = () => {
+      console.log('Environment Check:', {
+        VITE_SUPABASE_URL: !!import.meta.env.VITE_SUPABASE_URL,
+        VITE_SUPABASE_ANON_KEY: !!import.meta.env.VITE_SUPABASE_ANON_KEY,
+        VITE_API_URL: !!import.meta.env.VITE_API_URL,
+        VITE_APP_URL: import.meta.env.VITE_APP_URL,
+        NODE_ENV: import.meta.env.MODE
+      });
+    };
+
+    checkEnvironment();
+
+    // Add global error handler
+    const handleGlobalError = (event: ErrorEvent) => {
+      console.error('Global Error:', event.error);
+      console.error('Error Stack:', event.error?.stack);
+      console.log('Environment Check:', {
+        VITE_SUPABASE_URL: !!import.meta.env.VITE_SUPABASE_URL,
+        VITE_SUPABASE_ANON_KEY: !!import.meta.env.VITE_SUPABASE_ANON_KEY,
+        VITE_API_URL: !!import.meta.env.VITE_API_URL,
+        VITE_APP_URL: import.meta.env.VITE_APP_URL,
+        NODE_ENV: import.meta.env.MODE
+      });
+    };
+
+    window.addEventListener('error', handleGlobalError);
+    return () => window.removeEventListener('error', handleGlobalError);
+  }, []);
+
+  return (
+    <ErrorBoundary fallback={errorFallback}>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <AuthProvider>
+          <FavoritesProvider>
+            <RouterProvider 
+              router={router} 
+              fallbackElement={<LoadingFallback />}
+            />
+          </FavoritesProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </ErrorBoundary>
+  );
+};
 
 export default App;

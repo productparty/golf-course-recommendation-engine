@@ -218,7 +218,7 @@ export const ClubDetailPage = () => {
             <Box sx={{ height: '400px', mb: 3, borderRadius: 1 }}>
                 <InteractiveMap
                     clubs={[club]}
-                    center={[club.lng || 0, club.lat || 0]}
+                    center={[club.lat || 0, club.lng || 0]}
                     radius={500}
                     initialZoom={14}
                     onMarkerClick={() => {}}

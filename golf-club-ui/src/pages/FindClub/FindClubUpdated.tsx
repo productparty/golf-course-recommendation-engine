@@ -248,8 +248,8 @@ const FindClubUpdated = forwardRef<HTMLDivElement, Props>(({ className }, ref) =
           return aDifficulty - bDifficulty;
         default:
           return 0;
-      }
-    });
+        }
+      });
     
     setClubs(sortedClubs);
   };
@@ -327,7 +327,9 @@ const FindClubUpdated = forwardRef<HTMLDivElement, Props>(({ className }, ref) =
   };
 
   const handleClearSearch = () => {
-    localStorage.removeItem('findClubState');
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('findClubState');
+    }
     setFilters({
       zipCode: '',
       radius: '25',
@@ -706,17 +708,19 @@ const FindClubUpdated = forwardRef<HTMLDivElement, Props>(({ className }, ref) =
 
               {clubs.length > 0 && (
                 <>
-                  <Box sx={{ mb: 4, mt: 2 }}>
-                    <InteractiveMap 
-                      clubs={getPaginatedClubs}
-                      center={[mapCenter[0], mapCenter[1]]}
-                      radius={Number(filters.radius)}
-                      onMarkerClick={handleMarkerClick}
-                      showNumbers={true}
-                      initialZoom={4}
-                      key={`map-${filters.zipCode}-${filters.radius}`}
-                    />
-                  </Box>
+                  {filters.zipCode && filters.radius && (
+                    <Box sx={{ mb: 4, mt: 2 }}>
+                      <InteractiveMap 
+                        clubs={getPaginatedClubs}
+                        center={[mapCenter[0], mapCenter[1]]}
+                        radius={Number(filters.radius)}
+                        onMarkerClick={handleMarkerClick}
+                        showNumbers={true}
+                        initialZoom={4}
+                        key={`map-${filters.zipCode}-${filters.radius}`}
+                      />
+                    </Box>
+                  )}
                   <Grid container spacing={2}>
                     {getPaginatedClubs.map((club: Club, index: number) => (
                       <Grid item xs={12} key={club.id}>
@@ -811,7 +815,5 @@ const FindClubUpdated = forwardRef<HTMLDivElement, Props>(({ className }, ref) =
     </Box>
   );
 });
-
-FindClubUpdated.displayName = 'FindClubUpdated';
 
 export default FindClubUpdated;

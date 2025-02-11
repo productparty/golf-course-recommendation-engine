@@ -15,32 +15,11 @@ import { useSearchState } from '../../hooks/useSearchState';
 import './RecommendClub.css';
 
 interface Club {
-  id: string;
-  club_name: string;
-  address: string;
-  city: string;
-  state: string;
+  id: number;
+  name: string;
+  latitude: number;
+  longitude: number;
   zip_code: string;
-  distance_miles: number;
-  price_tier: string;
-  difficulty: string;
-  score: number;
-  number_of_holes: string;
-  club_membership: string;
-  driving_range: boolean;
-  putting_green: boolean;
-  chipping_green: boolean;
-  practice_bunker: boolean;
-  restaurant: boolean;
-  lodging_on_site: boolean;
-  motor_cart: boolean;
-  pull_cart: boolean;
-  golf_clubs_rental: boolean;
-  club_fitting: boolean;
-  golf_lessons: boolean;
-  latitude?: number;
-  longitude?: number;
-  match_percentage: number;
 }
 
 const isValidCoordinate = (lat: number, lng: number) => 
@@ -65,7 +44,7 @@ const RecommendClubUpdated: React.FC = () => {
   const [totalPages, setTotalPages] = useState(1);
   const ITEMS_PER_PAGE = 5;
   const [favorites, setFavorites] = useState<string[]>([]);
-  const [mapCenter, setMapCenter] = useState<[number, number]>([-98.5795, 39.8283]);
+  const [mapCenter, setMapCenter] = useState<[number, number]>([39.8283, -98.5795]);
 
   const handleSearch = async () => {
     if (!zipCode) {
@@ -310,24 +289,26 @@ const RecommendClubUpdated: React.FC = () => {
 
         {courses.length > 0 && (
           <>
-            <Box sx={{ 
-              height: '400px', 
-              width: '100%',
-              mb: 3, 
-              borderRadius: 1 
-            }}>
-              <InteractiveMap
-                clubs={courses.filter(c => 
-                  c.latitude && c.longitude &&
-                  isValidCoordinate(c.latitude, c.longitude)
-                )}
-                center={mapCenter}
-                radius={parseInt(radius)}
-                onMarkerClick={handleClubClick}
-                showNumbers={true}
-                initialZoom={4} // Start zoomed out to see more context
-              />
-            </Box>
+            {zipCode && radius && (
+              <Box sx={{ 
+                height: '400px', 
+                width: '100%',
+                mb: 3, 
+                borderRadius: 1 
+              }}>
+                <InteractiveMap
+                  clubs={courses.filter(c => 
+                    c.latitude && c.longitude &&
+                    isValidCoordinate(c.latitude, c.longitude)
+                  )}
+                  center={mapCenter}
+                  radius={parseInt(radius)}
+                  onMarkerClick={handleClubClick}
+                  showNumbers={true}
+                  initialZoom={4} // Start zoomed out to see more context
+                />
+              </Box>
+            )}
 
             <Grid container spacing={2}>
               {courses

@@ -1,18 +1,8 @@
 // components/InteractiveMap.tsx
 import React, { useEffect, useRef, forwardRef } from 'react';
-import { config } from '../config';
-
-import mapboxgl from 'mapbox-gl';
-import type { Map, Marker, Popup, LngLatBounds, LngLat } from 'mapbox-gl';
-
-// Set the token if it exists
-try {
-    (mapboxgl as any).accessToken = config.MAPBOX_TOKEN;
-} catch (error) {
-    console.error('Failed to set Mapbox token:', error);
-}
-import 'mapbox-gl/dist/mapbox-gl.css';
 import { Box } from '@mui/material';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 
 interface Club {
     id: string;
@@ -57,147 +47,24 @@ export const InteractiveMap = forwardRef<HTMLDivElement, InteractiveMapProps>(({
   showNumbers = false,
   initialZoom = 14
 }, ref) => {
-    const containerRef = useRef<HTMLDivElement>(null);
     const mapContainer = useRef<HTMLDivElement>(null);
-    const map = useRef<Map | null>(null);
-    const markers = useRef<mapboxgl.Marker[]>([]);
-    const bounds = useRef<mapboxgl.LngLatBounds | null>(null);
+    const map = useRef<L.Map | null>(null);
+    const markers = useRef<L.Marker[]>([]);
 
     useEffect(() => {
-        if (!containerRef.current) return;
         if (!mapContainer.current) return;
-        
-        try {
-            if (!(mapboxgl as any).accessToken) {
-                throw new Error('Mapbox token is not set');
-            }
-
-            // Filter out clubs without valid coordinates
-            const validClubs = clubs.filter(club => 
-            club.latitude != null && 
-            club.longitude != null && 
-            !isNaN(club.latitude) && 
-            !isNaN(club.longitude)
-        );
-
-        if (validClubs.length === 0) {
-            console.warn('No valid club coordinates found');
-        }
 
         // Initialize map if it doesn't exist
         if (!map.current) {
-            map.current = new mapboxgl.Map({
-                container: mapContainer.current,
-                style: 'mapbox://styles/mapbox/outdoors-v12', // Terrain-friendly style
-                center: center,
+            map.current = L.map(mapContainer.current, {
+                center: [center[1], center[0]], // Leaflet uses [lat, long]
                 zoom: initialZoom,
-                pitch: 45,
-                bearing: 0,
+                zoomControl: true,
             });
 
-            // Add terrain and sky layers
-            map.current.on('load', () => {
-                if (map.current) {
-                    map.current.addSource('mapbox-dem', {
-                        'type': 'raster-dem',
-                        'url': 'mapbox://mapbox.mapbox-terrain-dem-v1',
-                        'tileSize': 512,
-                        'maxzoom': 14
-                    });
-
-                    map.current.setTerrain({ 
-                        'source': 'mapbox-dem',
-                        'exaggeration': 1.5 
-                    });
-
-                    map.current.addLayer({
-                        'id': 'sky',
-                        'type': 'sky',
-                        'paint': {
-                            'sky-type': 'atmosphere',
-                            'sky-atmosphere-sun': [0.0, 90.0],
-                            'sky-atmosphere-sun-intensity': 15
-                        }
-                    });
-
-                    // Add clubs source
-                    map.current.addSource('clubs', {
-                        type: 'geojson',
-                        data: {
-                            type: 'FeatureCollection',
-                            features: validClubs.map(club => ({
-                                type: 'Feature',
-                                geometry: {
-                                    type: 'Point',
-                                    coordinates: [club.longitude!, club.latitude!]
-                                },
-                                properties: {
-                                    id: club.id,
-                                    name: club.club_name,
-                                    address: club.address
-                                }
-                            }))
-                        },
-                        cluster: false
-                    });
-
-                    // Add individual markers
-                    map.current.addLayer({
-                        id: 'unclustered-point',
-                        type: 'circle',
-                        source: 'clubs',
-                        filter: ['!', ['has', 'point_count']],
-                        paint: {
-                            'circle-color': '#11b4da',
-                            'circle-radius': 8,
-                            'circle-stroke-width': 1,
-                            'circle-stroke-color': '#fff'
-                        }
-                    });
-
-                    // Add club labels
-                    map.current.addLayer({
-                        id: 'club-labels',
-                        type: 'symbol',
-                        source: 'clubs',
-                        filter: ['!', ['has', 'point_count']],
-                        layout: {
-                            'text-field': ['get', 'name'],
-                            'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
-                            'text-size': 12,
-                            'text-offset': [0, 1.5],
-                            'text-anchor': 'top'
-                        },
-                        paint: {
-                            'text-halo-color': '#fff',
-                            'text-halo-width': 1
-                        }
-                    });
-                }
-            });
-        }
-
-        // Update map center and source data when props change
-        if (map.current) {
-            map.current.setCenter(center);
-            const source = map.current.getSource('clubs') as mapboxgl.GeoJSONSource;
-            if (source) {
-                source.setData({
-                    type: 'FeatureCollection',
-                    features: validClubs.map(club => ({
-                        type: 'Feature',
-                        geometry: {
-                            type: 'Point',
-                            coordinates: [club.longitude!, club.latitude!]
-                        },
-                        properties: {
-                            id: club.id,
-                            name: club.club_name,
-                            address: club.address
-                        }
-                    }))
-                });
-            }
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map.current);
         }
 
         // Clear existing markers
@@ -208,51 +75,52 @@ export const InteractiveMap = forwardRef<HTMLDivElement, InteractiveMapProps>(({
         clubs.forEach((club, index) => {
             if (club.latitude && club.longitude && 
                 isValidCoordinate(club.latitude, club.longitude)) {
-                const el = showNumbers ? createNumberedMarker(index + 1) : document.createElement('div');
-                if (!showNumbers) {
-                    el.className = 'marker';
-                }
-                
-                const marker = new mapboxgl.Marker(el)
-                    .setLngLat(new (mapboxgl as any).LngLat(club.longitude, club.latitude))
-                    .setPopup(new mapboxgl.Popup().setHTML(club.club_name))
-                    .addTo(map.current!);
+                const el = showNumbers ? createNumberedMarker(index + 1) : undefined;
+                const marker = L.marker([club.latitude, club.longitude], {
+                    icon: el ? L.divIcon({ className: '', html: el.outerHTML }) : undefined
+                })
+                    .addTo(map.current!)
+                    .bindPopup(club.club_name)
+                    .on('click', () => onMarkerClick(club.id));
 
                 markers.current.push(marker);
-
-                el.addEventListener('click', () => onMarkerClick(club.id));
             }
         });
 
-        // Only fit bounds if clubs change
-        if (clubs.length > 0 && clubs.some(club => club.longitude && club.latitude)) {
-            const newBounds = new mapboxgl.LngLatBounds();
-            clubs.forEach(club => {
-                if (club.longitude && club.latitude) {
-                    newBounds.extend([club.longitude, club.latitude]);
-                }
-            });
-            
-            // Only update bounds if they've changed significantly
-            if (!bounds.current || !bounds.current.toArray().every((coord, i) => 
-                Math.abs(Number(coord) - Number(newBounds.toArray()[i])) > 0.0001
-            )) {
-                map.current!.fitBounds(newBounds, { padding: 50 });
-                bounds.current = newBounds;
+        // Fit bounds to markers
+        if (clubs.length > 0 && clubs.some(club => club.longitude && club.latitude) && map.current) {
+            const markerCoordinates = clubs
+                .filter(club => club.latitude && club.longitude)
+                .map(club => L.latLng(club.latitude!, club.longitude!));
+            if (markerCoordinates.length > 0) {
+                const bounds = L.latLngBounds(markerCoordinates);
+                map.current.fitBounds(bounds, { padding: [50, 50] });
             }
         }
 
-            return () => {
-                if (map.current) {
-                    map.current.remove();
-                    map.current = null;
-                }
-            };
-        } catch (error) {
-            console.error('Error initializing map:', error);
-            return () => {};
+        // Add click handler
+        map.current?.on('click', (e: L.LeafletMouseEvent) => {
+            onMapClick && onMapClick([e.latlng.lat, e.latlng.lng]);
+        });
+
+        return () => {
+            if (map.current) {
+                map.current.remove();
+                map.current = null;
+            }
+        };
+    }, [mapContainer.current, clubs, center, showNumbers, initialZoom]);
+
+    useEffect(() => {
+        if (center && map.current) {
+            // Update marker position
+            if (markers.current.length > 0) {
+                markers.current.forEach(marker => marker.setLatLng(center));
+            } else {
+                markers.current.push(L.marker(center).addTo(map.current));
+            }
         }
-    }, [containerRef.current, clubs, center, showNumbers]);
+    }, [center]);
 
     return (
         <Box ref={ref} sx={{ height: '100%', width: '100%' }}>
@@ -264,9 +132,6 @@ export const InteractiveMap = forwardRef<HTMLDivElement, InteractiveMapProps>(({
                     borderRadius: 1,
                     overflow: 'hidden',
                     position: 'relative',
-                    '& .mapboxgl-canvas': {
-                        borderRadius: 1
-                    }
                 }}
             />
         </Box>

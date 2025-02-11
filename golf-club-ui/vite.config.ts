@@ -7,19 +7,38 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
   const isProd = mode === 'production';
   
-  // Validate required environment variables
-  const requiredVars = [
-    'VITE_SUPABASE_URL',
-    'VITE_SUPABASE_ANON_KEY',
-    'VITE_API_URL',
-    'VITE_MAPBOX_TOKEN'
-  ];
-
-  requiredVars.forEach(varName => {
-    if (!env[varName]) {
-      throw new Error(`Missing required environment variable: ${varName}`);
-    }
+  // Log environment variables for debugging
+  console.log('Environment variables loaded:', {
+    VITE_SUPABASE_URL: !!env.VITE_SUPABASE_URL,
+    VITE_SUPABASE_ANON_KEY: !!env.VITE_SUPABASE_ANON_KEY,
+    VITE_API_URL: !!env.VITE_API_URL,
+    VITE_MAPBOX_TOKEN: !!env.VITE_MAPBOX_TOKEN,
+    NODE_ENV: env.NODE_ENV,
+    MODE: mode
   });
+
+  // Define default values for required environment variables
+  const defaults = {
+    VITE_API_URL: 'https://golf-course-recommendation-engin-production.up.railway.app',
+    VITE_MAPBOX_TOKEN: process.env.VITE_MAPBOX_TOKEN || env.VITE_MAPBOX_TOKEN
+  };
+
+  // Merge environment variables with defaults
+  const config = {
+    VITE_SUPABASE_URL: env.VITE_SUPABASE_URL,
+    VITE_SUPABASE_ANON_KEY: env.VITE_SUPABASE_ANON_KEY,
+    VITE_API_URL: env.VITE_API_URL || defaults.VITE_API_URL,
+    VITE_MAPBOX_TOKEN: env.VITE_MAPBOX_TOKEN || defaults.VITE_MAPBOX_TOKEN
+  };
+
+  // Validate critical environment variables
+  if (!config.VITE_SUPABASE_URL || !config.VITE_SUPABASE_ANON_KEY) {
+    console.error('Missing critical environment variables:', {
+      VITE_SUPABASE_URL: !!config.VITE_SUPABASE_URL,
+      VITE_SUPABASE_ANON_KEY: !!config.VITE_SUPABASE_ANON_KEY
+    });
+    throw new Error('Missing critical environment variables: VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY');
+  }
   
   return {
     base: '/',

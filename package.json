@@ -6,15 +6,17 @@
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
     "@mui/icons-material": "^6.4.0",
-    "@mui/material": "^6.4.0",
+    "@mui/material": "^6.4.3",
     "@sendgrid/mail": "^8.1.4",
     "@types/lodash": "^4.17.14",
     "@vercel/analytics": "^1.4.1",
     "framer-motion": "^10.16.4",
+    "leaflet": "^1.9.4",
     "lodash": "^4.17.21",
     "lodash.debounce": "^4.0.8"
   },
   "devDependencies": {
+    "@types/leaflet": "^1.9.16",
     "@types/lodash.debounce": "^4.0.9",
     "@types/mapbox-gl": "^3.4.1",
     "@types/node": "^22.10.7",
