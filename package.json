@@ -3,37 +3,49 @@
   "version": "1.0.0",
   "private": true,
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.36.3",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
     "@mui/icons-material": "^6.4.0",
     "@mui/material": "^6.4.3",
     "@sendgrid/mail": "^8.1.4",
-    "@types/lodash": "^4.17.14",
+    "@supabase/supabase-js": "^2.39.0",
+    "@tanstack/react-query": "^5.34.2",
     "@vercel/analytics": "^1.4.1",
+    "@vercel/node": "^5.1.2",
     "framer-motion": "^10.16.4",
     "leaflet": "^1.9.4",
     "lodash": "^4.17.21",
-    "lodash.debounce": "^4.0.8"
+    "lodash.debounce": "^4.0.8",
+    "mapbox-gl": "^3.1.2",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.22.3",
+    "tiktoken": "^1.0.20"
   },
   "devDependencies": {
     "@types/leaflet": "^1.9.16",
+    "@types/lodash": "^4.17.14",
     "@types/lodash.debounce": "^4.0.9",
     "@types/mapbox-gl": "^3.4.1",
     "@types/node": "^22.10.7",
-    "@types/react-dom": "^19.0.3",
+    "@types/react": "^18.2.6",
+    "@types/react-dom": "^18.2.4",
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.20",
+    "esbuild": "^0.24.2",
     "postcss": "^8.5.1",
-    "tailwindcss": "^4.0.0"
+    "tailwindcss": "^4.0.0",
+    "typescript": "^5.0.4",
+    "vite": "^5.1.4"
   },
   "engines": {
     "node": ">=18.0.0"
   },
   "scripts": {
-    "build": "cd golf-club-ui && npm run build",
+    "build": "npm run build --prefix golf-club-ui",
     "deploy": "vercel deploy --prod --yes",
-    "dev": "cd golf-club-ui && npm run dev",
-    "start": "cd golf-club-ui && npm run start",
-    "postinstall": "cd golf-club-ui && npm install"
+    "dev": "npm run dev --prefix golf-club-ui",
+    "start": "npm run start --prefix golf-club-ui"
   }
 }
