@@ -1,34 +1,27 @@
 import React from 'react';
-import { RouterProvider } from 'react-router-dom';
-import { ThemeProvider } from '@mui/material/styles';
-import CssBaseline from '@mui/material/CssBaseline';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
-import { FavoritesProvider } from './context/FavoritesContext';
-import theme from './theme';
-import { ErrorBoundary } from './components/ErrorBoundary';
-import { router } from './router';
-import Box from '@mui/material/Box';
-import CircularProgress from '@mui/material/CircularProgress';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { LocalizationProvider } from '@mui/x-date-pickers';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import ProtectedRoute from './components/ProtectedRoute';
+import HomePage from './pages/home/HomePage';
+import LoginPage from './pages/login/Login';
+import CreateAccount from './pages/create-account/CreateAccount';
+import PasswordReset from './pages/password-reset/PasswordReset';
+import { Box } from '@mui/material';
+import { ErrorBoundary } from "./components/ErrorBoundary";
 
-const LoadingFallback = () => (
-  <Box 
-    display="flex" 
-    justifyContent="center" 
-    alignItems="center" 
-    minHeight="100vh"
-  >
-    <CircularProgress />
-  </Box>
-);
+const queryClient = new QueryClient();
 
 const App: React.FC = () => {
-  // Create error fallback element
+  // Create error fallback element (Simplified)
   const errorFallback = (
-    <Box 
-      display="flex" 
-      flexDirection="column" 
-      alignItems="center" 
-      justifyContent="center" 
+    <Box
+      display="flex"
+      flexDirection="column"
+      alignItems="center"
+      justifyContent="center"
       minHeight="100vh"
       p={4}
     >
@@ -36,7 +29,7 @@ const App: React.FC = () => {
       <p style={{ color: '#666', marginBottom: '1rem' }}>
         An unexpected error occurred. Please try refreshing the page.
       </p>
-      <button 
+      <button
         onClick={() => window.location.reload()}
         style={{
           backgroundColor: '#1976d2',
@@ -52,50 +45,29 @@ const App: React.FC = () => {
     </Box>
   );
 
-  // Add error handling for initialization
-  React.useEffect(() => {
-    const checkEnvironment = () => {
-      console.log('Environment Check:', {
-        VITE_SUPABASE_URL: !!import.meta.env.VITE_SUPABASE_URL,
-        VITE_SUPABASE_ANON_KEY: !!import.meta.env.VITE_SUPABASE_ANON_KEY,
-        VITE_API_URL: !!import.meta.env.VITE_API_URL,
-        VITE_APP_URL: import.meta.env.VITE_APP_URL,
-        NODE_ENV: import.meta.env.MODE
-      });
-    };
-
-    checkEnvironment();
-
-    // Add global error handler
-    const handleGlobalError = (event: ErrorEvent) => {
-      console.error('Global Error:', event.error);
-      console.error('Error Message:', event.message);
-      console.error('Error Stack:', event.error?.stack);
-      console.log('Vercel Environment Variables:', {
-        VITE_SUPABASE_URL: import.meta.env.VITE_SUPABASE_URL,
-        VITE_SUPABASE_ANON_KEY: import.meta.env.VITE_SUPABASE_ANON_KEY,
-        VITE_API_URL: import.meta.env.VITE_API_URL,
-        VITE_APP_URL: import.meta.env.VITE_APP_URL,
-      });
-    };
-
-    window.addEventListener('error', handleGlobalError);
-    return () => window.removeEventListener('error', handleGlobalError);
-  }, []);
-
   return (
     <ErrorBoundary fallback={errorFallback}>
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <AuthProvider>
-          <FavoritesProvider>
-            <RouterProvider 
-              router={router} 
-              fallbackElement={<LoadingFallback />}
-            />
-          </FavoritesProvider>
-        </AuthProvider>
-      </ThemeProvider>
+      <QueryClientProvider client={queryClient}>
+        <LocalizationProvider dateAdapter={AdapterDayjs}>
+          <AuthProvider>
+            <Router>
+              <Routes>
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/create-account" element={<CreateAccount />} />
+                <Route path="/password-reset" element={<PasswordReset />} />
+                <Route
+                  path="*"
+                  element={
+                    <ProtectedRoute>
+                      <HomePage />
+                    </ProtectedRoute>
+                  }
+                />
+              </Routes>
+            </Router>
+          </AuthProvider>
+        </LocalizationProvider>
+      </QueryClientProvider>
     </ErrorBoundary>
   );
 };

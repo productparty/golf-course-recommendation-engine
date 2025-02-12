@@ -1,27 +1,21 @@
-import React, { Suspense } from 'react';
+import React, { useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
-import CircularProgress from '@mui/material/CircularProgress';
-import Box from '@mui/material/Box';
-import './styles/tailwind.css';
 import './index.css';
-import './App.css';
-
-const LoadingFallback = () => (
-  <Box 
-    display="flex" 
-    justifyContent="center" 
-    alignItems="center" 
-    minHeight="100vh"
-  >
-    <CircularProgress />
-  </Box>
-);
+import { supabase } from './supabaseClient';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <Suspense fallback={<LoadingFallback />}>
-      <App />
-    </Suspense>
-  </React.StrictMode>,
+    <App />
+  </React.StrictMode>
 );
+
+// Extra logging for initialization in main.tsx
+supabase.auth.getSession().then(({ data, error }) => {
+  console.log('Initial Supabase getSession result:', { data, error });
+  if (error) {
+    console.error('Initial Supabase auth error:', error);
+  }
+}).catch(err => {
+  console.error('Initial Supabase auth error (catch):', err);
+});
