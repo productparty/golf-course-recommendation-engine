@@ -1,16 +1,15 @@
 import React from 'react';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import ProtectedRoute from './components/ProtectedRoute';
-import HomePage from './pages/home/HomePage';
-import LoginPage from './pages/login/Login';
-import CreateAccount from './pages/create-account/CreateAccount';
-import PasswordReset from './pages/password-reset/PasswordReset';
+import { ProtectedRoute } from './components/ProtectedRoute';
 import { Box } from '@mui/material';
-import { ErrorBoundary } from "./components/ErrorBoundary";
+import { ErrorBoundary } from './components/ErrorBoundary';
+import LoginPage from './pages/login/Login';
+import CreateAccountPage from './pages/CreateAccount/CreateAccountPage';
+import PasswordResetPage from './pages/PasswordReset/PasswordResetPage';
+import HomePage from './pages/Home/home';
 
 const queryClient = new QueryClient();
 
@@ -37,7 +36,7 @@ const App: React.FC = () => {
           padding: '8px 16px',
           border: 'none',
           borderRadius: '4px',
-          cursor: 'pointer'
+          cursor: 'pointer',
         }}
       >
         Refresh Page
@@ -50,21 +49,12 @@ const App: React.FC = () => {
       <QueryClientProvider client={queryClient}>
         <LocalizationProvider dateAdapter={AdapterDayjs}>
           <AuthProvider>
-            <Router>
-              <Routes>
-                <Route path="/login" element={<LoginPage />} />
-                <Route path="/create-account" element={<CreateAccount />} />
-                <Route path="/password-reset" element={<PasswordReset />} />
-                <Route
-                  path="*"
-                  element={
-                    <ProtectedRoute>
-                      <HomePage />
-                    </ProtectedRoute>
-                  }
-                />
-              </Routes>
-            </Router>
+            <LoginPage />
+            <CreateAccountPage />
+            <PasswordResetPage />
+            <ProtectedRoute>
+              <HomePage />
+            </ProtectedRoute>
           </AuthProvider>
         </LocalizationProvider>
       </QueryClientProvider>

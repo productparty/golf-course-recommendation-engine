@@ -3,19 +3,17 @@ import Layout from './components/Layout';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import CircularProgress from '@mui/material/CircularProgress';
 import Box from '@mui/material/Box';
-import Login from './pages/login/Login';
-import Home from './pages/Home/home';
+import LoginPage from './pages/login/Login';
+import HomePage from './pages/Home/home';
 import Dashboard from './pages/Home/Dashboard';
 import FindClubUpdated from './pages/FindClub/FindClubUpdated';
 import RecommendClubUpdated from './pages/RecommendClub/RecommendClubUpdated';
 import Favorites from './pages/Favorites/Favorites';
-import GolferProfileUpdated from './pages/GolferProfile/GolferProfileUpdated';
-import CreateAccount from './pages/CreateAccount/CreateAccount';
-import PasswordResetRequest from './pages/PasswordResetRequest/PasswordResetRequest';
-import PasswordResetConfirm from './pages/PasswordResetConfirm/PasswordResetConfirm';
+import CreateAccountPage from './pages/CreateAccount/CreateAccountPage';
+import PasswordResetPage from './pages/PasswordReset/PasswordResetPage';
+import PasswordResetConfirm from './pages/PasswordReset/PasswordResetConfirm';
 import ClubDetail from './pages/ClubDetail/ClubDetail';
 import NotFound from './pages/NotFound/NotFound';
-import LandingPage from './pages/Home/LandingPage';
 
 const LoadingFallback = () => (
   <Box 
@@ -28,56 +26,82 @@ const LoadingFallback = () => (
   </Box>
 );
 
-export const router = createBrowserRouter([
+const router = createBrowserRouter([
   {
-    path: '/',
     element: <Layout />,
-    errorElement: <NotFound />,
     children: [
       {
-        path: '/',
-        element: <LandingPage />
+        index: true,
+        element: (
+          <ProtectedRoute>
+            <HomePage />
+          </ProtectedRoute>
+        ),
+        errorElement: <NotFound />,
       },
       {
         path: '/dashboard',
-        element: <ProtectedRoute><Dashboard /></ProtectedRoute>
+        element: (
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        ),
       },
       {
-        path: '/find',
-        element: <ProtectedRoute><FindClubUpdated /></ProtectedRoute>
+        path: '/find-club',
+        element: (
+          <ProtectedRoute>
+            <FindClubUpdated />
+          </ProtectedRoute>
+        ),
       },
       {
-        path: '/recommend',
-        element: <ProtectedRoute><RecommendClubUpdated /></ProtectedRoute>
+        path: '/recommend-club',
+        element: (
+          <ProtectedRoute>
+            <RecommendClubUpdated />
+          </ProtectedRoute>
+        ),
       },
       {
         path: '/favorites',
-        element: <ProtectedRoute><Favorites /></ProtectedRoute>
-      },
-      {
-        path: '/profile',
-        element: <ProtectedRoute><GolferProfileUpdated /></ProtectedRoute>
+        element: (
+          <ProtectedRoute>
+            <Favorites />
+          </ProtectedRoute>
+        ),
       },
       {
         path: '/login',
-        element: <Login />
+        element: <LoginPage />,
       },
       {
         path: '/create-account',
-        element: <CreateAccount />
+        element: <CreateAccountPage />,
       },
       {
         path: '/password-reset',
-        element: <PasswordResetRequest />
+        element: <PasswordResetPage />,
       },
       {
         path: '/password-reset-confirm',
-        element: <PasswordResetConfirm />
+        element: <PasswordResetConfirm />,
       },
       {
         path: '/clubs/:id',
-        element: <ProtectedRoute><ClubDetail /></ProtectedRoute>
-      }
-    ]
+        element: (
+          <ProtectedRoute>
+            <ClubDetail />
+          </ProtectedRoute>
+        ),
+      },
+    ],
+    errorElement: <NotFound />,
+  },
+  {
+    path: '*',
+    element: <NotFound />,
   }
 ]);
+
+export default router;
