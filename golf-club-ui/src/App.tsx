@@ -3,13 +3,10 @@ import { AuthProvider } from './context/AuthContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { ProtectedRoute } from './components/ProtectedRoute';
-import { Box } from '@mui/material';
 import { ErrorBoundary } from './components/ErrorBoundary';
-import LoginPage from './pages/login/Login';
-import CreateAccountPage from './pages/CreateAccount/CreateAccountPage';
-import PasswordResetPage from './pages/PasswordReset/PasswordResetPage';
-import HomePage from './pages/Home/home';
+import { Box } from '@mui/material';
+import router from './router'; // Import the router
+import { RouterProvider } from 'react-router-dom';
 
 const queryClient = new QueryClient();
 
@@ -49,12 +46,7 @@ const App: React.FC = () => {
       <QueryClientProvider client={queryClient}>
         <LocalizationProvider dateAdapter={AdapterDayjs}>
           <AuthProvider>
-            <LoginPage />
-            <CreateAccountPage />
-            <PasswordResetPage />
-            <ProtectedRoute>
-              <HomePage />
-            </ProtectedRoute>
+            <RouterProvider router={router} /> {/* Only render the RouterProvider */}
           </AuthProvider>
         </LocalizationProvider>
       </QueryClientProvider>
