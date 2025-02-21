@@ -1,7 +1,6 @@
 // components/InteractiveMap.tsx
-import React, { useEffect, useRef, forwardRef } from 'react';
+import React, { useEffect, useRef, forwardRef, useMemo } from 'react';
 import { Box } from '@mui/material';
-import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { MapContainer, TileLayer, useMap } from 'react-leaflet';
 import { LatLngBounds, LatLng } from 'leaflet';
@@ -41,27 +40,30 @@ const isValidCoordinate = (lat: number, lng: number) =>
   lat >= -90 && lat <= 90 && 
   lng >= -180 && lng <= 180;
 
-// Add this component to handle bounds
 const MapBounds: React.FC<{ clubs: Club[] }> = ({ clubs }) => {
   const map = useMap();
-  useEffect(() => {
-    if (clubs.length > 0) {
-      const bounds = new LatLngBounds([]);
-      clubs.forEach((club) => {
-        if (club.latitude && club.longitude && isValidCoordinate(club.latitude, club.longitude)) {
-          bounds.extend(new LatLng(club.latitude, club.longitude));
-        }
-      });
 
-      // Check if bounds are valid before fitting
-      if (bounds.isValid()) {
-        map.fitBounds(bounds, { padding: [50, 50] });
-      } else {
-        // Optionally, set a default view if no valid bounds
-         map.setView([39.8283, -98.5795], 4); // Example: Center of US, zoom level 4
+  const bounds = useMemo(() => {
+    const latLngBounds = new LatLngBounds([]);
+    clubs.forEach((club) => {
+      if (
+        club.latitude &&
+        club.longitude &&
+        isValidCoordinate(club.latitude, club.longitude)
+      ) {
+        latLngBounds.extend(new LatLng(club.latitude, club.longitude));
       }
+    });
+    return latLngBounds;
+  }, [clubs]);
+
+  useEffect(() => {
+     if (bounds.isValid()) {
+      map.fitBounds(bounds, { padding: [50, 50] });
+    } else {
+      map.setView([39.8283, -98.5795], 4);
     }
-  }, [clubs, map]);
+  }, [bounds, map]);
 
   return null;
 };

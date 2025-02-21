@@ -7,6 +7,8 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { Box } from '@mui/material';
 import { RouterProvider } from 'react-router-dom';
 import router from './router';
+import { ThemeProvider } from '@mui/material/styles';
+import theme from './theme';
 
 const queryClient = new QueryClient();
 
@@ -45,7 +47,9 @@ const App: React.FC = () => {
     <ErrorBoundary fallback={errorFallback}>
       <QueryClientProvider client={queryClient}>
         <LocalizationProvider dateAdapter={AdapterDayjs}>
-          <RouterProvider router={router} />
+          <ThemeProvider theme={theme}>
+            <RouterProvider router={router} />
+          </ThemeProvider>
         </LocalizationProvider>
       </QueryClientProvider>
     </ErrorBoundary>

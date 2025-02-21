@@ -18,25 +18,31 @@ if (!config.SUPABASE_URL || !config.SUPABASE_ANON_KEY) {
 // Create a more robust storage implementation
 const customStorage = {
   getItem: (key: string): string | null => {
-    try {
-      return localStorage.getItem(key);
-    } catch (e) {
-      console.warn('Storage access failed:', e);
-      return null;
+    if (typeof window !== 'undefined' && window.localStorage) {
+      try {
+        return localStorage.getItem(key);
+      } catch (e) {
+        console.warn('Storage access failed:', e);
+      }
     }
+    return null;
   },
   setItem: (key: string, value: string) => {
-    try {
-      localStorage.setItem(key, value);
-    } catch (e) {
-      console.warn('Storage write failed:', e);
+    if (typeof window !== 'undefined' && window.localStorage) {
+      try {
+        localStorage.setItem(key, value);
+      } catch (e) {
+        console.warn('Storage write failed:', e);
+      }
     }
   },
   removeItem: (key: string) => {
-    try {
-      localStorage.removeItem(key);
-    } catch (e) {
-      console.warn('Storage remove failed:', e);
+    if (typeof window !== 'undefined' && window.localStorage) {
+      try {
+        localStorage.removeItem(key);
+      } catch (e) {
+        console.warn('Storage remove failed:', e);
+      }
     }
   }
 };
@@ -59,6 +65,9 @@ supabase.auth.getSession().then(({ data, error }) => {
     console.log('Supabase connection successful');
   }
 });
+
+console.log('SUPABASE_URL (supabaseClient.ts):', config.SUPABASE_URL);
+console.log('SUPABASE_ANON_KEY (supabaseClient.ts):', config.SUPABASE_ANON_KEY);
 
 // Add navigation helper
 export const navigateAfterAuth = () => {

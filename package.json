@@ -14,7 +14,7 @@
     "@tanstack/react-query": "^5.34.2",
     "@types/react-leaflet": "^2.8.3",
     "@vercel/analytics": "^1.4.1",
-    "@vercel/node": "^5.1.2",
+    "@vercel/node": "^5.1.7",
     "dayjs": "^1.11.10",
     "framer-motion": "^10.16.4",
     "leaflet": "^1.9.4",
@@ -35,13 +35,13 @@
     "@types/node": "^22.10.7",
     "@types/react": "^18.2.6",
     "@types/react-dom": "^18.2.4",
-    "@vitejs/plugin-react": "^4.3.4",
+    "@vitejs/plugin-react": "^1.3.2",
     "autoprefixer": "^10.4.20",
-    "esbuild": "^0.24.2",
+    "esbuild": "^0.25.0",
     "postcss": "^8.5.1",
     "tailwindcss": "^4.0.0",
     "typescript": "^5.0.4",
-    "vite": "^5.1.4"
+    "vite": "6.1.1"
   },
   "engines": {
     "node": ">=18.0.0"

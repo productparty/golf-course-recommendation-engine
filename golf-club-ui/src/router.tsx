@@ -1,23 +1,24 @@
 import { createBrowserRouter } from 'react-router-dom';
 import Layout from './components/Layout';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import React, { lazy, Suspense } from 'react';
 import CircularProgress from '@mui/material/CircularProgress';
 import Box from '@mui/material/Box';
-import Login from './pages/login/Login';
-import HomePage from './pages/Home/HomePage';
-import Dashboard from './pages/Home/Dashboard';
-import FindClubUpdated from './pages/FindClub/FindClubUpdated';
-import RecommendClubUpdated from './pages/RecommendClub/RecommendClubUpdated';
-import Favorites from './pages/Favorites/Favorites';
-import CreateAccount from './pages/CreateAccount/CreateAccount';
-import PasswordResetRequest from './pages/PasswordResetRequest/PasswordResetRequest';
-import ClubDetail from './pages/ClubDetail/ClubDetail';
-import NotFound from './pages/NotFound/NotFound';
 import { AuthProvider } from './context/AuthContext';
-import PasswordResetPage from './pages/PasswordReset/PasswordResetPage';
-import PasswordResetConfirm from './pages/PasswordReset/PasswordResetConfirm';
-import LandingPage from './pages/Home/LandingPage';
-import GolferProfileUpdated from './pages/GolferProfile/GolferProfileUpdated';
+const Login = lazy(() => import('./pages/login/Login'));
+const HomePage = lazy(() => import('./pages/Home/HomePage'));
+const Dashboard = lazy(() => import('./pages/Home/Dashboard'));
+const FindClubUpdated = lazy(() => import('./pages/FindClub/FindClubUpdated'));
+const RecommendClubUpdated = lazy(() => import('./pages/RecommendClub/RecommendClubUpdated'));
+const Favorites = lazy(() => import('./pages/Favorites/Favorites'));
+const CreateAccount = lazy(() => import('./pages/CreateAccount/CreateAccount'));
+const PasswordResetRequest = lazy(() => import('./pages/PasswordResetRequest/PasswordResetRequest'));
+const ClubDetail = lazy(() => import('./pages/ClubDetail/ClubDetail'));
+const NotFound = lazy(() => import('./pages/NotFound/NotFound'));
+const PasswordResetPage = lazy(() => import('./pages/PasswordReset/PasswordResetPage'));
+const PasswordResetConfirm = lazy(() => import('./pages/PasswordReset/PasswordResetConfirm'));
+const LandingPage = lazy(() => import('./pages/Home/LandingPage'));
+const GolferProfileUpdated = lazy(() => import('./pages/GolferProfile/GolferProfileUpdated'));
 
 const LoadingFallback = () => (
   <Box 
@@ -34,33 +35,59 @@ const router = createBrowserRouter([
   {
     path: '/',
     element: <Layout />,
-    errorElement: <NotFound />,
+    errorElement: (
+      <Suspense fallback={<LoadingFallback />}>
+        <NotFound />
+      </Suspense>
+    ),
     children: [
       {
         path: 'login',
-        element: <Login />
+        element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <Login />
+          </Suspense>
+        )
       },
       {
         path: 'create-account',
-        element: <CreateAccount />
+        element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <CreateAccount />
+          </Suspense>
+        )
       },
       {
         path: 'password-reset-request',
-        element: <PasswordResetRequest />
+        element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <PasswordResetRequest />
+          </Suspense>
+        )
       },
       {
         path: 'password-reset',
-        element: <PasswordResetPage />
+        element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <PasswordResetPage />
+          </Suspense>
+        )
       },
       {
         path: '/',
-        element: <LandingPage />,
+        element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <LandingPage />
+          </Suspense>
+        ),
       },
       {
         path: 'dashboard',
         element: (
           <ProtectedRoute>
-            <Dashboard />
+            <Suspense fallback={<LoadingFallback />}>
+              <Dashboard />
+            </Suspense>
           </ProtectedRoute>
         ),
       },
@@ -68,7 +95,9 @@ const router = createBrowserRouter([
         path: '/find-club',
         element: (
           <ProtectedRoute>
-            <FindClubUpdated />
+            <Suspense fallback={<LoadingFallback />}>
+              <FindClubUpdated />
+            </Suspense>
           </ProtectedRoute>
         ),
       },
@@ -76,7 +105,9 @@ const router = createBrowserRouter([
         path: '/recommend-club',
         element: (
           <ProtectedRoute>
-            <RecommendClubUpdated />
+            <Suspense fallback={<LoadingFallback />}>
+              <RecommendClubUpdated />
+            </Suspense>
           </ProtectedRoute>
         ),
       },
@@ -84,7 +115,9 @@ const router = createBrowserRouter([
         path: '/favorites',
         element: (
           <ProtectedRoute>
-            <Favorites />
+            <Suspense fallback={<LoadingFallback />}>
+              <Favorites />
+            </Suspense>
           </ProtectedRoute>
         ),
       },
@@ -92,7 +125,9 @@ const router = createBrowserRouter([
         path: '/clubs/:id',
         element: (
           <ProtectedRoute>
-            <ClubDetail />
+            <Suspense fallback={<LoadingFallback />}>
+              <ClubDetail />
+            </Suspense>
           </ProtectedRoute>
         ),
       },
@@ -100,7 +135,9 @@ const router = createBrowserRouter([
         path: '/profile',
         element: (
           <ProtectedRoute>
-            <GolferProfileUpdated />
+            <Suspense fallback={<LoadingFallback />}>
+              <GolferProfileUpdated />
+            </Suspense>
           </ProtectedRoute>
         ),
       },
@@ -108,7 +145,11 @@ const router = createBrowserRouter([
   },
   {
     path: '*',
-    element: <NotFound />,
+    element: (
+      <Suspense fallback={<LoadingFallback />}>
+        <NotFound />
+      </Suspense>
+    ),
   }
 ]);
 

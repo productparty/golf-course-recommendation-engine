@@ -45,6 +45,8 @@ if (!config.SUPABASE_URL || !config.SUPABASE_ANON_KEY) {
 // Only log in development
 if (import.meta.env.DEV) {
   console.log('Config:', config);
+  console.log('SUPABASE_URL (config.ts):', config.SUPABASE_URL);
+  console.log('SUPABASE_ANON_KEY (config.ts):', config.SUPABASE_ANON_KEY);
 }
 
 export default config;

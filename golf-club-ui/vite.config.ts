@@ -6,7 +6,7 @@ export default defineConfig(({ mode }) => {
   // Load env file based on `mode` in the current working directory.
   const env = loadEnv(mode, process.cwd(), '');
   const isProd = mode === 'production';
-  
+
   // Log environment variables for debugging
   console.log('Environment variables loaded:', {
     VITE_SUPABASE_URL: !!env.VITE_SUPABASE_URL,
@@ -15,6 +15,9 @@ export default defineConfig(({ mode }) => {
     NODE_ENV: env.NODE_ENV,
     MODE: mode
   });
+
+  console.log('VITE_SUPABASE_URL in vite.config.ts:', env.VITE_SUPABASE_URL);
+  console.log('VITE_SUPABASE_ANON_KEY in vite.config.ts:', env.VITE_SUPABASE_ANON_KEY);
 
   // Define default values for required environment variables
   const defaults = {
@@ -36,7 +39,7 @@ export default defineConfig(({ mode }) => {
     });
     throw new Error('Missing critical environment variables: VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY');
   }
-  
+
   return {
     base: '/',
     plugins: [react()],
@@ -57,23 +60,16 @@ export default defineConfig(({ mode }) => {
       }
     },
     build: {
-      outDir: 'dist',
-      sourcemap: !isProd,
+      outDir: 'golf-club-ui/dist',
+      target: 'esnext',
+      sourcemap: true,
       assetsDir: 'assets',
-      rollupOptions: {
-        output: {
-          manualChunks(id) {
-            if (id.includes('node_modules')) {
-              if (id.includes('@mui') || id.includes('@emotion')) return 'mui';
-              if (id.includes('supabase')) return 'supabase';
-              return 'vendor';
-            }
-          }
-        }
-      }
+      chunkSizeWarningLimit: 1000,
     },
     optimizeDeps: {
       include: [
+        'react',
+        'react-dom',
         '@mui/material/Button',
         '@mui/material/Container',
         '@mui/material/Typography',

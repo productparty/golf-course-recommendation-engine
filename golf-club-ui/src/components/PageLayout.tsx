@@ -1,4 +1,4 @@
-import React, { useState, forwardRef } from 'react';
+import React, { useState, useEffect, forwardRef } from 'react';
 import { Container, Typography, Box, Paper, Button, Dialog, DialogTitle, DialogContent, List, ListItem, ListItemText, SxProps, Theme } from '@mui/material';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
@@ -12,12 +12,13 @@ interface PageLayoutProps {
 
 const PageLayout = forwardRef<HTMLDivElement, PageLayoutProps>(({ children, title, titleProps }, ref) => {
   const [showFavorites, setShowFavorites] = useState(false);
-  const { session } = useAuth();
+  const { session, initialized } = useAuth(); // Get initialized from useAuth
   const [favorites, setFavorites] = useState<Array<{ id: string; club_name: string }>>([]);
 
   const fetchFavorites = async () => {
-    if (!session?.user?.id) return;
-    
+    // Check if initialized before accessing session
+    if (!initialized || !session?.user?.id) return;
+
     const { data, error } = await supabase
       .from('favorites')
       .select(`
@@ -32,29 +33,37 @@ const PageLayout = forwardRef<HTMLDivElement, PageLayoutProps>(({ children, titl
       return;
     }
 
-    setFavorites(data.map(item => ({
-      id: item.club_id,
-      club_name: item.clubs[0].club_name
-    })));
+    // Check if data is valid before mapping
+    if (data) {
+      setFavorites(data.map(item => ({
+        id: item.club_id,
+        club_name: item.clubs[0].club_name
+      })));
+    }
   };
+
+  // Fetch favorites only when the component mounts and when the session changes
+  useEffect(() => {
+    fetchFavorites();
+  }, [session, initialized]);
 
   return (
     <Box ref={ref} sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <Container maxWidth="lg" sx={{ py: 4 }}>
-        <Paper 
-          elevation={3} 
-          sx={{ 
+        <Paper
+          elevation={3}
+          sx={{
             p: 4,
             mb: 4,
             backgroundColor: 'background.paper',
             borderRadius: 2
           }}
         >
-          <Typography 
-            variant="h5" 
-            component="h1" 
+          <Typography
+            variant="h5"
+            component="h1"
             gutterBottom
-            sx={{ 
+            sx={{
               color: 'primary.main',
               fontWeight: 'medium',
               mb: 4,
@@ -67,8 +76,8 @@ const PageLayout = forwardRef<HTMLDivElement, PageLayoutProps>(({ children, titl
         </Paper>
       </Container>
 
-      <Dialog 
-        open={showFavorites} 
+      <Dialog
+        open={showFavorites}
         onClose={() => setShowFavorites(false)}
         maxWidth="sm"
         fullWidth
