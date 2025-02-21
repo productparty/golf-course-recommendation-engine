@@ -13,6 +13,8 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import { useSearchState } from '../../hooks/useSearchState';
 import './RecommendClub.css';
+import { divIcon } from 'leaflet';
+import { Marker } from 'react-leaflet';
 
 interface Club {
   id: number;
@@ -160,26 +162,26 @@ const RecommendClubUpdated: React.FC = () => {
         .eq('golfclub_id', clubId);
         
       if (error) {
-        console.error('Error removing favorite:', error);
+        console.error('Error removing favorite:', error.message, error.details, error.hint);
         return;
       }
-      
+
       setFavorites(prev => prev.filter(id => id !== clubId));
     } else {
       const { error } = await supabase
         .from('favorites')
         .insert([
-          { 
+          {
             profile_id: session.user.id,
             golfclub_id: clubId
           }
         ]);
-        
+
       if (error) {
-        console.error('Error adding favorite:', error);
+        console.error('Error adding favorite:', error.message, error.details, error.hint);
         return;
       }
-      
+
       setFavorites(prev => [...prev, clubId]);
     }
   };
@@ -192,6 +194,25 @@ const RecommendClubUpdated: React.FC = () => {
   const handleClubClick = (clubId: string) => {
     navigate(`/clubs/${clubId}`, {
       state: { from: location.pathname }
+    });
+  };
+
+  const createCustomMarker = (number: number) => {
+    return divIcon({
+      className: 'custom-marker',
+      html: `<div style="
+        background-color: #1976d2;
+        color: white;
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        border: 2px solid white;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      ">${number}</div>`,
     });
   };
 
@@ -294,19 +315,34 @@ const RecommendClubUpdated: React.FC = () => {
                 height: '400px', 
                 width: '100%',
                 mb: 3, 
-                borderRadius: 1 
+                borderRadius: 1
               }}>
                 <InteractiveMap
-                  clubs={courses.filter(c => 
+                  clubs={courses.filter(c =>
                     c.latitude && c.longitude &&
                     isValidCoordinate(c.latitude, c.longitude)
                   )}
-                  center={mapCenter}
+                  center={[mapCenter[0], mapCenter[1]]}
                   radius={parseInt(radius)}
                   onMarkerClick={handleClubClick}
                   showNumbers={true}
-                  initialZoom={4} // Start zoomed out to see more context
-                />
+                  initialZoom={4}
+                  key={`map-${currentPage}`}
+                >
+                  {courses.filter(c =>
+                    c.latitude && c.longitude &&
+                    isValidCoordinate(c.latitude, c.longitude)
+                  ).map((club, index) => (
+                    <Marker
+                      key={club.id}
+                      position={[club.latitude ?? 0, club.longitude ?? 0]}
+                      icon={createCustomMarker(index + 1)}
+                      eventHandlers={{
+                        click: () => handleClubClick(club.id)
+                      }}
+                    />
+                  ))}
+                </InteractiveMap>
               </Box>
             )}
 

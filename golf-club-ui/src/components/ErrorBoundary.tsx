@@ -8,73 +8,45 @@ interface Props {
 
 interface State {
   hasError: boolean;
-  error?: Error;
+  error: any;
+  errorInfo: React.ErrorInfo | null;
 }
 
 export class ErrorBoundary extends React.Component<Props, State> {
   constructor(props: Props) {
     super(props);
-    this.state = { hasError: false };
+    this.state = { hasError: false, error: null, errorInfo: null };
   }
 
-  static getDerivedStateFromError(error: Error) {
-    return { hasError: true, error };
+  static getDerivedStateFromError(error: any) {
+    return { hasError: true, error: error };
   }
 
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    // Log detailed error information
-    console.error('Application Error Details:', {
-      error: {
-        name: error.name,
-        message: error.message,
-        stack: error.stack
-      },
-      errorInfo,
-      environment: {
-        url: window.location.href,
-        userAgent: navigator.userAgent,
-        timestamp: new Date().toISOString(),
-        // Log environment variable availability (not values)
-        env: {
-          VITE_SUPABASE_URL: !!import.meta.env.VITE_SUPABASE_URL,
-          VITE_SUPABASE_ANON_KEY: !!import.meta.env.VITE_SUPABASE_ANON_KEY,
-          VITE_APP_URL: !!import.meta.env.VITE_APP_URL,
-          VITE_API_URL: !!import.meta.env.VITE_API_URL
-        }
-      }
-    });
+  componentDidCatch(error: any, errorInfo: React.ErrorInfo) {
+    console.error("Caught error in ErrorBoundary", error, errorInfo);
+    this.setState({ errorInfo: errorInfo });
   }
 
   render() {
     if (this.state.hasError) {
-      const error = this.state.error;
       return this.props.fallback || (
-        <Box p={4} sx={{ maxWidth: 800, margin: '0 auto' }}>
-          <Typography variant="h4" color="error" gutterBottom>
-            Application Error
+        <Box
+          display="flex"
+          flexDirection="column"
+          alignItems="center"
+          justifyContent="center"
+          minHeight="100vh"
+          p={4}
+        >
+          <Typography variant="h5" color="error" gutterBottom>
+            Something went wrong.
           </Typography>
-          <Typography variant="body1" paragraph>
-            An unexpected error has occurred. Please try refreshing the page or contact support if the problem persists.
+          <Typography variant="body1">
+            {this.state.error?.message || "An unexpected error occurred."}
           </Typography>
-          {error && (
-            <Box sx={{ 
-              mt: 2, 
-              p: 2, 
-              bgcolor: 'grey.100', 
-              borderRadius: 1,
-              whiteSpace: 'pre-wrap',
-              overflow: 'auto'
-            }}>
-              <Typography variant="body2" color="error">
-                Error: {error.message}
-              </Typography>
-              {process.env.NODE_ENV === 'development' && error.stack && (
-                <Typography variant="caption" component="pre" sx={{ mt: 1 }}>
-                  {error.stack}
-                </Typography>
-              )}
-            </Box>
-          )}
+          <Typography variant="body2">
+            Please try refreshing the page or contact support.
+          </Typography>
         </Box>
       );
     }

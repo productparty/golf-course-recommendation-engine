@@ -3,6 +3,8 @@ import React, { useEffect, useRef, forwardRef } from 'react';
 import { Box } from '@mui/material';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { MapContainer, TileLayer, useMap } from 'react-leaflet';
+import { LatLngBounds, LatLng } from 'leaflet';
 
 interface Club {
     id: string;
@@ -22,6 +24,7 @@ interface InteractiveMapProps {
     onMarkerClick: (clubId: string) => void;
     showNumbers?: boolean;
     initialZoom?: number;
+    children?: React.ReactNode;
 }
 
 // Create a custom HTML element for each marker
@@ -38,107 +41,55 @@ const isValidCoordinate = (lat: number, lng: number) =>
   lat >= -90 && lat <= 90 && 
   lng >= -180 && lng <= 180;
 
+// Add this component to handle bounds
+const MapBounds: React.FC<{ clubs: Club[] }> = ({ clubs }) => {
+  const map = useMap();
+  useEffect(() => {
+    if (clubs.length > 0) {
+      const bounds = new LatLngBounds([]);
+      clubs.forEach((club) => {
+        if (club.latitude && club.longitude && isValidCoordinate(club.latitude, club.longitude)) {
+          bounds.extend(new LatLng(club.latitude, club.longitude));
+        }
+      });
+
+      // Check if bounds are valid before fitting
+      if (bounds.isValid()) {
+        map.fitBounds(bounds, { padding: [50, 50] });
+      } else {
+        // Optionally, set a default view if no valid bounds
+         map.setView([39.8283, -98.5795], 4); // Example: Center of US, zoom level 4
+      }
+    }
+  }, [clubs, map]);
+
+  return null;
+};
+
 export const InteractiveMap = forwardRef<HTMLDivElement, InteractiveMapProps>(({
-  clubs,
+  clubs,  // This will now be getPaginatedClubs instead of all clubs
   center,
-  radius,
-  onMapClick,
-  onMarkerClick,
-  showNumbers = false,
-  initialZoom = 14
+  initialZoom = 14,
+  children
 }, ref) => {
-    const mapContainer = useRef<HTMLDivElement>(null);
-    const map = useRef<L.Map | null>(null);
-    const markers = useRef<L.Marker[]>([]);
-
-    useEffect(() => {
-        console.log("InteractiveMap useEffect - mapContainer:", mapContainer.current);
-        if (!mapContainer.current) return;
-
-        // Initialize map if it doesn't exist
-        if (!map.current) {
-            console.log("InteractiveMap - Initializing map");
-            map.current = L.map(mapContainer.current, {
-                center: [center[1], center[0]], // Leaflet uses [lat, long]
-                zoom: initialZoom,
-                zoomControl: true,
-            });
-
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            }).addTo(map.current);
-        }
-
-        // Clear existing markers
-        markers.current.forEach(marker => marker.remove());
-        markers.current = [];
-
-        // Add new markers
-        clubs.forEach((club, index) => {
-            if (club.latitude && club.longitude && 
-                isValidCoordinate(club.latitude, club.longitude)) {
-                const el = showNumbers ? createNumberedMarker(index + 1) : undefined;
-                const marker = L.marker([club.latitude, club.longitude], {
-                    icon: el ? L.divIcon({ className: '', html: el.outerHTML }) : undefined
-                })
-                    .addTo(map.current!)
-                    .bindPopup(club.club_name)
-                    .on('click', () => onMarkerClick(club.id));
-
-                markers.current.push(marker);
-            }
-        });
-
-        // Fit bounds to markers
-        if (clubs.length > 0 && clubs.some(club => club.longitude && club.latitude) && map.current) {
-            const markerCoordinates = clubs
-                .filter(club => club.latitude && club.longitude)
-                .map(club => L.latLng(club.latitude!, club.longitude!));
-            if (markerCoordinates.length > 0) {
-                const bounds = L.latLngBounds(markerCoordinates);
-                map.current.fitBounds(bounds, { padding: [50, 50] });
-            }
-        }
-
-        // Add click handler
-        map.current?.on('click', (e: L.LeafletMouseEvent) => {
-            onMapClick && onMapClick([e.latlng.lat, e.latlng.lng]);
-        });
-
-        return () => {
-            if (map.current) {
-                console.log("InteractiveMap - Removing map");
-                map.current.remove();
-                map.current = null;
-            }
-        };
-    }, [mapContainer.current, clubs, center, showNumbers, initialZoom]);
-
-    useEffect(() => {
-        if (center && map.current) {
-            // Update marker position
-            if (markers.current.length > 0) {
-                markers.current.forEach(marker => marker.setLatLng(center));
-            } else {
-                markers.current.push(L.marker(center).addTo(map.current));
-            }
-        }
-    }, [center]);
-
-    return (
-        <Box ref={ref} sx={{ height: '100%', width: '100%' }}>
-            <Box
-                ref={mapContainer}
-                sx={{
-                    height: '400px',
-                    width: '100%',
-                    borderRadius: 1,
-                    overflow: 'hidden',
-                    position: 'relative',
-                }}
-            />
-        </Box>
-    );
+  return (
+    <Box ref={ref} sx={{ height: '100%', width: '100%' }}>
+      <Box sx={{ height: '400px', width: '100%', borderRadius: 1, overflow: 'hidden' }}>
+        <MapContainer 
+          center={center} 
+          zoom={initialZoom} 
+          style={{ height: '100%', width: '100%' }}
+        >
+          <TileLayer
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          />
+          <MapBounds clubs={clubs} />
+          {children}
+        </MapContainer>
+      </Box>
+    </Box>
+  );
 });
 
 InteractiveMap.displayName = 'InteractiveMap';

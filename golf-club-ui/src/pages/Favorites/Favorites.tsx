@@ -9,14 +9,14 @@ import { InteractiveMap } from '../../components/InteractiveMap';
 import { useNavigate } from 'react-router-dom';
 import mapboxgl from 'mapbox-gl';
 
-interface GolfClub {
+interface GolfClubResponse {
+  global_id: string;
   id: string;
   club_name: string;
   address: string;
   city: string;
   state: string;
   zip_code: string;
-  distance_miles?: number;
   price_tier: string;
   difficulty: string;
   number_of_holes: string;
@@ -32,13 +32,18 @@ interface GolfClub {
   golf_clubs_rental: boolean;
   club_fitting: boolean;
   golf_lessons: boolean;
-  latitude?: number;
-  longitude?: number;
-  match_percentage: number;
+  latitude: number;
+  longitude: number;
 }
 
-interface FavoriteClub extends GolfClub {
+interface FavoriteRecord {
   golfclub_id: string;
+  golfclub: GolfClubResponse;
+}
+
+interface FavoriteClub extends GolfClubResponse {
+  golfclub_id: string;
+  match_percentage: number;
 }
 
 const isValidCoordinate = (lat: number, lng: number): boolean =>
@@ -59,94 +64,37 @@ const Favorites: React.FC = () => {
   const fetchFavorites = async () => {
     if (!session?.user?.id) {
       setFavoriteClubs([]);
-      setTotalPages(0);
       setIsLoading(false);
       return;
     }
 
     setIsLoading(true);
-
+    console.log('Session:', session); // Log the session object
     try {
-      const { data: favoritesData, error: favoritesError } = await supabase
+      const userId = session?.user?.id;
+      console.log('User ID:', userId); // Log the user ID
+
+      const { data, error: favoritesError } = await supabase
         .from('favorites')
-        .select('golfclub_id')
-        .eq('profile_id', session.user.id)
-        .order('created_at', { ascending: false });
+        .select('golfclub_id, golfclub:golfclub!inner(*)')
+        .eq('profile_id', userId) as { data: FavoriteRecord[] | null; error: any };
 
-      if (favoritesError) {
-        console.error('Error fetching favorites:', favoritesError);
-        setError('Failed to fetch favorites. Please try again later.');
-        setIsLoading(false);
-        return;
-      }
+      if (favoritesError) throw favoritesError;
 
-      if (!favoritesData || favoritesData.length === 0) {
-        setFavoriteClubs([]);
-        setTotalPages(0);
-        setIsLoading(false);
-        return;
-      }
+      const validClubs = (data || []).map(fav => ({
+        ...fav.golfclub,
+        golfclub_id: fav.golfclub_id,
+        match_percentage: 0
+      })) as FavoriteClub[];
 
-      const clubIds = favoritesData.map((f) => f.golfclub_id).join(',');
-      const response = await fetch(`${config.API_URL}/api/clubs/?ids=${clubIds}`, {
-        headers: {
-          Authorization: `Bearer ${session?.access_token}`,
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-      });
+      const filteredClubs = validClubs.filter(club => isValidCoordinate(club.latitude, club.longitude));
+      setFavoriteClubs(filteredClubs);
+      setTotalPages(Math.ceil(filteredClubs.length / ITEMS_PER_PAGE));
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        setError(errorData.detail || `Failed to fetch club details: ${response.status}`);
-        setIsLoading(false);
-        return;
-      }
-
-      const clubsData = await response.json();
-
-      if (clubsData && clubsData.results) {
-        const clubsWithCoords = await Promise.all(
-          clubsData.results.map(async (club: GolfClub) => {
-            try {
-              const response = await fetch(`https://api.zippopotam.us/us/${club.zip_code}`);
-              if (!response.ok) {
-                throw new Error(`Failed to get coordinates for ${club.zip_code}`);
-              }
-              const zipData = await response.json();
-              return {
-                ...club,
-                latitude: Number(zipData.places[0].latitude),
-                longitude: Number(zipData.places[0].longitude),
-                golfclub_id: club.id,
-              };
-            } catch (error: unknown) {
-              console.error(`Failed to get coordinates for ${club.zip_code}:`, error);
-              return { ...club, golfclub_id: club.id };
-            }
-          })
-        );
-
-        const validClubs = clubsWithCoords.filter((club) =>
-          club.latitude && club.longitude && isValidCoordinate(club.latitude, club.longitude)
-        );
-
-        setFavoriteClubs(validClubs);
-        setTotalPages(Math.ceil(validClubs.length / ITEMS_PER_PAGE));
-
-        if (validClubs.length > 0) {
-          const bounds = new mapboxgl.LngLatBounds();
-          validClubs.forEach((club) => {
-            if (club.longitude && club.latitude) {
-              bounds.extend([club.longitude, club.latitude]);
-            }
-          });
-          mapRef.current?.fitBounds(bounds, { padding: 50, maxZoom: 12 });
-        }
-      }
-    } catch (error: unknown) {
+    } catch (error) {
       console.error('Error fetching favorites:', error);
-      setError(error instanceof Error ? error.message : 'An unexpected error occurred');
+      setError('Failed to fetch favorites');
+    } finally {
       setIsLoading(false);
     }
   };
@@ -218,7 +166,7 @@ const Favorites: React.FC = () => {
 
             <Grid container spacing={2}>
               {getCurrentPageFavorites().map((club, index) => (
-                <Grid item xs={12} key={club.id}>
+                <Grid item xs={12} key={club.golfclub_id}>
                   <Box
                     sx={{
                       backgroundColor: 'white',
@@ -231,11 +179,11 @@ const Favorites: React.FC = () => {
                     <ClubCard
                       club={club}
                       isFavorite={true}
-                      onToggleFavorite={() => handleToggleFavorite(club.id)}
+                      onToggleFavorite={() => handleToggleFavorite(club.golfclub_id)}
                       showToggle={true}
                       index={(currentPage - 1) * ITEMS_PER_PAGE + index}
                       showScore={false}
-                      onClick={() => navigate(`/clubs/${club.id}`)}
+                      onClick={() => navigate(`/clubs/${club.golfclub_id}`)}
                       sx={{
                         cursor: 'pointer',
                         '&:hover': {

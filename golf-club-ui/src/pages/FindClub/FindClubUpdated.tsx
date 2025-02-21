@@ -12,6 +12,8 @@ import { config } from '../../config';
 import { supabase } from '../../lib/supabase';
 import { InteractiveMap } from '../../components/InteractiveMap';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { divIcon } from 'leaflet';
+import { Marker } from 'react-leaflet';
 
 interface Filters {
   zipCode: string;
@@ -271,55 +273,31 @@ const FindClubUpdated = forwardRef<HTMLDivElement, Props>(({ className }, ref) =
   };
 
   const handleToggleFavorite = async (clubId: string) => {
-    if (!session?.user?.id) {
-      setError('Please log in to save favorites');
-      return;
-    }
+    if (!session?.user?.id) return;
 
     const isFavorite = favorites.includes(clubId);
-    setIsLoading(true);
     
-    try {
-      if (isFavorite) {
-        const { error } = await supabase
-          .from('favorites')
-          .delete()
-          .eq('profile_id', session.user.id)
-          .eq('golfclub_id', clubId);
-          
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from('favorites')
-          .insert([
-            { 
-              profile_id: session.user.id,
-              golfclub_id: clubId,
-              created_at: new Date().toISOString()
-            }
-          ]);
-          
-        if (error) throw error;
-      }
-      
-      // Fetch updated favorites after successful toggle
-      const { data, error } = await supabase
+    if (isFavorite) {
+      // Remove from favorites
+      await supabase
         .from('favorites')
-        .select('golfclub_id')
-        .eq('profile_id', session.user.id);
-        
-      if (error) {
-        throw error;
-      }
-      
-      setFavorites(data.map(fav => fav.golfclub_id));
-      setError(''); // Clear any previous errors
-    } catch (error: any) {
-      console.error('Error toggling favorite:', error);
-      setError(error.message || 'Failed to update favorite');
-    } finally {
-      setIsLoading(false);
+        .delete()
+        .eq('profile_id', session.user.id)
+        .eq('golfclub_id', clubId);
+    } else {
+      // Add to favorites
+      await supabase
+        .from('favorites')
+        .insert([
+          { 
+            profile_id: session.user.id,
+            golfclub_id: clubId
+          }
+        ]);
     }
+    
+    // Refresh favorites list
+    fetchFavorites();
   };
 
   const handleMarkerClick = (clubId: string) => {
@@ -432,6 +410,26 @@ const FindClubUpdated = forwardRef<HTMLDivElement, Props>(({ className }, ref) =
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Add this custom marker style
+  const createCustomMarker = (number: number) => {
+    return divIcon({
+      className: 'custom-marker',
+      html: `<div style="
+        background-color: #1976d2;
+        color: white;
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        border: 2px solid white;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      ">${number}</div>`,
+    });
+  };
 
   return (
     <Box
@@ -710,15 +708,26 @@ const FindClubUpdated = forwardRef<HTMLDivElement, Props>(({ className }, ref) =
                 <>
                   {filters.zipCode && filters.radius && (
                     <Box sx={{ mb: 4, mt: 2 }}>
-                      <InteractiveMap 
+                      <InteractiveMap
                         clubs={getPaginatedClubs}
                         center={[mapCenter[0], mapCenter[1]]}
                         radius={Number(filters.radius)}
                         onMarkerClick={handleMarkerClick}
                         showNumbers={true}
                         initialZoom={4}
-                        key={`map-${filters.zipCode}-${filters.radius}`}
-                      />
+                        key={`map-${filters.zipCode}-${filters.radius}-${currentPage}`}
+                      >
+                        {getPaginatedClubs.map((club, index) => (
+                          <Marker
+                            key={club.id}
+                            position={[club.latitude ?? 0, club.longitude ?? 0]}
+                            icon={createCustomMarker(index + 1)}
+                            eventHandlers={{
+                              click: () => handleMarkerClick(club.id)
+                            }}
+                          />
+                        ))}
+                      </InteractiveMap>
                     </Box>
                   )}
                   <Grid container spacing={2}>

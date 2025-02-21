@@ -3,17 +3,21 @@ import Layout from './components/Layout';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import CircularProgress from '@mui/material/CircularProgress';
 import Box from '@mui/material/Box';
-import LoginPage from './pages/login/Login';
-import HomePage from './pages/Home/home';
+import Login from './pages/login/Login';
+import HomePage from './pages/Home/HomePage';
 import Dashboard from './pages/Home/Dashboard';
 import FindClubUpdated from './pages/FindClub/FindClubUpdated';
 import RecommendClubUpdated from './pages/RecommendClub/RecommendClubUpdated';
 import Favorites from './pages/Favorites/Favorites';
-import CreateAccountPage from './pages/CreateAccount/CreateAccountPage';
-import PasswordResetPage from './pages/PasswordReset/PasswordResetPage';
-import PasswordResetConfirm from './pages/PasswordReset/PasswordResetConfirm';
+import CreateAccount from './pages/CreateAccount/CreateAccount';
+import PasswordResetRequest from './pages/PasswordResetRequest/PasswordResetRequest';
 import ClubDetail from './pages/ClubDetail/ClubDetail';
 import NotFound from './pages/NotFound/NotFound';
+import { AuthProvider } from './context/AuthContext';
+import PasswordResetPage from './pages/PasswordReset/PasswordResetPage';
+import PasswordResetConfirm from './pages/PasswordReset/PasswordResetConfirm';
+import LandingPage from './pages/Home/LandingPage';
+import GolferProfileUpdated from './pages/GolferProfile/GolferProfileUpdated';
 
 const LoadingFallback = () => (
   <Box 
@@ -28,19 +32,32 @@ const LoadingFallback = () => (
 
 const router = createBrowserRouter([
   {
+    path: '/',
     element: <Layout />,
+    errorElement: <NotFound />,
     children: [
       {
-        index: true,
-        element: (
-          <ProtectedRoute>
-            <HomePage />
-          </ProtectedRoute>
-        ),
-        errorElement: <NotFound />,
+        path: 'login',
+        element: <Login />
       },
       {
-        path: '/dashboard',
+        path: 'create-account',
+        element: <CreateAccount />
+      },
+      {
+        path: 'password-reset-request',
+        element: <PasswordResetRequest />
+      },
+      {
+        path: 'password-reset',
+        element: <PasswordResetPage />
+      },
+      {
+        path: '/',
+        element: <LandingPage />,
+      },
+      {
+        path: 'dashboard',
         element: (
           <ProtectedRoute>
             <Dashboard />
@@ -72,22 +89,6 @@ const router = createBrowserRouter([
         ),
       },
       {
-        path: '/login',
-        element: <LoginPage />,
-      },
-      {
-        path: '/create-account',
-        element: <CreateAccountPage />,
-      },
-      {
-        path: '/password-reset',
-        element: <PasswordResetPage />,
-      },
-      {
-        path: '/password-reset-confirm',
-        element: <PasswordResetConfirm />,
-      },
-      {
         path: '/clubs/:id',
         element: (
           <ProtectedRoute>
@@ -95,8 +96,15 @@ const router = createBrowserRouter([
           </ProtectedRoute>
         ),
       },
-    ],
-    errorElement: <NotFound />,
+      {
+        path: '/profile',
+        element: (
+          <ProtectedRoute>
+            <GolferProfileUpdated />
+          </ProtectedRoute>
+        ),
+      },
+    ]
   },
   {
     path: '*',

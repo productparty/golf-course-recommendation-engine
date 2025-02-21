@@ -5,8 +5,8 @@ import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { Box } from '@mui/material';
-import router from './router'; // Import the router
 import { RouterProvider } from 'react-router-dom';
+import router from './router';
 
 const queryClient = new QueryClient();
 
@@ -45,9 +45,7 @@ const App: React.FC = () => {
     <ErrorBoundary fallback={errorFallback}>
       <QueryClientProvider client={queryClient}>
         <LocalizationProvider dateAdapter={AdapterDayjs}>
-          <AuthProvider>
-            <RouterProvider router={router} /> {/* Only render the RouterProvider */}
-          </AuthProvider>
+          <RouterProvider router={router} />
         </LocalizationProvider>
       </QueryClientProvider>
     </ErrorBoundary>

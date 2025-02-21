@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { TextField, Button, Box, Typography, Alert, Link } from '@mui/material';
@@ -13,25 +13,27 @@ const Login: React.FC = () => {
   const { signIn } = useAuth();
   const navigate = useNavigate();
 
-  console.log('API URL:', config.API_URL);
+  useEffect(() => {
+    console.log('Supabase URL:', import.meta.env.VITE_SUPABASE_URL);
+    console.log('API URL:', import.meta.env.VITE_API_URL);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
-    console.log('handleSubmit - Start', { email, password }); // Log values
-
     try {
+      console.log('Attempting login with Supabase...');
       await signIn(email, password);
-      console.log('handleSubmit - signIn successful'); // Log after signIn
+      console.log('Login successful');
+      navigate('/dashboard');
     } catch (err) {
+      console.error('Login error:', err);
       const message = err instanceof Error ? err.message : 'Failed to sign in';
       setError(message);
-      console.error('Sign in error:', err);
     } finally {
       setLoading(false);
-      console.log('handleSubmit - End'); // Log at the end
     }
   };
 

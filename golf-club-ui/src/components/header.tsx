@@ -10,61 +10,44 @@ const Header = forwardRef<HTMLDivElement>((props, ref) => {
   const handleLogout = async () => {
     try {
       await signOut();
-      navigate('/');
+      navigate('/login');
     } catch (error) {
       console.error('Error signing out:', error);
     }
   };
 
   return (
-    <AppBar ref={ref} position="static" sx={{ bgcolor: 'primary.main', color: 'white' }}>
+    <AppBar ref={ref} position="static" sx={{ bgcolor: '#2E8B57' }}>
       <Toolbar>
         <Typography 
           variant="h6" 
           component={Link} 
-          to="/" 
+          to={session ? '/dashboard' : '/'} 
           sx={{ 
-            flexGrow: 0,
             textDecoration: 'none', 
             color: 'inherit',
-            marginRight: 2,
-            fontWeight: 'bold',
-            letterSpacing: 1.1
+            flexGrow: 0,
+            marginRight: 4
           }}
         >
           Find My Club
         </Typography>
-        <Box sx={{ flexGrow: 1 }} />
-        <Box sx={{ display: 'flex', gap: 1 }}>
+        
+        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
           {session && (
             <>
-              <Button component={Link} to="/" color="inherit">Home</Button>
-              <Button component={Link} to="/find" color="inherit">Find Clubs</Button>
-              <Button component={Link} to="/recommend" color="inherit">Recommendations</Button>
-              <Button component={Link} to="/favorites" color="inherit">Favorites</Button>
-              <Button component={Link} to="/profile" color="inherit">Profile</Button>
+              <Button color="inherit" component={Link} to="/dashboard">Home</Button>
+              <Button color="inherit" component={Link} to="/find-club">Find Club</Button>
+              <Button color="inherit" component={Link} to="/recommend-club">Recommend Club</Button>
+              <Button color="inherit" component={Link} to="/favorites">Favorites</Button>
+              <Button color="inherit" component={Link} to="/profile">Profile</Button>
+              <Button color="inherit" onClick={handleLogout}>Logout</Button>
             </>
           )}
-          {session ? (
-            <Typography 
-              component="span" 
-              onClick={handleLogout}
-              sx={{
-                cursor: 'pointer',
-                '&:hover': { textDecoration: 'underline' },
-                color: 'inherit',
-                padding: '6px 8px'
-              }}
-              role="button"
-              tabIndex={0}
-              onKeyPress={(e) => e.key === 'Enter' && handleLogout()}
-            >
-              Logout
-            </Typography>
-          ) : (
+          {!session && (
             <>
-              <Button component={Link} to="/create-account" color="inherit">Get Started</Button>
-              <Button component={Link} to="/login" color="inherit">Sign In</Button>
+              <Button color="inherit" component={Link} to="/login">Login</Button>
+              <Button color="inherit" component={Link} to="/create-account">Sign Up</Button>
             </>
           )}
         </Box>

@@ -40,6 +40,22 @@ export default defineConfig(({ mode }) => {
   return {
     base: '/',
     plugins: [react()],
+    resolve: {
+      alias: {
+        '@': path.resolve(__dirname, './src'),
+      },
+    },
+    server: {
+      port: 3000,
+      open: true,
+      proxy: {
+        '/auth': {
+          target: env.VITE_SUPABASE_URL,
+          changeOrigin: true,
+          secure: false,
+        }
+      }
+    },
     build: {
       outDir: 'dist',
       sourcemap: !isProd,
@@ -58,15 +74,15 @@ export default defineConfig(({ mode }) => {
     },
     optimizeDeps: {
       include: [
+        '@mui/material/Button',
+        '@mui/material/Container',
+        '@mui/material/Typography',
+        '@mui/material/Box',
         '@emotion/react',
         '@emotion/styled',
-        '@mui/material/Button',
-        '@mui/material/AppBar',
-        '@mui/material/Toolbar',
-        '@mui/material/Typography',
-        '@mui/material/Box'
-      ],
-      exclude: ['mapbox-gl']
+        '@mui/material/styles',
+        '@mui/icons-material'
+      ]
     }
   };
 });

@@ -1,19 +1,24 @@
 import React from 'react';
+import { Box, Container, Typography, Link } from '@mui/material';
 
 const Footer: React.FC = () => {
   return (
-    <footer
-      style={{
-        padding: '1rem',
-        margin: 0,
-        textAlign: 'center',
-        backgroundColor: '#f0f0f0',
+    <Box 
+      component="footer" 
+      sx={{ 
+        py: 3,
+        px: 2,
+        mt: 'auto',
+        backgroundColor: '#2E8B57',
+        color: 'white'
       }}
     >
-      <p style={{ margin: 0 }}>
-        © {new Date().getFullYear()} Find My Club. All rights reserved.
-      </p>
-    </footer>
+      <Container maxWidth="lg">
+        <Typography variant="body2" align="center">
+          © {new Date().getFullYear()} Find My Club. All rights reserved.
+        </Typography>
+      </Container>
+    </Box>
   );
 };
 
