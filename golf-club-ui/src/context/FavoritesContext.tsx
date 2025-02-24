@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
 import { supabase } from '../lib/supabase';
+import type { FavoriteRecord } from '../types/golf-club';
 
 interface FavoritesContextType {
   favorites: string[];
@@ -29,7 +30,9 @@ export const FavoritesProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       return;
     }
 
-    setFavorites(data.map(fav => fav.golfclub_id));
+    if (data) {
+      setFavorites(data.map(fav => fav.golfclub_id));
+    }
   };
 
   useEffect(() => {

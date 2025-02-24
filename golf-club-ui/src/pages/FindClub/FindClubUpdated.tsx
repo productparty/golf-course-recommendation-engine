@@ -456,27 +456,34 @@ const FindClubUpdated = forwardRef<HTMLDivElement, Props>(({ className }, ref) =
             Search and filter golf clubs based on your preferences and location.
           </Typography>
 
-          <div className="content" style={{
-            display: 'flex',
-            gap: '2rem',
-            flex: 1,
-            minHeight: 0,
-            overflow: 'hidden'
-          }}>
-            <aside className="filters" style={{
-              width: '300px',
-              position: 'sticky',
-              top: '1rem',
-              alignSelf: 'flex-start',
-              maxHeight: 'calc(100vh - 2rem)',
-              overflowY: 'auto',
-              zIndex: 1,
-              transition: 'all 0.3s ease',
-              backgroundColor: 'white',
-              padding: '16px',
-              boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-              borderRadius: '4px'
-            }}>
+          <Box 
+            className="content"
+            sx={{
+              display: 'flex',
+              gap: '2rem',
+              flex: 1,
+              minHeight: 0,
+              overflow: 'hidden'
+            }}
+          >
+            <Box
+              component="aside"
+              className="filters"
+              sx={{
+                width: '300px',
+                position: 'sticky',
+                top: '1rem',
+                alignSelf: 'flex-start',
+                maxHeight: 'calc(100vh - 2rem)',
+                overflowY: 'auto',
+                zIndex: 1,
+                transition: 'all 0.3s ease',
+                backgroundColor: 'white',
+                padding: '16px',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                borderRadius: '4px'
+              }}
+            >
               <Typography variant="h6" gutterBottom>Filters</Typography>
               <Box sx={{ 
                 display: 'flex',
@@ -652,14 +659,18 @@ const FindClubUpdated = forwardRef<HTMLDivElement, Props>(({ className }, ref) =
                   sx={{ mb: 2 }}
                 />
               </Box>
-            </aside>
+            </Box>
 
-            <section className="results" style={{ 
-              flex: 1,
-              minWidth: 0,
-              overflowY: 'auto',
-              padding: '1rem'
-            }}>
+            <Box
+              component="section" 
+              className="results"
+              sx={{ 
+                flex: 1,
+                minWidth: 0,
+                overflowY: 'auto',
+                padding: '1rem'
+              }}
+            >
               <Box sx={{ 
                 display: 'flex', 
                 justifyContent: 'space-between', 
@@ -817,8 +828,8 @@ const FindClubUpdated = forwardRef<HTMLDivElement, Props>(({ className }, ref) =
                   </Typography>
                 </>
               )}
-            </section>
-          </div>
+            </Box>
+          </Box>
         </Box>
       </PageLayout>
     </Box>

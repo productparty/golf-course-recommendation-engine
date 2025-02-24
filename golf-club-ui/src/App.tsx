@@ -7,9 +7,10 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { Box } from '@mui/material';
 import { RouterProvider } from 'react-router-dom';
 import router from './router';
-import { ThemeProvider } from '@mui/material/styles';
-import theme from './theme';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+import { lazy, Suspense } from 'react';
 
+const theme = createTheme();
 const queryClient = new QueryClient();
 
 const App: React.FC = () => {

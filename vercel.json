@@ -1,21 +1,14 @@
 {
-  "version": 2,
   "buildCommand": "cd golf-club-ui && npm install && npm run build",
   "outputDirectory": "golf-club-ui/dist",
-  "public": true,
-  "cleanUrls": true,
-  "trailingSlash": false,
-  "regions": ["iad1"],
-  "alias": "golf-club-ui-lac.vercel.app",
+  "framework": "vite",
   "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
-  ],
-  "headers": [
     {
       "source": "/(.*)",
-      "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
-      ]
+      "destination": "/index.html"
     }
   ]
 }
+
+
+

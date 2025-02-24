@@ -361,26 +361,25 @@ const RecommendClubUpdated: React.FC = () => {
                         }
                       }}
                     >
-                      <Link 
-                        to={`/clubs/${club.id}`} 
-                        state={{ from: location.pathname + location.search }}
-                      >
-                        <ClubCard 
-                          club={club}
-                          showScore={true}
-                          isFavorite={favorites.includes(club.id)}
-                          onToggleFavorite={handleToggleFavorite}
-                          showToggle={true}
-                          index={index}
-                          sx={{
-                            '& .MuiCardHeader-action': {
-                              position: { xs: 'static', sm: 'absolute' },
-                              right: { xs: 0, sm: 16 },
-                              top: { xs: 0, sm: 16 }
-                            }
-                          }}
-                        />
-                      </Link>
+                      <ClubCard 
+                        club={club}
+                        showScore={true}
+                        isFavorite={favorites.includes(club.id)}
+                        onToggleFavorite={(clubId) => {
+                          handleToggleFavorite(clubId);
+                        }}
+                        showToggle={true}
+                        index={index}
+                        onClick={() => navigate(`/clubs/${club.id}`)}
+                        sx={{
+                          cursor: 'pointer',
+                          '& .MuiCardHeader-action': {
+                            position: { xs: 'static', sm: 'absolute' },
+                            right: { xs: 0, sm: 16 },
+                            top: { xs: 0, sm: 16 }
+                          }
+                        }}
+                      />
                     </Box>
                   </Grid>
                 ))

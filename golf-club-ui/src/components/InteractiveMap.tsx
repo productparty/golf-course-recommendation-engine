@@ -40,32 +40,35 @@ const isValidCoordinate = (lat: number, lng: number) =>
   lat >= -90 && lat <= 90 && 
   lng >= -180 && lng <= 180;
 
-const MapBounds: React.FC<{ clubs: Club[] }> = ({ clubs }) => {
-  const map = useMap();
+export const MapBounds: React.FC<{ clubs: any[] }> = ({ clubs }) => {
+    const map = useMap();
 
-  const bounds = useMemo(() => {
-    const latLngBounds = new LatLngBounds([]);
-    clubs.forEach((club) => {
-      if (
-        club.latitude &&
-        club.longitude &&
-        isValidCoordinate(club.latitude, club.longitude)
-      ) {
-        latLngBounds.extend(new LatLng(club.latitude, club.longitude));
-      }
-    });
-    return latLngBounds;
-  }, [clubs]);
+    useEffect(() => {
+        if (!clubs.length) return;
 
-  useEffect(() => {
-     if (bounds.isValid()) {
-      map.fitBounds(bounds, { padding: [50, 50] });
-    } else {
-      map.setView([39.8283, -98.5795], 4);
-    }
-  }, [bounds, map]);
+        if (clubs.length === 1) {
+            // For single club view, zoom in closer
+            const club = clubs[0];
+            map.setView([club.lat || club.latitude, club.lng || club.longitude], 15);
+            return;
+        }
 
-  return null;
+        // Original bounds logic for multiple clubs
+        const bounds = new LatLngBounds(
+            clubs.map(club => [
+                club.latitude || 0,
+                club.longitude || 0
+            ] as [number, number])
+        );
+
+        if (bounds.isValid()) {
+            map.fitBounds(bounds, { padding: [50, 50] });
+        } else {
+            map.setView([39.8283, -98.5795], 4);
+        }
+    }, [clubs, map]);
+
+    return null;
 };
 
 export const InteractiveMap = forwardRef<HTMLDivElement, InteractiveMapProps>(({

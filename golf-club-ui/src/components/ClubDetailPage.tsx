@@ -107,7 +107,7 @@ export const ClubDetailPage = () => {
 
     const { mapContainer, setMapContainer } = useMap({
         center: club ? [club.lng || 0, club.lat || 0] : [0, 0],
-        radius: 500
+        radius: 0  // Set to 0 since we want to focus on a single club
     });
 
     useEffect(() => {
@@ -218,9 +218,9 @@ export const ClubDetailPage = () => {
             <Box sx={{ height: '400px', mb: 3, borderRadius: 1 }}>
                 <InteractiveMap
                     clubs={[club]}
-                    center={[club.lat || 0, club.lng || 0]}
-                    radius={500}
-                    initialZoom={14}
+                    center={[club.lng || 0, club.lat || 0]}
+                    radius={0}
+                    initialZoom={15}  // Increased zoom level for better detail
                     onMarkerClick={() => {}}
                 />
             </Box>
