@@ -9,20 +9,6 @@ import { useNavigate } from 'react-router-dom';
 import mapboxgl from 'mapbox-gl';
 import type { FavoriteRecord, FavoriteClub, GolfClubResponse } from '../../types/golf-club';
 
-const isValidCoordinate = (lat: number, lng: number): boolean =>
-  !isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180;
-
-const isValidGolfClub = (club: unknown): club is GolfClubResponse => {
-  if (!club || typeof club !== 'object') return false;
-  const c = club as any;
-  return (
-    typeof c.id === 'string' &&
-    typeof c.club_name === 'string' &&
-    typeof c.latitude === 'number' &&
-    typeof c.longitude === 'number'
-  );
-};
-
 interface GolfClubData {
   id: string;
   club_name: string;
@@ -42,6 +28,20 @@ interface FavoriteData {
   golfclub: GolfClubData;
 }
 
+const isValidCoordinate = (lat: number, lng: number): boolean =>
+  !isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180;
+
+const isValidGolfClub = (club: unknown): club is GolfClubResponse => {
+  if (!club || typeof club !== 'object') return false;
+  const c = club as any;
+  return (
+    typeof c.id === 'string' &&
+    typeof c.club_name === 'string' &&
+    typeof c.latitude === 'number' &&
+    typeof c.longitude === 'number'
+  );
+};
+
 const Favorites: React.FC = () => {
   const { session } = useAuth();
   const [favoriteClubs, setFavoriteClubs] = useState<FavoriteClub[]>([]);
@@ -53,6 +53,15 @@ const Favorites: React.FC = () => {
   const [mapCenter] = useState<[number, number]>([-98.5795, 39.8283]);
   const navigate = useNavigate();
   const mapRef = React.useRef<mapboxgl.Map | null>(null);
+
+  const getCurrentPageFavorites = () => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    return favoriteClubs.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  };
+
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(Math.max(1, Math.min(newPage, totalPages)));
+  };
 
   const fetchFavorites = async () => {
     if (!session?.user?.id) {
@@ -67,7 +76,7 @@ const Favorites: React.FC = () => {
         .from('favorites')
         .select(`
           golfclub_id,
-          golfclub:golfclubs!inner (
+          golfclubs (
             id,
             club_name,
             latitude,
@@ -89,13 +98,14 @@ const Favorites: React.FC = () => {
         setFavoriteClubs([]);
         return;
       }
+
       const validClubs = data
-        .filter((fav): fav is { golfclub_id: string; golfclub: GolfClubData[] } => {
-          return Boolean(fav?.golfclub) && isValidGolfClub(fav.golfclub[0]);
+        .filter((fav): fav is { golfclub_id: string; golfclubs: GolfClubData[] } => {
+          return Boolean(fav?.golfclubs) && isValidGolfClub(fav.golfclubs[0]);
         })
         .map(fav => {
           const club: FavoriteClub = {
-            ...fav.golfclub,
+            ...fav.golfclubs[0],
             golfclub_id: fav.golfclub_id,
             match_percentage: 0,
             global_id: '',
@@ -137,7 +147,7 @@ const Favorites: React.FC = () => {
 
     } catch (error) {
       console.error('Error fetching favorites:', error);
-      console.error('Error details:', error); // Log the full error object
+      console.error('Error details:', error);
       if (error instanceof Error) {
         setError(error.message || 'Failed to fetch favorites');
       } else {
@@ -146,15 +156,6 @@ const Favorites: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const getCurrentPageFavorites = () => {
-    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-    return favoriteClubs.slice(startIndex, startIndex + ITEMS_PER_PAGE);
-  };
-
-  const handlePageChange = (newPage: number) => {
-    setCurrentPage(Math.max(1, Math.min(newPage, totalPages)));
   };
 
   const handleToggleFavorite = async (clubId: string) => {
