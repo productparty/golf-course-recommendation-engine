@@ -5,7 +5,7 @@ import { supabase } from '../../lib/supabase';
 import ClubCard from '../../components/ClubCard';
 import PageLayout from '../../components/PageLayout';
 import { InteractiveMap } from '../../components/InteractiveMap';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import mapboxgl from 'mapbox-gl';
 import type { FavoriteRecord, FavoriteClub, GolfClubResponse } from '../../types/golf-club';
 
@@ -20,10 +20,10 @@ interface GolfClubData {
   zip_code: string;
   price_tier: string;
   difficulty: string;
-  number_of_holes: number;
+  number_of_holes: string;
 }
 
-interface FavoriteData {
+interface FavoriteResponse {
   golfclub_id: string;
   golfclub: GolfClubData;
 }
@@ -36,6 +36,7 @@ const isValidGolfClub = (club: unknown): club is GolfClubResponse => {
   const c = club as any;
   return (
     typeof c.id === 'string' &&
+    typeof c.global_id === 'string' &&
     typeof c.club_name === 'string' &&
     typeof c.latitude === 'number' &&
     typeof c.longitude === 'number'
@@ -76,7 +77,7 @@ const Favorites: React.FC = () => {
         .from('favorites')
         .select(`
           golfclub_id,
-          golfclubs (
+          golfclub:golfclub!inner (
             id,
             club_name,
             latitude,
@@ -100,43 +101,46 @@ const Favorites: React.FC = () => {
       }
 
       const validClubs = data
-        .filter((fav): fav is { golfclub_id: string; golfclubs: GolfClubData[] } => {
-          return Boolean(fav?.golfclubs) && isValidGolfClub(fav.golfclubs[0]);
+        .filter((fav: any): fav is { golfclub_id: string; golfclub: any } => {
+          return Boolean(fav?.golfclub) && 
+            typeof fav.golfclub === 'object' && 
+            typeof fav.golfclub.id === 'string' &&
+            typeof fav.golfclub.club_name === 'string';
         })
-        .map(fav => {
+        .map((fav) => {
+          // Create a FavoriteClub object with all required properties
           const club: FavoriteClub = {
-            ...fav.golfclubs[0],
+            global_id: fav.golfclub.global_id || '',
+            id: fav.golfclub.id,
+            club_name: fav.golfclub.club_name,
+            address: fav.golfclub.address,
+            city: fav.golfclub.city,
+            state: fav.golfclub.state,
+            zip_code: fav.golfclub.zip_code,
+            price_tier: fav.golfclub.price_tier,
+            difficulty: fav.golfclub.difficulty,
+            number_of_holes: fav.golfclub.number_of_holes,
+            club_membership: fav.golfclub.club_membership || '',
+            driving_range: Boolean(fav.golfclub.driving_range),
+            putting_green: Boolean(fav.golfclub.putting_green),
+            chipping_green: Boolean(fav.golfclub.chipping_green),
+            practice_bunker: Boolean(fav.golfclub.practice_bunker),
+            restaurant: Boolean(fav.golfclub.restaurant),
+            lodging_on_site: Boolean(fav.golfclub.lodging_on_site),
+            motor_cart: Boolean(fav.golfclub.motor_cart),
+            pull_cart: Boolean(fav.golfclub.pull_cart),
+            golf_clubs_rental: Boolean(fav.golfclub.golf_clubs_rental),
+            club_fitting: Boolean(fav.golfclub.club_fitting),
+            golf_lessons: Boolean(fav.golfclub.golf_lessons),
+            latitude: fav.golfclub.latitude,
+            longitude: fav.golfclub.longitude,
             golfclub_id: fav.golfclub_id,
-            match_percentage: 0,
-            global_id: '',
-            id: '',
-            club_name: '',
-            address: '',
-            city: '',
-            state: '',
-            zip_code: '',
-            price_tier: '',
-            difficulty: '',
-            number_of_holes: '',
-            club_membership: '',
-            driving_range: false,
-            putting_green: false,
-            chipping_green: false,
-            practice_bunker: false,
-            restaurant: false,
-            lodging_on_site: false,
-            motor_cart: false,
-            pull_cart: false,
-            golf_clubs_rental: false,
-            club_fitting: false,
-            golf_lessons: false,
-            latitude: 0,
-            longitude: 0
+            match_percentage: 0
           };
           return club;
         });
 
-      const filteredClubs = validClubs.filter(club => 
+      const filteredClubs = validClubs.filter((club: FavoriteClub) => 
         typeof club.latitude === 'number' && 
         typeof club.longitude === 'number' && 
         isValidCoordinate(club.latitude, club.longitude)
@@ -170,6 +174,8 @@ const Favorites: React.FC = () => {
     fetchFavorites();
   };
 
+  const location = useLocation();
+  
   useEffect(() => {
     if (session) {
       fetchFavorites();
@@ -205,7 +211,10 @@ const Favorites: React.FC = () => {
           <>
             <Box sx={{ mb: 4 }}>
               <InteractiveMap
-                clubs={favoriteClubs.filter((c) => c.latitude && c.longitude && isValidCoordinate(c.latitude, c.longitude))}
+                clubs={favoriteClubs.filter((c) => c.latitude && c.longitude && isValidCoordinate(c.latitude, c.longitude)).map(club => ({
+                  ...club,
+                  id: club.golfclub_id
+                }))}
                 center={mapCenter}
                 radius={25}
                 onMarkerClick={(clubId) => navigate(`/clubs/${clubId}`)}
