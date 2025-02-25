@@ -1,13 +1,15 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
+import { Box, Typography, CircularProgress } from '@mui/material';
+import { Session, AuthChangeEvent } from '@supabase/supabase-js';
 
 const AuthCallback = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
     // Process the OAuth callback or email confirmation
-    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: authListener } = supabase.auth.onAuthStateChange((event: AuthChangeEvent, session: Session | null) => {
       console.log("Auth event:", event);
       
       if (event === 'SIGNED_IN' && session) {
@@ -42,9 +44,15 @@ const AuthCallback = () => {
   }, [navigate]);
 
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-      <p>Processing authentication, please wait...</p>
-    </div>
+    <Box 
+      display="flex" 
+      justifyContent="center" 
+      alignItems="center" 
+      minHeight="100vh"
+    >
+      <Typography>Processing authentication, please wait...</Typography>
+      <CircularProgress sx={{ ml: 2 }} />
+    </Box>
   );
 };
 

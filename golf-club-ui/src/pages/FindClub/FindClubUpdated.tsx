@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, forwardRef } from 'react';
 import { 
   Grid, TextField, Button, FormControl, InputLabel, Select, MenuItem, 
   Box, Alert, CircularProgress, SelectChangeEvent, Typography, Card,
-  FormControlLabel, Switch, Divider, CardContent, useTheme, useMediaQuery, IconButton, SwipeableDrawer
+  FormControlLabel, Switch, Divider, CardContent, useTheme, useMediaQuery, IconButton, SwipeableDrawer, Paper
 } from '@mui/material';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import PageLayout from '../../components/PageLayout';
@@ -74,7 +74,7 @@ const FindClubUpdated = forwardRef<HTMLDivElement, Props>(({ className }, ref) =
   });
   const [favorites, setFavorites] = useState<string[]>([]);
   const [showOnlyFavorites, setShowOnlyFavorites] = useState(false);
-  const [mapCenter, setMapCenter] = useState<[number, number]>([-98.5795, 39.8283]);
+  const [mapCenter, setMapCenter] = useState<[number, number]>([39.8283, -98.5795]);
   const [isSticky, setIsSticky] = useState(false);
   const [filteredClubs, setFilteredClubs] = useState<Club[]>([]);
   const theme = useTheme();
@@ -89,12 +89,45 @@ const FindClubUpdated = forwardRef<HTMLDivElement, Props>(({ className }, ref) =
     setFilters(prev => ({ ...prev, [name]: event.target.value }));
   };
 
+  const handleSwitchChange = (name: keyof Filters) => (event: React.ChangeEvent<HTMLInputElement>) => {
+    setFilters(prev => ({ ...prev, [name]: event.target.checked }));
+  };
+
+  const handleClearSearch = () => {
+    setFilters({
+      zipCode: '',
+      radius: '25',
+      preferred_price_range: '',
+      preferred_difficulty: '',
+      number_of_holes: '',
+      club_membership: '',
+      driving_range: false,
+      putting_green: false,
+      chipping_green: false,
+      practice_bunker: false,
+      restaurant: false,
+      lodging_on_site: false,
+      motor_cart: false,
+      pull_cart: false,
+      golf_clubs_rental: false,
+      club_fitting: false,
+      golf_lessons: false,
+    });
+    setClubs([]);
+    setError('');
+    setSortBy('');
+    setCurrentPage(1);
+    navigate('/find-club');
+  };
+
   const updateURL = (params: Record<string, string>) => {
     const searchParams = new URLSearchParams(params);
     navigate(`?${searchParams.toString()}`, { replace: true });
   };
 
-  const handleSearch = async () => {
+  const handleSearch = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    
     if (!filters.zipCode) {
       setError('Please enter a zip code');
       return;
@@ -104,10 +137,13 @@ const FindClubUpdated = forwardRef<HTMLDivElement, Props>(({ className }, ref) =
     setError('');
 
     try {
+      // Log the request for debugging
+      console.log('Searching with filters:', filters);
+      
       const queryParams = new URLSearchParams({
         zip_code: filters.zipCode,
         radius: filters.radius,
-        limit: '25',
+        limit: '100', // Increase limit to ensure we get results
       });
 
       if (filters.preferred_price_range) {
@@ -135,58 +171,127 @@ const FindClubUpdated = forwardRef<HTMLDivElement, Props>(({ className }, ref) =
         }
       });
 
-      const response = await fetch(
-        `${config.API_URL}/api/find_clubs/?${queryParams}`,
-        {
-          headers: {
-            'Authorization': `Bearer ${session?.access_token}`,
-            'Content-Type': 'application/json'
-          },
-          credentials: 'include'
+      // Log the full URL for debugging
+      const apiUrl = `${config.API_URL}/api/find_clubs/?${queryParams}`;
+      console.log('API URL:', apiUrl);
+
+      const response = await fetch(apiUrl, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${session?.access_token}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
         }
-      );
+      });
+
+      // Log the response status
+      console.log('Response status:', response.status);
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Failed to find clubs');
+        const errorText = await response.text();
+        console.error('Error response:', errorText);
+        
+        try {
+          const errorData = JSON.parse(errorText);
+          throw new Error(errorData.detail || 'Failed to find clubs');
+        } catch (e) {
+          throw new Error(`Server error: ${response.status}`);
+        }
       }
 
       const data = await response.json();
-
-      const coursesWithCoords = await Promise.all((data.results || []).map(async (course: Club) => {
-        try {
-          const response = await fetch(`https://api.zippopotam.us/us/${course.zip_code}`);
-          const zipData = await response.json();
+      console.log('Search results:', data);
+      
+      if (data.results && Array.isArray(data.results)) {
+        // Transform the results to match the expected Club format
+        const transformedClubs = data.results.map((club: any) => ({
+          id: club.id || club.global_id || club.golfclub_id,
+          global_id: club.id || club.global_id || club.golfclub_id,
+          club_name: club.club_name || club.name,
+          address: club.address,
+          city: club.city,
+          state: club.state,
+          zip_code: club.zip_code,
+          latitude: typeof club.latitude === 'string' ? parseFloat(club.latitude) : club.latitude || 0,
+          longitude: typeof club.longitude === 'string' ? parseFloat(club.longitude) : club.longitude || 0,
+          price_tier: club.price_tier || '$',
+          difficulty: club.difficulty || 'Medium',
+          number_of_holes: club.number_of_holes || '18',
+          distance_miles: club.distance_miles,
+          club_membership: club.club_membership || 'Public',
+          driving_range: Boolean(club.driving_range),
+          putting_green: Boolean(club.putting_green),
+          chipping_green: Boolean(club.chipping_green),
+          practice_bunker: Boolean(club.practice_bunker),
+          restaurant: Boolean(club.restaurant),
+          lodging_on_site: Boolean(club.lodging_on_site),
+          motor_cart: Boolean(club.motor_cart),
+          pull_cart: Boolean(club.pull_cart),
+          golf_clubs_rental: Boolean(club.golf_clubs_rental),
+          club_fitting: Boolean(club.club_fitting),
+          golf_lessons: Boolean(club.golf_lessons),
+        }));
+        
+        setClubs(transformedClubs);
+        setTotalPages(Math.ceil(transformedClubs.length / ITEMS_PER_PAGE));
+        setCurrentPage(1);
+        
+        if (transformedClubs.length > 0) {
+          // Find the first club with valid coordinates
+          const clubWithCoords = transformedClubs.find((club: Club) => 
+            club.latitude && club.longitude && 
+            !isNaN(club.latitude) && !isNaN(club.longitude) &&
+            Math.abs(club.latitude) <= 90 && Math.abs(club.longitude) <= 180
+          );
           
-          return {
-            ...course,
-            latitude: Number(zipData.places[0].latitude),
-            longitude: Number(zipData.places[0].longitude)
-          };
-        } catch (error) {
-          console.error(`Failed to get coordinates for ${course.zip_code}:`, error);
-          return course;
+          if (clubWithCoords) {
+            setMapCenter([clubWithCoords.latitude, clubWithCoords.longitude]);
+            console.log('Setting map center to:', clubWithCoords.latitude, clubWithCoords.longitude);
+          } else {
+            // Default to a US center if no valid coordinates
+            setMapCenter([39.8283, -98.5795]);
+          }
         }
-      }));
-
-      setClubs(coursesWithCoords);
-      setTotalPages(Math.ceil(coursesWithCoords.length / ITEMS_PER_PAGE));
-      setCurrentPage(1);
-
-      if (sortBy) {
-        handleSortChange({ target: { value: sortBy } } as SelectChangeEvent<SortOption>);
+        
+        // Update URL with search parameters
+        const urlParams: Record<string, string> = {
+          zipCode: filters.zipCode,
+          radius: filters.radius
+        };
+        
+        if (filters.preferred_price_range) urlParams.price = filters.preferred_price_range;
+        if (filters.preferred_difficulty) urlParams.difficulty = filters.preferred_difficulty;
+        if (filters.number_of_holes) urlParams.holes = filters.number_of_holes;
+        
+        updateURL(urlParams);
+      } else if (data.clubs && Array.isArray(data.clubs)) {
+        // Original handling for clubs array
+        setClubs(data.clubs);
+        setTotalPages(Math.ceil(data.clubs.length / ITEMS_PER_PAGE));
+        setCurrentPage(1);
+        
+        if (data.clubs.length > 0 && data.center) {
+          setMapCenter([data.center.lat, data.center.lng]);
+        }
+        
+        // Update URL with search parameters
+        const urlParams: Record<string, string> = {
+          zipCode: filters.zipCode,
+          radius: filters.radius
+        };
+        
+        if (filters.preferred_price_range) urlParams.price = filters.preferred_price_range;
+        if (filters.preferred_difficulty) urlParams.difficulty = filters.preferred_difficulty;
+        if (filters.number_of_holes) urlParams.holes = filters.number_of_holes;
+        
+        updateURL(urlParams);
+      } else {
+        setClubs([]);
+        setError('No clubs found matching your criteria');
       }
-
-      updateURL({
-        zipCode: filters.zipCode,
-        radius: filters.radius,
-        page: currentPage.toString()
-      });
-
-      setFilteredClubs(coursesWithCoords);
-    } catch (error: any) {
-      console.error('Error finding clubs:', error);
-      setError(error.message || 'Failed to find clubs');
+    } catch (err) {
+      console.error('Error searching clubs:', err);
+      setError(err instanceof Error ? err.message : 'Failed to search clubs');
     } finally {
       setIsLoading(false);
     }
@@ -273,7 +378,7 @@ const FindClubUpdated = forwardRef<HTMLDivElement, Props>(({ className }, ref) =
       return;
     }
     
-    setFavorites(data.map(fav => fav.golfclub_id));
+    setFavorites(data.map((fav: { golfclub_id: string }) => fav.golfclub_id));
   };
 
   const handleToggleFavorite = async (clubId: string) => {
@@ -305,37 +410,14 @@ const FindClubUpdated = forwardRef<HTMLDivElement, Props>(({ className }, ref) =
   };
 
   const handleMarkerClick = (clubId: string) => {
-    navigate(`/clubs/${clubId}`);
-  };
-
-  const handleClearSearch = () => {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('findClubState');
+    console.log('Navigating to club detail with ID:', clubId);
+    // Use global_id for navigation if available
+    const club = clubs.find(c => c.id === clubId || c.global_id === clubId);
+    if (club) {
+      navigate(`/club-detail/${club.global_id || club.id}`);
+    } else {
+      console.error('Club not found with ID:', clubId);
     }
-    setFilters({
-      zipCode: '',
-      radius: '25',
-      preferred_price_range: '',
-      preferred_difficulty: '',
-      number_of_holes: '',
-      club_membership: '',
-      driving_range: false,
-      putting_green: false,
-      chipping_green: false,
-      practice_bunker: false,
-      restaurant: false,
-      lodging_on_site: false,
-      motor_cart: false,
-      pull_cart: false,
-      golf_clubs_rental: false,
-      club_fitting: false,
-      golf_lessons: false,
-    });
-    setClubs([]);
-    setCurrentPage(1);
-    setSortBy('');
-    setFilteredClubs([]);
-    navigate('.');
   };
 
   useEffect(() => {
@@ -415,6 +497,26 @@ const FindClubUpdated = forwardRef<HTMLDivElement, Props>(({ className }, ref) =
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  useEffect(() => {
+    if (clubs.length > 0) {
+      console.log('Current clubs data:', clubs);
+      console.log('Paginated clubs:', getPaginatedClubs);
+      
+      // Check if clubs have valid coordinates
+      const validCoords = clubs.filter(club => 
+        club.latitude && club.longitude && 
+        !isNaN(club.latitude) && !isNaN(club.longitude) &&
+        Math.abs(club.latitude) <= 90 && Math.abs(club.longitude) <= 180
+      );
+      
+      console.log('Clubs with valid coordinates:', validCoords.length);
+      
+      if (validCoords.length > 0) {
+        console.log('First valid club coordinates:', validCoords[0].latitude, validCoords[0].longitude);
+      }
+    }
+  }, [clubs, getPaginatedClubs]);
+
   // Add this custom marker style
   const createCustomMarker = (number: number) => {
     return divIcon({
@@ -444,7 +546,7 @@ const FindClubUpdated = forwardRef<HTMLDivElement, Props>(({ className }, ref) =
         minHeight: '100vh',
         maxWidth: '1440px',
         margin: '0 auto',
-        padding: { xs: '0.5rem', md: '1rem' }
+        padding: { xs: '0.5rem', sm: '1rem' }
       }}
     >
       <PageLayout title="Find Club" titleProps={{ sx: { textAlign: 'center' } }}>
@@ -457,265 +559,35 @@ const FindClubUpdated = forwardRef<HTMLDivElement, Props>(({ className }, ref) =
             Search and filter golf clubs based on your preferences and location.
           </Typography>
 
-          <Box 
-            sx={{
-              display: 'flex',
-              gap: { xs: '1rem', md: '2rem' },
-              flex: 1,
-              position: 'relative'
-            }}
-          >
-            {isMobile ? (
-              <>
-                <IconButton
-                  onClick={() => setFilterDrawerOpen(true)}
-                  sx={{ 
-                    position: 'fixed',
-                    bottom: 16,
-                    right: 16,
-                    bgcolor: 'primary.main',
-                    color: 'white',
-                    '&:hover': { bgcolor: 'primary.dark' },
-                    zIndex: 1000
-                  }}
-                >
-                  <FilterListIcon />
-                </IconButton>
-                <SwipeableDrawer
-                  anchor="bottom"
-                  open={filterDrawerOpen}
-                  onClose={() => setFilterDrawerOpen(false)}
-                  onOpen={() => setFilterDrawerOpen(true)}
-                  sx={{
-                    '& .MuiDrawer-paper': {
-                      maxHeight: '80vh',
-                      borderTopLeftRadius: 16,
-                      borderTopRightRadius: 16,
-                      px: 2,
-                      py: 3
-                    }
-                  }}
-                >
-                  <Typography variant="h6" gutterBottom>Filters</Typography>
-                  <Box sx={{ 
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '1rem',
-                    height: '100%'
-                  }}>
-                    {/* Location Search */}
-                    <Typography variant="subtitle1" gutterBottom>
-                      Location
-                    </Typography>
-                    <TextField
-                      fullWidth
-                      label="Zip Code"
-                      value={filters.zipCode}
-                      onChange={handleTextChange('zipCode')}
-                      placeholder="Enter ZIP code..."
-                      size="small"
-                      sx={{ mb: 2 }}
-                    />
-                    <FormControl fullWidth size="small">
-                      <InputLabel>Search Radius</InputLabel>
-                      <Select
-                        value={filters.radius}
-                        onChange={handleSelectChange('radius')}
-                        label="Search Radius"
-                      >
-                        <MenuItem value="10">10 miles</MenuItem>
-                        <MenuItem value="25">25 miles</MenuItem>
-                        <MenuItem value="50">50 miles</MenuItem>
-                        <MenuItem value="100">100 miles</MenuItem>
-                      </Select>
-                    </FormControl>
-
-                    <Button
-                      variant="contained"
-                      onClick={handleSearch}
-                      disabled={isLoading}
-                      fullWidth
-                      sx={{ mt: 2 }}
-                    >
-                      {isLoading ? 'Searching...' : 'Search Clubs'}
-                    </Button>
-
-                    <Divider sx={{ my: 2 }} />
-
-                    {/* Course Info */}
-                    <Typography variant="subtitle1" gutterBottom>Course Info</Typography>
-                    <FormControl fullWidth margin="normal">
-                      <InputLabel>Price Range</InputLabel>
-                      <Select
-                        value={filters.preferred_price_range || ''}
-                        onChange={handleSelectChange('preferred_price_range')}
-                        label="Price Range"
-                      >
-                        <MenuItem value="">Any</MenuItem>
-                        <MenuItem value="$">$</MenuItem>
-                        <MenuItem value="$$">$$</MenuItem>
-                        <MenuItem value="$$$">$$$</MenuItem>
-                      </Select>
-                    </FormControl>
-
-                    <FormControl fullWidth margin="normal">
-                      <InputLabel>Difficulty</InputLabel>
-                      <Select
-                        value={filters.preferred_difficulty || ''}
-                        onChange={handleSelectChange('preferred_difficulty')}
-                        label="Difficulty"
-                      >
-                        <MenuItem value="">Any</MenuItem>
-                        <MenuItem value="Easy">Easy</MenuItem>
-                        <MenuItem value="Medium">Medium</MenuItem>
-                        <MenuItem value="Hard">Hard</MenuItem>
-                      </Select>
-                    </FormControl>
-
-                    <FormControl fullWidth margin="normal">
-                      <InputLabel>Number of Holes</InputLabel>
-                      <Select
-                        value={filters.number_of_holes || ''}
-                        onChange={handleSelectChange('number_of_holes')}
-                        label="Number of Holes"
-                      >
-                        <MenuItem value="">Any</MenuItem>
-                        <MenuItem value="9">9 Holes</MenuItem>
-                        <MenuItem value="18">18 Holes</MenuItem>
-                      </Select>
-                    </FormControl>
-
-                    <FormControl fullWidth margin="normal">
-                      <InputLabel>Club Membership</InputLabel>
-                      <Select
-                        value={filters.club_membership || ''}
-                        onChange={handleSelectChange('club_membership')}
-                        label="Club Membership"
-                      >
-                        <MenuItem value="">Any</MenuItem>
-                        <MenuItem value="public">Public</MenuItem>
-                        <MenuItem value="private">Private</MenuItem>
-                        <MenuItem value="military">Military</MenuItem>
-                        <MenuItem value="municipal">Municipal</MenuItem>
-                      </Select>
-                    </FormControl>
-
-                    <Divider sx={{ my: 2 }} />
-
-                    {/* Amenities & Facilities */}
-                    <Typography variant="subtitle1" gutterBottom>
-                      Amenities & Facilities
-                    </Typography>
-                    {[
-                      { field: 'driving_range', label: 'Driving Range' },
-                      { field: 'putting_green', label: 'Putting Green' },
-                      { field: 'chipping_green', label: 'Chipping Green' },
-                      { field: 'practice_bunker', label: 'Practice Bunker' },
-                      { field: 'restaurant', label: 'Restaurant' },
-                      { field: 'lodging_on_site', label: 'Lodging On-Site' },
-                    ].map(({ field, label }) => (
-                      <FormControlLabel
-                        key={field}
-                        control={
-                          <Switch
-                            checked={!!filters[field as keyof Filters]}
-                            onChange={(e) => setFilters(prev => ({
-                              ...prev,
-                              [field]: e.target.checked
-                            }))}
-                          />
-                        }
-                        label={label}
-                      />
-                    ))}
-
-                    <Divider sx={{ my: 2 }} />
-
-                    {/* Equipment & Services */}
-                    <Typography variant="subtitle1" gutterBottom>
-                      Equipment & Services
-                    </Typography>
-                    {[
-                      { field: 'motor_cart', label: 'Motor Cart' },
-                      { field: 'pull_cart', label: 'Pull Cart' },
-                      { field: 'golf_clubs_rental', label: 'Club Rental' },
-                      { field: 'club_fitting', label: 'Club Fitting' },
-                      { field: 'golf_lessons', label: 'Golf Lessons' },
-                    ].map(({ field, label }) => (
-                      <FormControlLabel
-                        key={field}
-                        control={
-                          <Switch
-                            checked={!!filters[field as keyof Filters]}
-                            onChange={(e) => setFilters(prev => ({
-                              ...prev,
-                              [field]: e.target.checked
-                            }))}
-                          />
-                        }
-                        label={label}
-                      />
-                    ))}
-
-                    <FormControlLabel
-                      control={
-                        <Switch
-                          checked={showOnlyFavorites}
-                          onChange={(e) => {
-                            setShowOnlyFavorites(e.target.checked);
-                            setCurrentPage(1);
-                          }}
-                        />
-                      }
-                      label="Show Only Favorites"
-                      sx={{ mb: 2 }}
-                    />
-                  </Box>
-                </SwipeableDrawer>
-              </>
-            ) : (
-              <Box
-                component="aside"
-                sx={{
-                  width: '300px',
-                  position: 'sticky',
-                  top: '1rem',
-                  alignSelf: 'flex-start',
-                  maxHeight: 'calc(100vh - 2rem)',
-                  overflowY: 'auto',
-                  zIndex: 1,
-                  bgcolor: 'background.paper',
-                  p: 2,
-                  borderRadius: 1,
-                  boxShadow: 1
-                }}
-              >
-                <Typography variant="h6" gutterBottom>Filters</Typography>
-                <Box sx={{ 
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '1rem',
-                  height: '100%'
-                }}>
-                  {/* Location Search */}
-                  <Typography variant="subtitle1" gutterBottom>
-                    Location
-                  </Typography>
+          <Grid container spacing={2}>
+            <Grid item xs={12} md={3}>
+              <Paper sx={{ 
+                p: { xs: 2, sm: 3 }, 
+                mb: { xs: 2, md: 0 },
+                display: 'block' // Ensure it's always displayed
+              }}>
+                <Typography variant="h6" gutterBottom>
+                  Find Club Search and Filter
+                </Typography>
+                
+                {/* Make sure form fields are properly sized for mobile */}
+                <Box component="form" onSubmit={handleSearch} sx={{ mt: 2 }}>
                   <TextField
-                    fullWidth
                     label="Zip Code"
+                    fullWidth
+                    margin="normal"
                     value={filters.zipCode}
-                    onChange={handleTextChange('zipCode')}
-                    placeholder="Enter ZIP code..."
-                    size="small"
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleTextChange('zipCode')(e)}
                     sx={{ mb: 2 }}
                   />
-                  <FormControl fullWidth size="small">
-                    <InputLabel>Search Radius</InputLabel>
+                  
+                  <FormControl fullWidth margin="normal" sx={{ mb: 2 }}>
+                    <InputLabel id="radius-label">Search Radius (miles)</InputLabel>
                     <Select
+                      labelId="radius-label"
                       value={filters.radius}
-                      onChange={handleSelectChange('radius')}
-                      label="Search Radius"
+                      onChange={(e) => handleSelectChange('radius')(e)}
+                      label="Search Radius (miles)"
                     >
                       <MenuItem value="10">10 miles</MenuItem>
                       <MenuItem value="25">25 miles</MenuItem>
@@ -723,160 +595,222 @@ const FindClubUpdated = forwardRef<HTMLDivElement, Props>(({ className }, ref) =
                       <MenuItem value="100">100 miles</MenuItem>
                     </Select>
                   </FormControl>
-
-                  <Button
-                    variant="contained"
-                    onClick={handleSearch}
-                    disabled={isLoading}
-                    fullWidth
-                    sx={{ mt: 2 }}
-                  >
-                    {isLoading ? 'Searching...' : 'Search Clubs'}
-                  </Button>
-
-                  <Divider sx={{ my: 2 }} />
-
-                  {/* Course Info */}
-                  <Typography variant="subtitle1" gutterBottom>Course Info</Typography>
-                  <FormControl fullWidth margin="normal">
-                    <InputLabel>Price Range</InputLabel>
+                  
+                  <FormControl fullWidth margin="normal" sx={{ mb: 2 }}>
+                    <InputLabel id="price-range-label">Price Range</InputLabel>
                     <Select
+                      labelId="price-range-label"
                       value={filters.preferred_price_range || ''}
-                      onChange={handleSelectChange('preferred_price_range')}
+                      onChange={(e) => handleSelectChange('preferred_price_range')(e)}
                       label="Price Range"
                     >
                       <MenuItem value="">Any</MenuItem>
-                      <MenuItem value="$">$</MenuItem>
-                      <MenuItem value="$$">$$</MenuItem>
-                      <MenuItem value="$$$">$$$</MenuItem>
+                      <MenuItem value="$">$ (Budget)</MenuItem>
+                      <MenuItem value="$$">$$ (Moderate)</MenuItem>
+                      <MenuItem value="$$$">$$$ (Premium)</MenuItem>
                     </Select>
                   </FormControl>
-
-                  <FormControl fullWidth margin="normal">
-                    <InputLabel>Difficulty</InputLabel>
+                  
+                  <FormControl fullWidth margin="normal" sx={{ mb: 2 }}>
+                    <InputLabel id="difficulty-label">Difficulty</InputLabel>
                     <Select
+                      labelId="difficulty-label"
                       value={filters.preferred_difficulty || ''}
-                      onChange={handleSelectChange('preferred_difficulty')}
+                      onChange={(e) => handleSelectChange('preferred_difficulty')(e)}
                       label="Difficulty"
                     >
                       <MenuItem value="">Any</MenuItem>
-                      <MenuItem value="Easy">Easy</MenuItem>
-                      <MenuItem value="Medium">Medium</MenuItem>
-                      <MenuItem value="Hard">Hard</MenuItem>
+                      <MenuItem value="Beginner">Beginner</MenuItem>
+                      <MenuItem value="Intermediate">Intermediate</MenuItem>
+                      <MenuItem value="Advanced">Advanced</MenuItem>
                     </Select>
                   </FormControl>
-
-                  <FormControl fullWidth margin="normal">
-                    <InputLabel>Number of Holes</InputLabel>
+                  
+                  <FormControl fullWidth margin="normal" sx={{ mb: 2 }}>
+                    <InputLabel id="holes-label">Number of Holes</InputLabel>
                     <Select
+                      labelId="holes-label"
                       value={filters.number_of_holes || ''}
-                      onChange={handleSelectChange('number_of_holes')}
+                      onChange={(e) => handleSelectChange('number_of_holes')(e)}
                       label="Number of Holes"
                     >
                       <MenuItem value="">Any</MenuItem>
                       <MenuItem value="9">9 Holes</MenuItem>
                       <MenuItem value="18">18 Holes</MenuItem>
+                      <MenuItem value="27">27 Holes</MenuItem>
+                      <MenuItem value="36">36 Holes</MenuItem>
                     </Select>
                   </FormControl>
-
-                  <FormControl fullWidth margin="normal">
-                    <InputLabel>Club Membership</InputLabel>
+                  
+                  <FormControl fullWidth margin="normal" sx={{ mb: 2 }}>
+                    <InputLabel id="membership-label">Membership Type</InputLabel>
                     <Select
+                      labelId="membership-label"
                       value={filters.club_membership || ''}
-                      onChange={handleSelectChange('club_membership')}
-                      label="Club Membership"
+                      onChange={(e) => handleSelectChange('club_membership')(e)}
+                      label="Membership Type"
                     >
                       <MenuItem value="">Any</MenuItem>
-                      <MenuItem value="public">Public</MenuItem>
-                      <MenuItem value="private">Private</MenuItem>
-                      <MenuItem value="military">Military</MenuItem>
-                      <MenuItem value="municipal">Municipal</MenuItem>
+                      <MenuItem value="Public">Public</MenuItem>
+                      <MenuItem value="Private">Private</MenuItem>
+                      <MenuItem value="Semi-Private">Semi-Private</MenuItem>
                     </Select>
                   </FormControl>
-
-                  <Divider sx={{ my: 2 }} />
-
-                  {/* Amenities & Facilities */}
-                  <Typography variant="subtitle1" gutterBottom>
-                    Amenities & Facilities
-                  </Typography>
-                  {[
-                    { field: 'driving_range', label: 'Driving Range' },
-                    { field: 'putting_green', label: 'Putting Green' },
-                    { field: 'chipping_green', label: 'Chipping Green' },
-                    { field: 'practice_bunker', label: 'Practice Bunker' },
-                    { field: 'restaurant', label: 'Restaurant' },
-                    { field: 'lodging_on_site', label: 'Lodging On-Site' },
-                  ].map(({ field, label }) => (
-                    <FormControlLabel
-                      key={field}
-                      control={
-                        <Switch
-                          checked={!!filters[field as keyof Filters]}
-                          onChange={(e) => setFilters(prev => ({
-                            ...prev,
-                            [field]: e.target.checked
-                          }))}
-                        />
-                      }
-                      label={label}
-                    />
-                  ))}
-
-                  <Divider sx={{ my: 2 }} />
-
-                  {/* Equipment & Services */}
-                  <Typography variant="subtitle1" gutterBottom>
-                    Equipment & Services
-                  </Typography>
-                  {[
-                    { field: 'motor_cart', label: 'Motor Cart' },
-                    { field: 'pull_cart', label: 'Pull Cart' },
-                    { field: 'golf_clubs_rental', label: 'Club Rental' },
-                    { field: 'club_fitting', label: 'Club Fitting' },
-                    { field: 'golf_lessons', label: 'Golf Lessons' },
-                  ].map(({ field, label }) => (
-                    <FormControlLabel
-                      key={field}
-                      control={
-                        <Switch
-                          checked={!!filters[field as keyof Filters]}
-                          onChange={(e) => setFilters(prev => ({
-                            ...prev,
-                            [field]: e.target.checked
-                          }))}
-                        />
-                      }
-                      label={label}
-                    />
-                  ))}
-
-                  <FormControlLabel
-                    control={
-                      <Switch
-                        checked={showOnlyFavorites}
-                        onChange={(e) => {
-                          setShowOnlyFavorites(e.target.checked);
-                          setCurrentPage(1);
-                        }}
+                  
+                  <Typography variant="subtitle2" sx={{ mt: 2, mb: 1 }}>Amenities</Typography>
+                  
+                  <Grid container spacing={1}>
+                    <Grid item xs={6}>
+                      <FormControlLabel
+                        control={
+                          <Switch
+                            checked={!!filters.driving_range}
+                            onChange={(e) => handleSwitchChange('driving_range')(e)}
+                          />
+                        }
+                        label="Driving Range"
                       />
-                    }
-                    label="Show Only Favorites"
-                    sx={{ mb: 2 }}
-                  />
+                    </Grid>
+                    <Grid item xs={6}>
+                      <FormControlLabel
+                        control={
+                          <Switch
+                            checked={!!filters.putting_green}
+                            onChange={(e) => handleSwitchChange('putting_green')(e)}
+                          />
+                        }
+                        label="Putting Green"
+                      />
+                    </Grid>
+                    <Grid item xs={6}>
+                      <FormControlLabel
+                        control={
+                          <Switch
+                            checked={!!filters.chipping_green}
+                            onChange={(e) => handleSwitchChange('chipping_green')(e)}
+                          />
+                        }
+                        label="Chipping Green"
+                      />
+                    </Grid>
+                    <Grid item xs={6}>
+                      <FormControlLabel
+                        control={
+                          <Switch
+                            checked={!!filters.practice_bunker}
+                            onChange={(e) => handleSwitchChange('practice_bunker')(e)}
+                          />
+                        }
+                        label="Practice Bunker"
+                      />
+                    </Grid>
+                    <Grid item xs={6}>
+                      <FormControlLabel
+                        control={
+                          <Switch
+                            checked={!!filters.restaurant}
+                            onChange={(e) => handleSwitchChange('restaurant')(e)}
+                          />
+                        }
+                        label="Restaurant"
+                      />
+                    </Grid>
+                    <Grid item xs={6}>
+                      <FormControlLabel
+                        control={
+                          <Switch
+                            checked={!!filters.lodging_on_site}
+                            onChange={(e) => handleSwitchChange('lodging_on_site')(e)}
+                          />
+                        }
+                        label="Lodging"
+                      />
+                    </Grid>
+                    <Grid item xs={6}>
+                      <FormControlLabel
+                        control={
+                          <Switch
+                            checked={!!filters.motor_cart}
+                            onChange={(e) => handleSwitchChange('motor_cart')(e)}
+                          />
+                        }
+                        label="Motor Cart"
+                      />
+                    </Grid>
+                    <Grid item xs={6}>
+                      <FormControlLabel
+                        control={
+                          <Switch
+                            checked={!!filters.pull_cart}
+                            onChange={(e) => handleSwitchChange('pull_cart')(e)}
+                          />
+                        }
+                        label="Pull Cart"
+                      />
+                    </Grid>
+                    <Grid item xs={6}>
+                      <FormControlLabel
+                        control={
+                          <Switch
+                            checked={!!filters.golf_clubs_rental}
+                            onChange={(e) => handleSwitchChange('golf_clubs_rental')(e)}
+                          />
+                        }
+                        label="Club Rental"
+                      />
+                    </Grid>
+                    <Grid item xs={6}>
+                      <FormControlLabel
+                        control={
+                          <Switch
+                            checked={!!filters.club_fitting}
+                            onChange={(e) => handleSwitchChange('club_fitting')(e)}
+                          />
+                        }
+                        label="Club Fitting"
+                      />
+                    </Grid>
+                    <Grid item xs={6}>
+                      <FormControlLabel
+                        control={
+                          <Switch
+                            checked={!!filters.golf_lessons}
+                            onChange={(e) => handleSwitchChange('golf_lessons')(e)}
+                          />
+                        }
+                        label="Golf Lessons"
+                      />
+                    </Grid>
+                  </Grid>
+                  
+                  <Box sx={{ 
+                    mt: 3, 
+                    display: 'flex', 
+                    flexDirection: { xs: 'column', sm: 'row' },
+                    gap: 1
+                  }}>
+                    <Button 
+                      type="submit" 
+                      variant="contained" 
+                      fullWidth
+                      disabled={isLoading}
+                    >
+                      {isLoading ? <CircularProgress size={24} /> : 'Search'}
+                    </Button>
+                    <Button 
+                      variant="outlined" 
+                      fullWidth
+                      onClick={handleClearSearch}
+                    >
+                      Clear
+                    </Button>
+                  </Box>
                 </Box>
-              </Box>
-            )}
-
-            <Box
-              component="section" 
-              sx={{ 
-                flex: 1,
-                minWidth: 0,
-                px: { xs: 1, md: 2 },
-                py: 1
-              }}
-            >
+              </Paper>
+            </Grid>
+            
+            {/* Results section */}
+            <Grid item xs={12} md={9}>
               <Box sx={{ 
                 display: 'flex', 
                 flexDirection: { xs: 'column', md: 'row' },
@@ -924,27 +858,20 @@ const FindClubUpdated = forwardRef<HTMLDivElement, Props>(({ className }, ref) =
               {clubs.length > 0 && (
                 <>
                   {filters.zipCode && filters.radius && (
-                    <Box sx={{ mb: 4, mt: 2 }}>
+                    <Box sx={{ mb: 4, mt: 2, height: '400px' }}>
                       <InteractiveMap
-                        clubs={getPaginatedClubs}
-                        center={[mapCenter[0], mapCenter[1]]}
+                        clubs={getPaginatedClubs.filter(club => 
+                          club.latitude && club.longitude && 
+                          !isNaN(club.latitude) && !isNaN(club.longitude) &&
+                          Math.abs(club.latitude) <= 90 && Math.abs(club.longitude) <= 180
+                        )}
+                        center={mapCenter}
                         radius={Number(filters.radius)}
                         onMarkerClick={handleMarkerClick}
                         showNumbers={true}
-                        initialZoom={4}
+                        initialZoom={8}
                         key={`map-${filters.zipCode}-${filters.radius}-${currentPage}`}
-                      >
-                        {getPaginatedClubs.map((club, index) => (
-                          <Marker
-                            key={club.id}
-                            position={[club.latitude ?? 0, club.longitude ?? 0]}
-                            icon={createCustomMarker(index + 1)}
-                            eventHandlers={{
-                              click: () => handleMarkerClick(club.id)
-                            }}
-                          />
-                        ))}
-                      </InteractiveMap>
+                      />
                     </Box>
                   )}
                   <Grid container spacing={{ xs: 1, md: 2 }}>
@@ -967,7 +894,10 @@ const FindClubUpdated = forwardRef<HTMLDivElement, Props>(({ className }, ref) =
                               cursor: 'pointer',
                               '&:hover': { boxShadow: 3 }
                             }}
-                            onClick={() => navigate(`/clubs/${club.id}`)}
+                            onClick={() => {
+                              console.log('Navigating to club detail with ID:', club.id);
+                              navigate(`/club-detail/${club.global_id || club.id}`);
+                            }}
                           />
                         </Box>
                       </Grid>
@@ -1035,8 +965,8 @@ const FindClubUpdated = forwardRef<HTMLDivElement, Props>(({ className }, ref) =
                   </Typography>
                 </>
               )}
-            </Box>
-          </Box>
+            </Grid>
+          </Grid>
         </Box>
       </PageLayout>
     </Box>

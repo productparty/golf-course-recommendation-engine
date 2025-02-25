@@ -1,75 +1,94 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { supabase } from '../supabaseClient';
-import { useLocation, useNavigate } from 'react-router-dom';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
+import { Session, User, AuthChangeEvent } from '@supabase/supabase-js';
+import { Box, CircularProgress } from '@mui/material';
 
 interface AuthContextType {
-  user: any;
-  session: any;
+  session: Session | null;
+  user: User | null;
+  loading: boolean;
   initialized: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
+  signUp: (email: string, password: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
-
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<any>(null);
-  const [session, setSession] = useState<any>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
   const [initialized, setInitialized] = useState(false);
-  const navigate = useNavigate();
-  const location = useLocation();
 
   useEffect(() => {
-    // Check active sessions and sets the user
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      setSession(session);
-      setInitialized(true);
-    });
+    // Initialize auth state
+    const initializeAuth = async () => {
+      try {
+        // Get current session
+        const { data: { session: currentSession } } = await supabase.auth.getSession();
+        setSession(currentSession);
+        setUser(currentSession?.user || null);
+      } catch (error) {
+        console.error('Error initializing auth:', error);
+      } finally {
+        setLoading(false);
+        setInitialized(true);
+      }
+    };
 
-    // Listen for changes on auth state (logged in, signed out, etc.)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-      setSession(session);
-      setInitialized(true);
-    });
+    initializeAuth();
 
-    return () => subscription.unsubscribe();
+    // Set up auth state listener
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      (event: AuthChangeEvent, currentSession: Session | null) => {
+        setSession(currentSession);
+        setUser(currentSession?.user || null);
+        setLoading(false);
+        setInitialized(true);
+      }
+    );
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
-    navigate('/');
+  };
+
+  const signUp = async (email: string, password: string) => {
+    const { error } = await supabase.auth.signUp({ email, password });
+    if (error) throw error;
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
-    setUser(null);
-    setSession(null);
-    setInitialized(false);
-    navigate('/');
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
   };
 
-  const value = {
-    user,
-    session,
-    initialized,
-    signIn,
-    signOut,
-  };
+  // Provide a loading state to prevent rendering the app before auth is initialized
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
-    <AuthContext.Provider value={value}>
+    <AuthContext.Provider value={{ session, user, loading, initialized, signIn, signOut, signUp }}>
       {children}
     </AuthContext.Provider>
   );
+};
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
 };

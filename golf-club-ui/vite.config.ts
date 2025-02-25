@@ -10,15 +10,21 @@ export default defineConfig({
           vendor: [
             'react',
             'react-dom',
+            'react-router-dom',
             '@mui/material',
             '@emotion/react',
-            '@emotion/styled'
+            '@emotion/styled',
+            '@tanstack/react-query'
           ]
         }
       }
-    }
+    },
+    sourcemap: true
   },
   optimizeDeps: {
-    include: ['@mui/material', '@emotion/react', '@emotion/styled']
+    include: ['@mui/material', '@emotion/react', '@emotion/styled', 'react-router-dom']
+  },
+  server: {
+    host: true
   }
 });

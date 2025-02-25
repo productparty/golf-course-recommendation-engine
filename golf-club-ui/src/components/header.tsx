@@ -44,8 +44,8 @@ const Header = forwardRef<HTMLDivElement>((props, ref) => {
     { label: 'Favorites', path: '/favorites' },
     { label: 'Profile', path: '/profile' },
   ] : [
-    { label: 'Login', path: '/login' },
     { label: 'Sign Up', path: '/create-account' },
+    { label: 'Login', path: '/login' },
   ];
 
   const drawer = (

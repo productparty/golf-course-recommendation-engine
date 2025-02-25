@@ -25,6 +25,7 @@ interface WeatherData {
 }
 
 export interface Club {
+  global_id: string;
   id: string;
   club_name: string;
   address: string;

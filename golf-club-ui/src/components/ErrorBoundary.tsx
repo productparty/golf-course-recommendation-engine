@@ -23,12 +23,17 @@ export class ErrorBoundary extends React.Component<Props, State> {
   }
 
   componentDidCatch(error: any, errorInfo: React.ErrorInfo) {
-    console.error("Caught error in ErrorBoundary", error, errorInfo);
+    // Log error details to console with more information
+    console.error("Caught error in ErrorBoundary:", error);
+    console.error("Component stack:", errorInfo.componentStack);
+    
+    // You could also log to an error tracking service here
     this.setState({ errorInfo: errorInfo });
   }
 
   render() {
     if (this.state.hasError) {
+      // Enhanced error display with more details in development
       return this.props.fallback || (
         <Box
           display="flex"
@@ -47,6 +52,13 @@ export class ErrorBoundary extends React.Component<Props, State> {
           <Typography variant="body2">
             Please try refreshing the page or contact support.
           </Typography>
+          {import.meta.env.DEV && this.state.errorInfo && (
+            <Box mt={4} p={2} bgcolor="grey.100" borderRadius={1} width="100%" overflow="auto">
+              <Box component="pre" sx={{ whiteSpace: 'pre-wrap', m: 0 }}>
+                {this.state.errorInfo.componentStack}
+              </Box>
+            </Box>
+          )}
         </Box>
       );
     }

@@ -1,52 +1,34 @@
-// Get environment variables
+// Get environment variables with fallbacks
 const env = {
   API_URL: import.meta.env.VITE_API_URL,
   SUPABASE_URL: import.meta.env.VITE_SUPABASE_URL,
   SUPABASE_ANON_KEY: import.meta.env.VITE_SUPABASE_ANON_KEY,
-  APP_URL: import.meta.env.VITE_APP_URL,
-  MODE: import.meta.env.MODE
+  APP_URL: import.meta.env.VITE_APP_URL
 };
 
-// Log environment status
-console.log('Environment Variables Status:', {
-  API_URL: !!env.API_URL,
-  SUPABASE_URL: !!env.SUPABASE_URL,
-  SUPABASE_ANON_KEY: !!env.SUPABASE_ANON_KEY,
-  APP_URL: !!env.APP_URL,
-  MODE: env.MODE
-});
-
-// Default values
+// Default values for development
 const defaults = {
-  API_URL: 'https://golf-course-recommendation-engin-production.up.railway.app',
+  API_URL: 'http://localhost:8000',
+  APP_URL: 'http://localhost:5173'
 };
 
-// Ensure API_URL has https:// prefix and no trailing slash
-const formatApiUrl = (url: string) => {
-  if (!url.startsWith('http')) {
-    url = `https://${url}`;
-  }
+// Format API URL to ensure it has no trailing slash
+const formatApiUrl = (url: string | undefined): string => {
+  if (!url) return '';
   return url.endsWith('/') ? url.slice(0, -1) : url;
 };
 
-// Export configuration object
+// Export configuration object with fallbacks
 export const config = {
   API_URL: formatApiUrl(env.API_URL || defaults.API_URL),
-  SUPABASE_URL: env.SUPABASE_URL,
-  SUPABASE_ANON_KEY: env.SUPABASE_ANON_KEY,
-  APP_URL: env.APP_URL
+  SUPABASE_URL: env.SUPABASE_URL || '',
+  SUPABASE_ANON_KEY: env.SUPABASE_ANON_KEY || '',
+  APP_URL: env.APP_URL || defaults.APP_URL
 };
-
-// Validate critical configuration
-if (!config.SUPABASE_URL || !config.SUPABASE_ANON_KEY) {
-  throw new Error('Missing critical environment variables: SUPABASE_URL or SUPABASE_ANON_KEY');
-}
 
 // Only log in development
 if (import.meta.env.DEV) {
   console.log('Config:', config);
-  console.log('SUPABASE_URL (config.ts):', config.SUPABASE_URL);
-  console.log('SUPABASE_ANON_KEY (config.ts):', config.SUPABASE_ANON_KEY);
 }
 
 export default config;

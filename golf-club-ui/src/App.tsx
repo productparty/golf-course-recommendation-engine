@@ -4,10 +4,15 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { ErrorBoundary } from './components/ErrorBoundary';
-import { Box } from '@mui/material';
-import { RouterProvider, createBrowserRouter } from 'react-router-dom';
+import { Box, Typography, CircularProgress } from '@mui/material';
+import { RouterProvider, createBrowserRouter, Navigate, Routes, Route } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { lazy, Suspense } from 'react';
+import { config } from './config';
+import { Analytics } from '@vercel/analytics/react';
+import Layout from './components/Layout';
+import ErrorPage from './pages/ErrorPage/ErrorPage';
+import { FavoritesProvider } from './context/FavoritesContext';
 
 // Import pages
 import Dashboard from './pages/Home/Dashboard';
@@ -21,104 +26,80 @@ import AuthCallback from './pages/Auth/Callback';
 import RecommendClubUpdated from './pages/RecommendClub/RecommendClubUpdated';
 import ClubDetail from './pages/ClubDetail/ClubDetail';
 import NotFound from './pages/NotFound/NotFound';
+import LandingPage from './pages/Home/LandingPage';
+import PasswordResetRequest from './pages/PasswordReset/PasswordResetRequest';
+import PasswordResetConfirm from './pages/PasswordReset/PasswordResetConfirm';
+import { ProtectedRoute } from './components/ProtectedRoute';
+
+// Log environment info in development or when debugging
+if (import.meta.env.DEV || import.meta.env.VITE_DEBUG === 'true') {
+  console.log('Environment:', import.meta.env.MODE);
+  console.log('API URL:', config.API_URL);
+  console.log('App URL:', config.APP_URL);
+  console.log('Supabase URL exists:', !!config.SUPABASE_URL);
+  console.log('Supabase key exists:', !!config.SUPABASE_ANON_KEY);
+}
+
+const LoadingFallback = () => (
+  <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
+    <CircularProgress />
+  </Box>
+);
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 const theme = createTheme();
-const queryClient = new QueryClient();
 
-// Create router with all routes
+// Define the router with proper layout structure
 const router = createBrowserRouter([
   {
-    path: '/',
-    element: <Dashboard />,
-  },
-  {
-    path: '/dashboard',
-    element: <Dashboard />,
-  },
-  {
-    path: '/find-club',
-    element: <FindClubUpdated />,
-  },
-  {
-    path: '/recommend-club',
-    element: <RecommendClubUpdated />,
-  },
-  {
-    path: '/favorites',
-    element: <Favorites />,
-  },
-  {
-    path: '/profile',
-    element: <GolferProfileUpdated />,
-  },
-  {
-    path: '/login',
-    element: <Login />,
-  },
-  {
-    path: '/create-account',
-    element: <SignUp />,
-  },
-  {
-    path: '/create-account-submitted',
-    element: <CreateAccountSubmitted />,
-  },
-  {
-    path: '/auth/callback',
-    element: <AuthCallback />,
-  },
-  {
-    path: '/clubs/:id',
-    element: <ClubDetail />,
-  },
-  {
-    path: '*',
-    element: <NotFound />,
-  },
+    path: "/",
+    element: <Layout />,
+    errorElement: <ErrorPage />,
+    children: [
+      { index: true, element: <LandingPage /> },
+      { path: "dashboard", element: <ProtectedRoute><Dashboard /></ProtectedRoute> },
+      { path: "find-club", element: <FindClubUpdated /> },
+      { path: "favorites", element: <ProtectedRoute><Favorites /></ProtectedRoute> },
+      { path: "profile", element: <ProtectedRoute><GolferProfileUpdated /></ProtectedRoute> },
+      { path: "login", element: <Login /> },
+      { path: "create-account", element: <SignUp /> },
+      { path: "signup", element: <Navigate to="/create-account" replace /> },
+      { path: "create-account-submitted", element: <CreateAccountSubmitted /> },
+      { path: "auth/callback", element: <AuthCallback /> },
+      { path: "password-reset", element: <PasswordResetRequest /> },
+      { path: "password-reset-confirm", element: <PasswordResetConfirm /> },
+      { path: "clubs/:id", element: <ClubDetail /> },
+      { path: "club-detail/:id", element: <ClubDetail /> },
+      { path: "*", element: <NotFound /> }
+    ]
+  }
 ]);
 
 const App: React.FC = () => {
-  // Create error fallback element (Simplified)
-  const errorFallback = (
-    <Box
-      display="flex"
-      flexDirection="column"
-      alignItems="center"
-      justifyContent="center"
-      minHeight="100vh"
-      p={4}
-    >
-      <h2 style={{ color: '#d32f2f', marginBottom: '1rem' }}>Application Error</h2>
-      <p style={{ color: '#666', marginBottom: '1rem' }}>
-        An unexpected error occurred. Please try refreshing the page.
-      </p>
-      <button
-        onClick={() => window.location.reload()}
-        style={{
-          backgroundColor: '#1976d2',
-          color: 'white',
-          padding: '8px 16px',
-          border: 'none',
-          borderRadius: '4px',
-          cursor: 'pointer',
-        }}
-      >
-        Refresh Page
-      </button>
-    </Box>
-  );
-
   return (
-    <ErrorBoundary fallback={errorFallback}>
-      <QueryClientProvider client={queryClient}>
-        <LocalizationProvider dateAdapter={AdapterDayjs}>
-          <ThemeProvider theme={theme}>
-            <AuthProvider>
-              <RouterProvider router={router} />
-            </AuthProvider>
-          </ThemeProvider>
-        </LocalizationProvider>
-      </QueryClientProvider>
+    <ErrorBoundary>
+      <Suspense fallback={<LoadingFallback />}>
+        <QueryClientProvider client={queryClient}>
+          <LocalizationProvider dateAdapter={AdapterDayjs}>
+            <ThemeProvider theme={theme}>
+              <AuthProvider>
+                <FavoritesProvider>
+                  <RouterProvider router={router} />
+                  <Analytics />
+                </FavoritesProvider>
+              </AuthProvider>
+            </ThemeProvider>
+          </LocalizationProvider>
+        </QueryClientProvider>
+      </Suspense>
     </ErrorBoundary>
   );
 };
