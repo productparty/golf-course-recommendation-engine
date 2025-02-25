@@ -73,74 +73,93 @@ const Favorites: React.FC = () => {
 
     setIsLoading(true);
     try {
-      const { data, error: favoritesError } = await supabase
+      // First, get all favorites for the user
+      const { data: favoritesData, error: favoritesError } = await supabase
         .from('favorites')
-        .select(`
-          golfclub_id,
-          golfclub:golfclub!inner (
-            id,
-            club_name,
-            latitude,
-            longitude,
-            address,
-            city,
-            state,
-            zip_code,
-            price_tier,
-            difficulty,
-            number_of_holes
-          )
-        `)
+        .select('golfclub_id')
         .eq('profile_id', session?.user?.id);
 
       if (favoritesError) throw favoritesError;
 
-      if (!data) {
+      if (!favoritesData || favoritesData.length === 0) {
         setFavoriteClubs([]);
+        setIsLoading(false);
         return;
       }
 
-      const validClubs = data
-        .filter((fav: any): fav is { golfclub_id: string; golfclub: any } => {
-          return Boolean(fav?.golfclub) && 
-            typeof fav.golfclub === 'object' && 
-            typeof fav.golfclub.id === 'string' &&
-            typeof fav.golfclub.club_name === 'string';
-        })
-        .map((fav) => {
-          // Create a FavoriteClub object with all required properties
-          const club: FavoriteClub = {
-            global_id: fav.golfclub.global_id || '',
-            id: fav.golfclub.id,
-            club_name: fav.golfclub.club_name,
-            address: fav.golfclub.address,
-            city: fav.golfclub.city,
-            state: fav.golfclub.state,
-            zip_code: fav.golfclub.zip_code,
-            price_tier: fav.golfclub.price_tier,
-            difficulty: fav.golfclub.difficulty,
-            number_of_holes: fav.golfclub.number_of_holes,
-            club_membership: fav.golfclub.club_membership || '',
-            driving_range: Boolean(fav.golfclub.driving_range),
-            putting_green: Boolean(fav.golfclub.putting_green),
-            chipping_green: Boolean(fav.golfclub.chipping_green),
-            practice_bunker: Boolean(fav.golfclub.practice_bunker),
-            restaurant: Boolean(fav.golfclub.restaurant),
-            lodging_on_site: Boolean(fav.golfclub.lodging_on_site),
-            motor_cart: Boolean(fav.golfclub.motor_cart),
-            pull_cart: Boolean(fav.golfclub.pull_cart),
-            golf_clubs_rental: Boolean(fav.golfclub.golf_clubs_rental),
-            club_fitting: Boolean(fav.golfclub.club_fitting),
-            golf_lessons: Boolean(fav.golfclub.golf_lessons),
-            latitude: fav.golfclub.latitude,
-            longitude: fav.golfclub.longitude,
-            golfclub_id: fav.golfclub_id,
-            match_percentage: 0
-          };
-          return club;
-        });
+      // Then, get the golf club details using the golfclub_ids
+      const { data: golfclubData, error: golfclubError } = await supabase
+        .from('golfclub')
+        .select(`
+          global_id,
+          club_name,
+          latitude,
+          longitude,
+          address,
+          city,
+          state,
+          zip_code,
+          price_tier,
+          difficulty,
+          number_of_holes,
+          club_membership,
+          driving_range,
+          putting_green,
+          chipping_green,
+          practice_bunker,
+          restaurant,
+          lodging_on_site,
+          motor_cart,
+          pull_cart,
+          golf_clubs_rental,
+          club_fitting,
+          golf_lessons
+        `)
+        .in('global_id', favoritesData.map(f => f.golfclub_id));
 
-      const filteredClubs = validClubs.filter((club: FavoriteClub) => 
+      if (golfclubError) throw golfclubError;
+
+      if (!golfclubData) {
+        setFavoriteClubs([]);
+        setIsLoading(false);
+        return;
+      }
+
+      // Map the golf club data to FavoriteClub type
+      const validClubs = golfclubData.map(club => {
+        const favoriteClub: FavoriteClub = {
+          id: club.global_id, // Use global_id as id
+          global_id: club.global_id,
+          club_name: club.club_name,
+          address: club.address,
+          city: club.city,
+          state: club.state,
+          zip_code: club.zip_code,
+          price_tier: club.price_tier,
+          difficulty: club.difficulty,
+          number_of_holes: club.number_of_holes,
+          club_membership: club.club_membership,
+          driving_range: Boolean(club.driving_range),
+          putting_green: Boolean(club.putting_green),
+          chipping_green: Boolean(club.chipping_green),
+          practice_bunker: Boolean(club.practice_bunker),
+          restaurant: Boolean(club.restaurant),
+          lodging_on_site: Boolean(club.lodging_on_site),
+          motor_cart: Boolean(club.motor_cart),
+          pull_cart: Boolean(club.pull_cart),
+          golf_clubs_rental: Boolean(club.golf_clubs_rental),
+          club_fitting: Boolean(club.club_fitting),
+          golf_lessons: Boolean(club.golf_lessons),
+          latitude: club.latitude,
+          longitude: club.longitude,
+          golfclub_id: club.global_id,
+          match_percentage: 0
+        };
+        return favoriteClub;
+      });
+
+      // Filter out any clubs with invalid coordinates
+      const filteredClubs = validClubs.filter(club => 
         typeof club.latitude === 'number' && 
         typeof club.longitude === 'number' && 
         isValidCoordinate(club.latitude, club.longitude)
@@ -151,7 +170,6 @@ const Favorites: React.FC = () => {
 
     } catch (error) {
       console.error('Error fetching favorites:', error);
-      console.error('Error details:', error);
       if (error instanceof Error) {
         setError(error.message || 'Failed to fetch favorites');
       } else {

@@ -3,8 +3,9 @@ import React, { useState, useEffect, useMemo, forwardRef } from 'react';
 import { 
   Grid, TextField, Button, FormControl, InputLabel, Select, MenuItem, 
   Box, Alert, CircularProgress, SelectChangeEvent, Typography, Card,
-  FormControlLabel, Switch, Divider, CardContent
+  FormControlLabel, Switch, Divider, CardContent, useTheme, useMediaQuery, IconButton, SwipeableDrawer
 } from '@mui/material';
+import FilterListIcon from '@mui/icons-material/FilterList';
 import PageLayout from '../../components/PageLayout';
 import ClubCard, { Club } from '../../components/ClubCard';
 import { useAuth } from '../../context/AuthContext';
@@ -76,6 +77,9 @@ const FindClubUpdated = forwardRef<HTMLDivElement, Props>(({ className }, ref) =
   const [mapCenter, setMapCenter] = useState<[number, number]>([-98.5795, 39.8283]);
   const [isSticky, setIsSticky] = useState(false);
   const [filteredClubs, setFilteredClubs] = useState<Club[]>([]);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
 
   const handleTextChange = (name: keyof Filters) => (event: React.ChangeEvent<HTMLInputElement>) => {
     setFilters(prev => ({ ...prev, [name]: event.target.value }));
@@ -440,14 +444,11 @@ const FindClubUpdated = forwardRef<HTMLDivElement, Props>(({ className }, ref) =
         minHeight: '100vh',
         maxWidth: '1440px',
         margin: '0 auto',
-        padding: '1rem'
+        padding: { xs: '0.5rem', md: '1rem' }
       }}
     >
       <PageLayout title="Find Club" titleProps={{ sx: { textAlign: 'center' } }}>
-        <Box 
-          component="div" 
-          sx={{ className: `find-club ${className || ''}` }}
-        >
+        <Box sx={{ className: `find-club ${className || ''}` }}>
           <Typography 
             variant="subtitle1" 
             color="text.secondary" 
@@ -457,226 +458,431 @@ const FindClubUpdated = forwardRef<HTMLDivElement, Props>(({ className }, ref) =
           </Typography>
 
           <Box 
-            className="content"
             sx={{
               display: 'flex',
-              gap: '2rem',
+              gap: { xs: '1rem', md: '2rem' },
               flex: 1,
-              minHeight: 0,
-              overflow: 'hidden'
+              position: 'relative'
             }}
           >
-            <Box
-              component="aside"
-              className="filters"
-              sx={{
-                width: '300px',
-                position: 'sticky',
-                top: '1rem',
-                alignSelf: 'flex-start',
-                maxHeight: 'calc(100vh - 2rem)',
-                overflowY: 'auto',
-                zIndex: 1,
-                transition: 'all 0.3s ease',
-                backgroundColor: 'white',
-                padding: '16px',
-                boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                borderRadius: '4px'
-              }}
-            >
-              <Typography variant="h6" gutterBottom>Filters</Typography>
-              <Box sx={{ 
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '1rem',
-                height: '100%'
-              }}>
-                {/* Location Search */}
-                <Typography variant="subtitle1" gutterBottom>
-                  Location
-                </Typography>
-                <TextField
-                  fullWidth
-                  label="Zip Code"
-                  value={filters.zipCode}
-                  onChange={handleTextChange('zipCode')}
-                  placeholder="Enter ZIP code..."
-                  size="small"
-                  sx={{ mb: 2 }}
-                />
-                <FormControl fullWidth size="small">
-                  <InputLabel>Search Radius</InputLabel>
-                  <Select
-                    value={filters.radius}
-                    onChange={handleSelectChange('radius')}
-                    label="Search Radius"
-                  >
-                    <MenuItem value="10">10 miles</MenuItem>
-                    <MenuItem value="25">25 miles</MenuItem>
-                    <MenuItem value="50">50 miles</MenuItem>
-                    <MenuItem value="100">100 miles</MenuItem>
-                  </Select>
-                </FormControl>
-
-                <Button
-                  variant="contained"
-                  onClick={handleSearch}
-                  disabled={isLoading}
-                  fullWidth
-                  sx={{ mt: 2 }}
+            {isMobile ? (
+              <>
+                <IconButton
+                  onClick={() => setFilterDrawerOpen(true)}
+                  sx={{ 
+                    position: 'fixed',
+                    bottom: 16,
+                    right: 16,
+                    bgcolor: 'primary.main',
+                    color: 'white',
+                    '&:hover': { bgcolor: 'primary.dark' },
+                    zIndex: 1000
+                  }}
                 >
-                  {isLoading ? 'Searching...' : 'Search Clubs'}
-                </Button>
-
-                <Divider sx={{ my: 2 }} />
-
-                {/* Course Info */}
-                <Typography variant="subtitle1" gutterBottom>Course Info</Typography>
-                <FormControl fullWidth margin="normal">
-                  <InputLabel>Price Range</InputLabel>
-                  <Select
-                    value={filters.preferred_price_range || ''}
-                    onChange={handleSelectChange('preferred_price_range')}
-                    label="Price Range"
-                  >
-                    <MenuItem value="">Any</MenuItem>
-                    <MenuItem value="$">$</MenuItem>
-                    <MenuItem value="$$">$$</MenuItem>
-                    <MenuItem value="$$$">$$$</MenuItem>
-                  </Select>
-                </FormControl>
-
-                <FormControl fullWidth margin="normal">
-                  <InputLabel>Difficulty</InputLabel>
-                  <Select
-                    value={filters.preferred_difficulty || ''}
-                    onChange={handleSelectChange('preferred_difficulty')}
-                    label="Difficulty"
-                  >
-                    <MenuItem value="">Any</MenuItem>
-                    <MenuItem value="Easy">Easy</MenuItem>
-                    <MenuItem value="Medium">Medium</MenuItem>
-                    <MenuItem value="Hard">Hard</MenuItem>
-                  </Select>
-                </FormControl>
-
-                <FormControl fullWidth margin="normal">
-                  <InputLabel>Number of Holes</InputLabel>
-                  <Select
-                    value={filters.number_of_holes || ''}
-                    onChange={handleSelectChange('number_of_holes')}
-                    label="Number of Holes"
-                  >
-                    <MenuItem value="">Any</MenuItem>
-                    <MenuItem value="9">9 Holes</MenuItem>
-                    <MenuItem value="18">18 Holes</MenuItem>
-                  </Select>
-                </FormControl>
-
-                <FormControl fullWidth margin="normal">
-                  <InputLabel>Club Membership</InputLabel>
-                  <Select
-                    value={filters.club_membership || ''}
-                    onChange={handleSelectChange('club_membership')}
-                    label="Club Membership"
-                  >
-                    <MenuItem value="">Any</MenuItem>
-                    <MenuItem value="public">Public</MenuItem>
-                    <MenuItem value="private">Private</MenuItem>
-                    <MenuItem value="military">Military</MenuItem>
-                    <MenuItem value="municipal">Municipal</MenuItem>
-                  </Select>
-                </FormControl>
-
-                <Divider sx={{ my: 2 }} />
-
-                {/* Amenities & Facilities */}
-                <Typography variant="subtitle1" gutterBottom>
-                  Amenities & Facilities
-                </Typography>
-                {[
-                  { field: 'driving_range', label: 'Driving Range' },
-                  { field: 'putting_green', label: 'Putting Green' },
-                  { field: 'chipping_green', label: 'Chipping Green' },
-                  { field: 'practice_bunker', label: 'Practice Bunker' },
-                  { field: 'restaurant', label: 'Restaurant' },
-                  { field: 'lodging_on_site', label: 'Lodging On-Site' },
-                ].map(({ field, label }) => (
-                  <FormControlLabel
-                    key={field}
-                    control={
-                      <Switch
-                        checked={!!filters[field as keyof Filters]}
-                        onChange={(e) => setFilters(prev => ({
-                          ...prev,
-                          [field]: e.target.checked
-                        }))}
-                      />
+                  <FilterListIcon />
+                </IconButton>
+                <SwipeableDrawer
+                  anchor="bottom"
+                  open={filterDrawerOpen}
+                  onClose={() => setFilterDrawerOpen(false)}
+                  onOpen={() => setFilterDrawerOpen(true)}
+                  sx={{
+                    '& .MuiDrawer-paper': {
+                      maxHeight: '80vh',
+                      borderTopLeftRadius: 16,
+                      borderTopRightRadius: 16,
+                      px: 2,
+                      py: 3
                     }
-                    label={label}
-                  />
-                ))}
-
-                <Divider sx={{ my: 2 }} />
-
-                {/* Equipment & Services */}
-                <Typography variant="subtitle1" gutterBottom>
-                  Equipment & Services
-                </Typography>
-                {[
-                  { field: 'motor_cart', label: 'Motor Cart' },
-                  { field: 'pull_cart', label: 'Pull Cart' },
-                  { field: 'golf_clubs_rental', label: 'Club Rental' },
-                  { field: 'club_fitting', label: 'Club Fitting' },
-                  { field: 'golf_lessons', label: 'Golf Lessons' },
-                ].map(({ field, label }) => (
-                  <FormControlLabel
-                    key={field}
-                    control={
-                      <Switch
-                        checked={!!filters[field as keyof Filters]}
-                        onChange={(e) => setFilters(prev => ({
-                          ...prev,
-                          [field]: e.target.checked
-                        }))}
-                      />
-                    }
-                    label={label}
-                  />
-                ))}
-
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={showOnlyFavorites}
-                      onChange={(e) => {
-                        setShowOnlyFavorites(e.target.checked);
-                        setCurrentPage(1);
-                      }}
+                  }}
+                >
+                  <Typography variant="h6" gutterBottom>Filters</Typography>
+                  <Box sx={{ 
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '1rem',
+                    height: '100%'
+                  }}>
+                    {/* Location Search */}
+                    <Typography variant="subtitle1" gutterBottom>
+                      Location
+                    </Typography>
+                    <TextField
+                      fullWidth
+                      label="Zip Code"
+                      value={filters.zipCode}
+                      onChange={handleTextChange('zipCode')}
+                      placeholder="Enter ZIP code..."
+                      size="small"
+                      sx={{ mb: 2 }}
                     />
-                  }
-                  label="Show Only Favorites"
-                  sx={{ mb: 2 }}
-                />
+                    <FormControl fullWidth size="small">
+                      <InputLabel>Search Radius</InputLabel>
+                      <Select
+                        value={filters.radius}
+                        onChange={handleSelectChange('radius')}
+                        label="Search Radius"
+                      >
+                        <MenuItem value="10">10 miles</MenuItem>
+                        <MenuItem value="25">25 miles</MenuItem>
+                        <MenuItem value="50">50 miles</MenuItem>
+                        <MenuItem value="100">100 miles</MenuItem>
+                      </Select>
+                    </FormControl>
+
+                    <Button
+                      variant="contained"
+                      onClick={handleSearch}
+                      disabled={isLoading}
+                      fullWidth
+                      sx={{ mt: 2 }}
+                    >
+                      {isLoading ? 'Searching...' : 'Search Clubs'}
+                    </Button>
+
+                    <Divider sx={{ my: 2 }} />
+
+                    {/* Course Info */}
+                    <Typography variant="subtitle1" gutterBottom>Course Info</Typography>
+                    <FormControl fullWidth margin="normal">
+                      <InputLabel>Price Range</InputLabel>
+                      <Select
+                        value={filters.preferred_price_range || ''}
+                        onChange={handleSelectChange('preferred_price_range')}
+                        label="Price Range"
+                      >
+                        <MenuItem value="">Any</MenuItem>
+                        <MenuItem value="$">$</MenuItem>
+                        <MenuItem value="$$">$$</MenuItem>
+                        <MenuItem value="$$$">$$$</MenuItem>
+                      </Select>
+                    </FormControl>
+
+                    <FormControl fullWidth margin="normal">
+                      <InputLabel>Difficulty</InputLabel>
+                      <Select
+                        value={filters.preferred_difficulty || ''}
+                        onChange={handleSelectChange('preferred_difficulty')}
+                        label="Difficulty"
+                      >
+                        <MenuItem value="">Any</MenuItem>
+                        <MenuItem value="Easy">Easy</MenuItem>
+                        <MenuItem value="Medium">Medium</MenuItem>
+                        <MenuItem value="Hard">Hard</MenuItem>
+                      </Select>
+                    </FormControl>
+
+                    <FormControl fullWidth margin="normal">
+                      <InputLabel>Number of Holes</InputLabel>
+                      <Select
+                        value={filters.number_of_holes || ''}
+                        onChange={handleSelectChange('number_of_holes')}
+                        label="Number of Holes"
+                      >
+                        <MenuItem value="">Any</MenuItem>
+                        <MenuItem value="9">9 Holes</MenuItem>
+                        <MenuItem value="18">18 Holes</MenuItem>
+                      </Select>
+                    </FormControl>
+
+                    <FormControl fullWidth margin="normal">
+                      <InputLabel>Club Membership</InputLabel>
+                      <Select
+                        value={filters.club_membership || ''}
+                        onChange={handleSelectChange('club_membership')}
+                        label="Club Membership"
+                      >
+                        <MenuItem value="">Any</MenuItem>
+                        <MenuItem value="public">Public</MenuItem>
+                        <MenuItem value="private">Private</MenuItem>
+                        <MenuItem value="military">Military</MenuItem>
+                        <MenuItem value="municipal">Municipal</MenuItem>
+                      </Select>
+                    </FormControl>
+
+                    <Divider sx={{ my: 2 }} />
+
+                    {/* Amenities & Facilities */}
+                    <Typography variant="subtitle1" gutterBottom>
+                      Amenities & Facilities
+                    </Typography>
+                    {[
+                      { field: 'driving_range', label: 'Driving Range' },
+                      { field: 'putting_green', label: 'Putting Green' },
+                      { field: 'chipping_green', label: 'Chipping Green' },
+                      { field: 'practice_bunker', label: 'Practice Bunker' },
+                      { field: 'restaurant', label: 'Restaurant' },
+                      { field: 'lodging_on_site', label: 'Lodging On-Site' },
+                    ].map(({ field, label }) => (
+                      <FormControlLabel
+                        key={field}
+                        control={
+                          <Switch
+                            checked={!!filters[field as keyof Filters]}
+                            onChange={(e) => setFilters(prev => ({
+                              ...prev,
+                              [field]: e.target.checked
+                            }))}
+                          />
+                        }
+                        label={label}
+                      />
+                    ))}
+
+                    <Divider sx={{ my: 2 }} />
+
+                    {/* Equipment & Services */}
+                    <Typography variant="subtitle1" gutterBottom>
+                      Equipment & Services
+                    </Typography>
+                    {[
+                      { field: 'motor_cart', label: 'Motor Cart' },
+                      { field: 'pull_cart', label: 'Pull Cart' },
+                      { field: 'golf_clubs_rental', label: 'Club Rental' },
+                      { field: 'club_fitting', label: 'Club Fitting' },
+                      { field: 'golf_lessons', label: 'Golf Lessons' },
+                    ].map(({ field, label }) => (
+                      <FormControlLabel
+                        key={field}
+                        control={
+                          <Switch
+                            checked={!!filters[field as keyof Filters]}
+                            onChange={(e) => setFilters(prev => ({
+                              ...prev,
+                              [field]: e.target.checked
+                            }))}
+                          />
+                        }
+                        label={label}
+                      />
+                    ))}
+
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={showOnlyFavorites}
+                          onChange={(e) => {
+                            setShowOnlyFavorites(e.target.checked);
+                            setCurrentPage(1);
+                          }}
+                        />
+                      }
+                      label="Show Only Favorites"
+                      sx={{ mb: 2 }}
+                    />
+                  </Box>
+                </SwipeableDrawer>
+              </>
+            ) : (
+              <Box
+                component="aside"
+                sx={{
+                  width: '300px',
+                  position: 'sticky',
+                  top: '1rem',
+                  alignSelf: 'flex-start',
+                  maxHeight: 'calc(100vh - 2rem)',
+                  overflowY: 'auto',
+                  zIndex: 1,
+                  bgcolor: 'background.paper',
+                  p: 2,
+                  borderRadius: 1,
+                  boxShadow: 1
+                }}
+              >
+                <Typography variant="h6" gutterBottom>Filters</Typography>
+                <Box sx={{ 
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '1rem',
+                  height: '100%'
+                }}>
+                  {/* Location Search */}
+                  <Typography variant="subtitle1" gutterBottom>
+                    Location
+                  </Typography>
+                  <TextField
+                    fullWidth
+                    label="Zip Code"
+                    value={filters.zipCode}
+                    onChange={handleTextChange('zipCode')}
+                    placeholder="Enter ZIP code..."
+                    size="small"
+                    sx={{ mb: 2 }}
+                  />
+                  <FormControl fullWidth size="small">
+                    <InputLabel>Search Radius</InputLabel>
+                    <Select
+                      value={filters.radius}
+                      onChange={handleSelectChange('radius')}
+                      label="Search Radius"
+                    >
+                      <MenuItem value="10">10 miles</MenuItem>
+                      <MenuItem value="25">25 miles</MenuItem>
+                      <MenuItem value="50">50 miles</MenuItem>
+                      <MenuItem value="100">100 miles</MenuItem>
+                    </Select>
+                  </FormControl>
+
+                  <Button
+                    variant="contained"
+                    onClick={handleSearch}
+                    disabled={isLoading}
+                    fullWidth
+                    sx={{ mt: 2 }}
+                  >
+                    {isLoading ? 'Searching...' : 'Search Clubs'}
+                  </Button>
+
+                  <Divider sx={{ my: 2 }} />
+
+                  {/* Course Info */}
+                  <Typography variant="subtitle1" gutterBottom>Course Info</Typography>
+                  <FormControl fullWidth margin="normal">
+                    <InputLabel>Price Range</InputLabel>
+                    <Select
+                      value={filters.preferred_price_range || ''}
+                      onChange={handleSelectChange('preferred_price_range')}
+                      label="Price Range"
+                    >
+                      <MenuItem value="">Any</MenuItem>
+                      <MenuItem value="$">$</MenuItem>
+                      <MenuItem value="$$">$$</MenuItem>
+                      <MenuItem value="$$$">$$$</MenuItem>
+                    </Select>
+                  </FormControl>
+
+                  <FormControl fullWidth margin="normal">
+                    <InputLabel>Difficulty</InputLabel>
+                    <Select
+                      value={filters.preferred_difficulty || ''}
+                      onChange={handleSelectChange('preferred_difficulty')}
+                      label="Difficulty"
+                    >
+                      <MenuItem value="">Any</MenuItem>
+                      <MenuItem value="Easy">Easy</MenuItem>
+                      <MenuItem value="Medium">Medium</MenuItem>
+                      <MenuItem value="Hard">Hard</MenuItem>
+                    </Select>
+                  </FormControl>
+
+                  <FormControl fullWidth margin="normal">
+                    <InputLabel>Number of Holes</InputLabel>
+                    <Select
+                      value={filters.number_of_holes || ''}
+                      onChange={handleSelectChange('number_of_holes')}
+                      label="Number of Holes"
+                    >
+                      <MenuItem value="">Any</MenuItem>
+                      <MenuItem value="9">9 Holes</MenuItem>
+                      <MenuItem value="18">18 Holes</MenuItem>
+                    </Select>
+                  </FormControl>
+
+                  <FormControl fullWidth margin="normal">
+                    <InputLabel>Club Membership</InputLabel>
+                    <Select
+                      value={filters.club_membership || ''}
+                      onChange={handleSelectChange('club_membership')}
+                      label="Club Membership"
+                    >
+                      <MenuItem value="">Any</MenuItem>
+                      <MenuItem value="public">Public</MenuItem>
+                      <MenuItem value="private">Private</MenuItem>
+                      <MenuItem value="military">Military</MenuItem>
+                      <MenuItem value="municipal">Municipal</MenuItem>
+                    </Select>
+                  </FormControl>
+
+                  <Divider sx={{ my: 2 }} />
+
+                  {/* Amenities & Facilities */}
+                  <Typography variant="subtitle1" gutterBottom>
+                    Amenities & Facilities
+                  </Typography>
+                  {[
+                    { field: 'driving_range', label: 'Driving Range' },
+                    { field: 'putting_green', label: 'Putting Green' },
+                    { field: 'chipping_green', label: 'Chipping Green' },
+                    { field: 'practice_bunker', label: 'Practice Bunker' },
+                    { field: 'restaurant', label: 'Restaurant' },
+                    { field: 'lodging_on_site', label: 'Lodging On-Site' },
+                  ].map(({ field, label }) => (
+                    <FormControlLabel
+                      key={field}
+                      control={
+                        <Switch
+                          checked={!!filters[field as keyof Filters]}
+                          onChange={(e) => setFilters(prev => ({
+                            ...prev,
+                            [field]: e.target.checked
+                          }))}
+                        />
+                      }
+                      label={label}
+                    />
+                  ))}
+
+                  <Divider sx={{ my: 2 }} />
+
+                  {/* Equipment & Services */}
+                  <Typography variant="subtitle1" gutterBottom>
+                    Equipment & Services
+                  </Typography>
+                  {[
+                    { field: 'motor_cart', label: 'Motor Cart' },
+                    { field: 'pull_cart', label: 'Pull Cart' },
+                    { field: 'golf_clubs_rental', label: 'Club Rental' },
+                    { field: 'club_fitting', label: 'Club Fitting' },
+                    { field: 'golf_lessons', label: 'Golf Lessons' },
+                  ].map(({ field, label }) => (
+                    <FormControlLabel
+                      key={field}
+                      control={
+                        <Switch
+                          checked={!!filters[field as keyof Filters]}
+                          onChange={(e) => setFilters(prev => ({
+                            ...prev,
+                            [field]: e.target.checked
+                          }))}
+                        />
+                      }
+                      label={label}
+                    />
+                  ))}
+
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={showOnlyFavorites}
+                        onChange={(e) => {
+                          setShowOnlyFavorites(e.target.checked);
+                          setCurrentPage(1);
+                        }}
+                      />
+                    }
+                    label="Show Only Favorites"
+                    sx={{ mb: 2 }}
+                  />
+                </Box>
               </Box>
-            </Box>
+            )}
 
             <Box
               component="section" 
-              className="results"
               sx={{ 
                 flex: 1,
                 minWidth: 0,
-                overflowY: 'auto',
-                padding: '1rem'
+                px: { xs: 1, md: 2 },
+                py: 1
               }}
             >
               <Box sx={{ 
                 display: 'flex', 
-                justifyContent: 'space-between', 
-                mb: 2,
-                flexDirection: { xs: 'column', sm: 'row' },
-                gap: { xs: 2, sm: 0 }
+                flexDirection: { xs: 'column', md: 'row' },
+                justifyContent: 'space-between',
+                gap: 2,
+                mb: 2
               }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                   <Typography variant="h6">Search Results</Typography>
@@ -741,18 +947,15 @@ const FindClubUpdated = forwardRef<HTMLDivElement, Props>(({ className }, ref) =
                       </InteractiveMap>
                     </Box>
                   )}
-                  <Grid container spacing={2}>
+                  <Grid container spacing={{ xs: 1, md: 2 }}>
                     {getPaginatedClubs.map((club: Club, index: number) => (
                       <Grid item xs={12} key={club.id}>
-                        <Box
-                          sx={{
-                            backgroundColor: 'white',
-                            borderRadius: 1,
-                            boxShadow: 1,
-                            padding: 2,
-                            position: 'relative',
-                          }}
-                        >
+                        <Box sx={{
+                          backgroundColor: 'background.paper',
+                          borderRadius: 1,
+                          boxShadow: 1,
+                          p: { xs: 1, md: 2 }
+                        }}>
                           <ClubCard 
                             club={club}
                             isFavorite={favorites.includes(club.id)}
@@ -762,9 +965,7 @@ const FindClubUpdated = forwardRef<HTMLDivElement, Props>(({ className }, ref) =
                             showScore={true}
                             sx={{ 
                               cursor: 'pointer',
-                              '&:hover': {
-                                boxShadow: 3
-                              }
+                              '&:hover': { boxShadow: 3 }
                             }}
                             onClick={() => navigate(`/clubs/${club.id}`)}
                           />
@@ -773,7 +974,13 @@ const FindClubUpdated = forwardRef<HTMLDivElement, Props>(({ className }, ref) =
                     ))}
                   </Grid>
 
-                  <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center', gap: 1 }}>
+                  <Box sx={{ 
+                    mt: 3, 
+                    display: 'flex', 
+                    flexWrap: 'wrap',
+                    justifyContent: 'center', 
+                    gap: 1 
+                  }}>
                     <Button
                       onClick={() => handlePageChange(1)}
                       disabled={currentPage === 1}

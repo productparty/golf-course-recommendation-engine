@@ -1,50 +1,91 @@
 import React, { useState } from 'react';
-import { Container, Typography, TextField, Button, Box } from '@mui/material';
+import { Container, Typography, TextField, Button, Box, Alert } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '../../lib/supabase';
 
 const SignUp: React.FC = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    name: '',
     email: '',
-    phone: '',
-    feedback: ''
+    password: '',
+    confirmPassword: ''
   });
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const mailtoLink = `mailto:mwatson1983@gmail.com?subject=Sign Up Form Submission&body=${encodeURIComponent(
-      `Name: ${formData.name}\nEmail: ${formData.email}\nPhone: ${formData.phone}\nFeedback: ${formData.feedback}`
-    )}`;
-    window.location.href = mailtoLink;
+    setError('');
+    setIsLoading(true);
+
+    // Basic validation
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match');
+      setIsLoading(false);
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      setError('Password must be at least 6 characters');
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      // Add console log to track signup attempt
+      console.log("Attempting to sign up with email:", formData.email);
+      
+      const { data, error } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+        // Add email redirect option for better confirmation flow
+        options: {
+          emailRedirectTo: window.location.origin + '/auth/callback'
+        }
+      });
+
+      if (error) throw error;
+
+      // Add console log to confirm successful signup
+      console.log("Sign up successful, redirecting to confirmation page");
+      
+      // Redirect to confirmation page - use replace to prevent back navigation
+      navigate('/create-account-submitted', { replace: true });
+      
+    } catch (error: any) {
+      console.error('Error during sign up:', error);
+      setError(error.message || 'An error occurred during sign up');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <Container maxWidth="sm">
       <Typography variant="h4" component="h1" gutterBottom>
-        Sign Up
+        Create Account
       </Typography>
       <Typography variant="body1" gutterBottom>
-        Join our community by filling out the form below. We value your feedback!
+        Join our community by creating your account below.
       </Typography>
+      
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
+
       <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
-        <TextField
-          fullWidth
-          label="Name"
-          name="name"
-          value={formData.name}
-          onChange={handleChange}
-          required
-          margin="normal"
-          sx={{ backgroundColor: 'white' }}
-        />
         <TextField
           fullWidth
           label="Email"
           name="email"
+          type="email"
           value={formData.email}
           onChange={handleChange}
           required
@@ -53,9 +94,10 @@ const SignUp: React.FC = () => {
         />
         <TextField
           fullWidth
-          label="Phone Number"
-          name="phone"
-          value={formData.phone}
+          label="Password"
+          name="password"
+          type="password"
+          value={formData.password}
           onChange={handleChange}
           required
           margin="normal"
@@ -63,18 +105,23 @@ const SignUp: React.FC = () => {
         />
         <TextField
           fullWidth
-          label="Questions / Feedback"
-          name="feedback"
-          value={formData.feedback}
+          label="Confirm Password"
+          name="confirmPassword"
+          type="password"
+          value={formData.confirmPassword}
           onChange={handleChange}
           required
           margin="normal"
-          multiline
-          rows={4}
           sx={{ backgroundColor: 'white' }}
         />
-        <Button type="submit" variant="contained" color="primary" sx={{ mt: 2 }}>
-          Submit
+        <Button 
+          type="submit" 
+          variant="contained" 
+          color="primary" 
+          sx={{ mt: 2 }}
+          disabled={isLoading}
+        >
+          {isLoading ? 'Creating Account...' : 'Create Account'}
         </Button>
       </Box>
     </Container>

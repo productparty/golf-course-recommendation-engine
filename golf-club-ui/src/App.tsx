@@ -5,13 +5,77 @@ import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { Box } from '@mui/material';
-import { RouterProvider } from 'react-router-dom';
-import router from './router';
+import { RouterProvider, createBrowserRouter } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { lazy, Suspense } from 'react';
 
+// Import pages
+import Dashboard from './pages/Home/Dashboard';
+import FindClubUpdated from './pages/FindClub/FindClubUpdated';
+import Favorites from './pages/Favorites/Favorites';
+import GolferProfileUpdated from './pages/GolferProfile/GolferProfileUpdated';
+import Login from './pages/login/Login';
+import SignUp from './pages/CreateAccount/CreateAccount';
+import CreateAccountSubmitted from './pages/CreateAccount/CreateAccountSubmitted';
+import AuthCallback from './pages/Auth/Callback';
+import RecommendClubUpdated from './pages/RecommendClub/RecommendClubUpdated';
+import ClubDetail from './pages/ClubDetail/ClubDetail';
+import NotFound from './pages/NotFound/NotFound';
+
 const theme = createTheme();
 const queryClient = new QueryClient();
+
+// Create router with all routes
+const router = createBrowserRouter([
+  {
+    path: '/',
+    element: <Dashboard />,
+  },
+  {
+    path: '/dashboard',
+    element: <Dashboard />,
+  },
+  {
+    path: '/find-club',
+    element: <FindClubUpdated />,
+  },
+  {
+    path: '/recommend-club',
+    element: <RecommendClubUpdated />,
+  },
+  {
+    path: '/favorites',
+    element: <Favorites />,
+  },
+  {
+    path: '/profile',
+    element: <GolferProfileUpdated />,
+  },
+  {
+    path: '/login',
+    element: <Login />,
+  },
+  {
+    path: '/create-account',
+    element: <SignUp />,
+  },
+  {
+    path: '/create-account-submitted',
+    element: <CreateAccountSubmitted />,
+  },
+  {
+    path: '/auth/callback',
+    element: <AuthCallback />,
+  },
+  {
+    path: '/clubs/:id',
+    element: <ClubDetail />,
+  },
+  {
+    path: '*',
+    element: <NotFound />,
+  },
+]);
 
 const App: React.FC = () => {
   // Create error fallback element (Simplified)
@@ -49,7 +113,9 @@ const App: React.FC = () => {
       <QueryClientProvider client={queryClient}>
         <LocalizationProvider dateAdapter={AdapterDayjs}>
           <ThemeProvider theme={theme}>
-            <RouterProvider router={router} />
+            <AuthProvider>
+              <RouterProvider router={router} />
+            </AuthProvider>
           </ThemeProvider>
         </LocalizationProvider>
       </QueryClientProvider>
